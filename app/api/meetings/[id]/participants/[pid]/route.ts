@@ -1,3 +1,13 @@
+try {
+  const nodeBuf = require("buffer");
+  if (nodeBuf && !nodeBuf.SlowBuffer) {
+    nodeBuf.SlowBuffer = Buffer;
+  }
+} catch (_) {}
+if (typeof Buffer !== "undefined" && !(Buffer as any).SlowBuffer) {
+  (Buffer as any).SlowBuffer = Buffer;
+}
+
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";

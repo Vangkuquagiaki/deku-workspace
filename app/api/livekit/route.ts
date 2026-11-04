@@ -3,10 +3,12 @@ export const revalidate = 0;
 
 import { NextRequest, NextResponse } from "next/server";
 import { currentProfile } from "@/lib/current-profile";
-
-const defaultApiKey = process.env.LIVEKIT_API_KEY || "APIuPrn5sZxJxbr";
-const defaultApiSecret = process.env.LIVEKIT_API_SECRET || "FZVAX93toFvmStN4iVAgqrJPvc6h5cy1P0VcJpx8HSP";
-const defaultWsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || "wss://deku-p77u1a3n.livekit.cloud";
+import {
+  generateLiveKitToken,
+  DEFAULT_LIVEKIT_API_KEY,
+  DEFAULT_LIVEKIT_API_SECRET,
+  DEFAULT_LIVEKIT_URL,
+} from "@/lib/livekit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,9 +26,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const apiKey = defaultApiKey;
-    const apiSecret = defaultApiSecret;
-    const wsUrl = defaultWsUrl;
+    const apiKey = DEFAULT_LIVEKIT_API_KEY;
+    const apiSecret = DEFAULT_LIVEKIT_API_SECRET;
+    const wsUrl = DEFAULT_LIVEKIT_URL;
 
     if (!apiKey || !apiSecret || !wsUrl) {
       return NextResponse.json(
@@ -52,28 +54,22 @@ export async function GET(req: NextRequest) {
       // Continue with query param fallback
     }
 
-    const { AccessToken } = await import("livekit-server-sdk");
-
-    const at = new AccessToken(apiKey, apiSecret, {
+    const token = generateLiveKitToken({
+      apiKey,
+      apiSecret,
       identity: username,
       name: displayName,
-      metadata: JSON.stringify({
+      room,
+      metadata: {
         avatarUrl: imageUrl,
         name: displayName,
-      }),
-    });
-
-    at.addGrant({
-      room,
-      roomJoin: true,
+      },
       canPublish: true,
       canPublishData: true,
-      canSubscribe: true
+      canSubscribe: true,
     });
 
-    const jwtToken = await at.toJwt();
-
-    return NextResponse.json({ token: jwtToken });
+    return NextResponse.json({ token, serverUrl: wsUrl });
   } catch (error: any) {
     console.error("[LIVEKIT_GET_ERROR]", error);
     return NextResponse.json(

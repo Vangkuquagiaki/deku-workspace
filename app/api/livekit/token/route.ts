@@ -3,10 +3,12 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { currentProfile } from "@/lib/current-profile";
 import { db } from "@/lib/db";
-
-const defaultApiKey = process.env.LIVEKIT_API_KEY || "APIuPrn5sZxJxbr";
-const defaultApiSecret = process.env.LIVEKIT_API_SECRET || "FZVAX93toFvmStN4iVAgqrJPvc6h5cy1P0VcJpx8HSP";
-const defaultWsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || "wss://deku-p77u1a3n.livekit.cloud";
+import {
+  generateLiveKitToken,
+  DEFAULT_LIVEKIT_API_KEY,
+  DEFAULT_LIVEKIT_API_SECRET,
+  DEFAULT_LIVEKIT_URL,
+} from "@/lib/livekit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,9 +20,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing "room" parameter' }, { status: 400 });
     }
 
-    const apiKey = defaultApiKey;
-    const apiSecret = defaultApiSecret;
-    const wsUrl = defaultWsUrl;
+    const apiKey = DEFAULT_LIVEKIT_API_KEY;
+    const apiSecret = DEFAULT_LIVEKIT_API_SECRET;
+    const wsUrl = DEFAULT_LIVEKIT_URL;
 
     if (!apiKey || !apiSecret || !wsUrl) {
       return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
@@ -86,28 +88,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { AccessToken } = await import("livekit-server-sdk");
-
-    const at = new AccessToken(apiKey, apiSecret, {
+    const jwtToken = generateLiveKitToken({
+      apiKey,
+      apiSecret,
       identity,
       name: displayName,
-      metadata: JSON.stringify({
+      room,
+      metadata: {
         role,
         language,
         avatarUrl: profile?.imageUrl || "",
-      }),
-    });
-
-    at.addGrant({
-      room,
-      roomJoin: true,
+      },
       canPublish: true,
       canPublishData: true,
       canSubscribe: true,
       hidden: false,
     });
-
-    const jwtToken = await at.toJwt();
 
     return NextResponse.json({
       token: jwtToken,
@@ -115,6 +111,7 @@ export async function POST(req: NextRequest) {
       displayName,
       role,
       room,
+      serverUrl: wsUrl,
     });
   } catch (error) {
     console.error("[LIVEKIT_TOKEN_POST_ERROR]", error);
