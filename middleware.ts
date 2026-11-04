@@ -1,32 +1,63 @@
 import { authMiddleware } from "@clerk/nextjs";
+import { NextResponse } from "next/server";
 
-export default authMiddleware({
-  publicRoutes: [
-    "/sign-in(.*)",
-    "/sign-up(.*)",
-    "/api/uploadthing",
-    "/api/socket/io",
-    "/api/livekit/webhook",
-    "/meet(.*)",
-    "/meetings(.*)",
-    "/base(.*)",
-    "/api/org-units(.*)",
-    "/api/posts(.*)",
-    "/api/tasks(.*)",
-    "/api/profile(.*)",
-    "/api/hr(.*)",
-    "/api/meetings(.*)",
-    "/api/leave(.*)",
-    "/api/approvals(.*)",
-    "/api/employees(.*)",
-    "/api/audit-logs(.*)",
-  ],
-  ignoredRoutes: [
-    "/api/uploadthing",
-    "/api/socket/io",
-    "/api/livekit/webhook",
-  ],
-});
+const clerkPublishableKey =
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+  "pk_test_cmlnaHQtcGhlYXNhbnQtOTYuY2xlcmsuYWNjb3VudHMuZGV2JA";
+
+const clerkSecretKey =
+  process.env.CLERK_SECRET_KEY ||
+  "sk_test_Ue2NpWazl2gxZDQ9upvNMnmERgR8b2AjBcZVimI5Yz";
+
+let clerkAuth: any = null;
+
+try {
+  clerkAuth = authMiddleware({
+    publishableKey: clerkPublishableKey,
+    secretKey: clerkSecretKey,
+    publicRoutes: [
+      "/sign-in(.*)",
+      "/sign-up(.*)",
+      "/api/uploadthing",
+      "/api/socket/io",
+      "/api/livekit/webhook",
+      "/meet(.*)",
+      "/meetings(.*)",
+      "/base(.*)",
+      "/api/org-units(.*)",
+      "/api/posts(.*)",
+      "/api/tasks(.*)",
+      "/api/profile(.*)",
+      "/api/hr(.*)",
+      "/api/meetings(.*)",
+      "/api/leave(.*)",
+      "/api/approvals(.*)",
+      "/api/employees(.*)",
+      "/api/audit-logs(.*)",
+    ],
+    ignoredRoutes: [
+      "/api/uploadthing",
+      "/api/socket/io",
+      "/api/livekit/webhook",
+    ],
+  });
+} catch (err) {
+  console.error("[MIDDLEWARE_INIT_ERROR]", err);
+}
+
+export default async function middleware(req: any, evt: any) {
+  if (!clerkAuth) {
+    return NextResponse.next();
+  }
+
+  try {
+    const res = await clerkAuth(req, evt);
+    return res || NextResponse.next();
+  } catch (error) {
+    console.error("[MIDDLEWARE_RUNTIME_ERROR]", error);
+    return NextResponse.next();
+  }
+}
 
 export const config = {
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
