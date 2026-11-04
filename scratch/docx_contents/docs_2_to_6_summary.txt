@@ -1,0 +1,131 @@
+=== DOC 2: FILENAME: Kế hoạch chi tiết Phòng họp công ty có phiên dịch và ghi hình.docx === (Total chars: 24275, lines: 506)
+Key headings/sections:
+Mục tiêu là xây phòng họp video nội bộ giống Google Meet, có phụ đề dịch Việt–Anh theo thời gian thực và ghi hình kèm biên bản, dựa trên nền Next.js, Clerk, Prisma và LiveKit mà dự án hiện tại đã có.
+Giai đoạn 4
+Giai đoạn 5
+Giai đoạn
+Giai đoạn 0 và 1: Nền tảng và phòng họp cơ bản
+Giai đoạn 0 xử lý các vấn đề nền để khỏi vướng về sau, giai đoạn 1 cho ra một phòng họp dùng được; cả hai mất khoảng 1,5 tuần.
+Giai đoạn 0: Chuẩn bị (2–3 ngày)
+Giai đoạn 1: Họp cơ bản (khoảng 1 tuần)
+Giai đoạn 2: Ghi hình
+Giai đoạn 3: Phụ đề dịch Việt–Anh
+Giai đoạn 4: Biên bản, tìm kiếm và tóm tắt
+Phần tóm tắt luôn ghi rõ "do AI tạo" và cho host chỉnh sửa trước khi gửi, vì có thể sai tên người hoặc bỏ sót việc.
+Giai đoạn 5: Phiên dịch bằng giọng nói
+Giai đoạn này đọc bản dịch thành tiếng cho người nghe, nên chỉ làm khi phụ đề ở giai đoạn 3 đã đạt chất lượng; ước tính 2 tuần.
+Giai đoạn 3 được nhấn mạnh vì đây là phần quyết định giá trị của hệ thống; nếu chất lượng nhận dạng tiếng Việt chưa đạt thì nên dừng ở đó và thử nhà cung cấp khác trước khi làm tiếp giai đoạn 4 và 5. Thời gian trên chưa tính khoảng thử nghiệm với người dùng thật.
+
+
+=== DOC 3: FILENAME: Kế hoạch tích hợp tính năng nội bộ doanh nghiệp vào Discord clone.docx === (Total chars: 57172, lines: 745)
+Key headings/sections:
+1. Tổng quan
+2. Quyết định cần chốt trước
+Giai đoạn đầu: nhập CSV hằng tháng hoặc HR nhập tay; chấm công tự động để mở rộng
+3. Mô hình dữ liệu
+Mục đích
+4. Lộ trình các giai đoạn
+5. Công việc và tiêu chí hoàn thành từng giai đoạn
+Giai đoạn
+1. Tổ chức và hồ sơ nhân sự
+2. Cổng tin nội bộ
+3. Base theo tổ
+4. Họp đa ngôn ngữ và nối với Base
+5. Dữ liệu demo và hoàn thiện
+6. Báo cáo và bảo vệ
+6. Ưu tiên và kịch bản demo
+Giai đoạn 0, 1 và 4
+Giai đoạn 2 và 3
+7. Rủi ro và câu hỏi còn mở
+Giai đoạn 0 bắt đầu bằng việc build và chạy được bản hiện có, sửa lỗi trước khi thêm bảng mới.
+8. Kế hoạch rút gọn cho hạn nộp 5/11
+9. Bảng kế hoạch tổng hợp: hiện có và việc cần làm
+10. Chi tiết từng hạng mục
+10.1 Build backend Spring Boot (28/10)
+10.2 Chốt stack của Discord clone (28/10)
+10.3 Tổ chức và kênh theo tổ (29/10)
+10.4 Thẻ hồ sơ và phân quyền (30/10)
+10.5 Nhập nhân sự bằng CSV (31/10)
+10.6 Bảng tin (1/11)
+10.7 Thử dịch vụ AI họp (2/11)
+10.8 Nối họp vào bảng việc của tổ (2/11)
+
+
+=== DOC 4: FILENAME: Nguồn dữ liệu thực tế cho Seed Data – Meeting Intelligence Platform.docx === (Total chars: 7093, lines: 160)
+Key headings/sections:
+1. Cuộc họp thật
+1.366 cuộc họp, 6.892 cặp đoạn họp và tóm tắt
+2. Tiếng Việt và song ngữ Việt–Anh
+3. Tin nhắn kiểu Discord
+4. Cách ghép vào dự án
+5. Dữ liệu đa ngôn ngữ
+2.880 giờ, 78 nghìn người nói
+3.001 câu dịch song song
+
+
+=== DOC 5: FILENAME: Tham_Khao_Lark_Chon_Loc_Va_Ke_Hoach_Thuc_Hien.docx === (Total chars: 31174, lines: 468)
+Key headings/sections:
+1. Kết luận ngắn
+2. Lark và Lark Base gồm những gì
+2.1 Các mô-đun chính của Lark
+2.2 Lark Base
+3. Bảng chọn lọc: lấy gì, để sau gì, bỏ gì
+Mục Bảng tin: HR đăng, ghim, đánh dấu đã đọc, HR xem danh sách đã đọc. Không làm bình luận.
+Phần họp đa ngôn ngữ đã có ở bộ AI.
+4. Ba tầng phân quyền, áp từ Lark Base
+1. Bảng hoặc kênh
+2. Bản ghi (dòng)
+3. Trường (cột)
+5. Những điều chỉnh vào kế hoạch cũ
+6. Các bước tiến hành chi tiết
+6.0 Kiểm tra điểm xuất phát (làm trước, mất 15 phút)
+6.1 Lịch gợi ý và thứ tự cắt
+Mục tiêu: có một backend chạy được và biết chính xác tính năng mới nằm ở đâu.
+Mục tiêu: đăng nhập bằng tài khoản giả, chỉ thấy phòng ban và kênh của tổ mình.
+Mục tiêu: cùng một thẻ hồ sơ, đổi tài khoản thì hiện khác trường; gọi API thiếu quyền thì bị chặn.
+Mục tiêu: HR tải một file là cập nhật được nhân sự và ngày công; chứng minh công ty thật chỉ cần đưa file của họ vào.
+Mục tiêu: HR đăng thông báo, toàn thể nhân sự thấy và đánh dấu đã đọc, HR biết ai chưa đọc.
+Mục tiêu: việc từ cuộc họp hiện trong bảng việc của đúng tổ, xem được dạng Bảng và dạng Kanban.
+Mục tiêu: nối phần AI họp với bảng việc, theo kiểu automation của Lark Base nhưng chỉ có một luật cố định.
+Mục tiêu: dựng lại toàn bộ từ database trống bằng một lệnh, và đổi vai trò nhanh khi demo.
+Mục tiêu: có đủ tài liệu để nộp và một video dự phòng.
+7. Câu hỏi có thể gặp khi bảo vệ
+8. Nguồn tham khảo
+9. Bổ sung ngày 2/11: phần chưa có trong file này
+Mục 12, các tính năng bổ sung M1 đến M9: đồng ý ghi âm (M1, quan trọng nhất vì giọng nói là dữ liệu cá nhân), biên bản họp, nhắc việc quá hạn, thông báo, danh bạ, ngôn ngữ và múi giờ, nghỉ phép, nhật ký truy cập, việc của tôi.
+Mục 13, phòng họp có ghi hình và phiên dịch: hiện chưa có. Làm được trước hạn là ghi hình trong trình duyệt (chỉ chạy trên HTTPS hoặc localhost), dịch bản tóm tắt sang tiếng Việt hoặc Anh, và thử phiên âm cuộc họp lẫn Việt và Anh. Phiên dịch trực tiếp và phòng họp video nhiều người không làm, và không nói với hội đồng là đã có.
+
+
+=== DOC 6: FILENAME: Thiet_Ke_He_Thong_Nhan_Su_Giao_Tiep_AI_Doanh_Nghiep.docx === (Total chars: 30775, lines: 672)
+Key headings/sections:
+1. Tóm tắt điều hành và ranh giới phạm vi
+Mục tiêu: xây dựng nền tảng nội bộ giúp doanh nghiệp quản lý cơ cấu tổ chức và nhân viên, giao tiếp theo phòng/tổ, giao và theo dõi việc, xử lý đề xuất/nghỉ phép, tổ chức cuộc họp có AI hỗ trợ và giám sát hoạt động theo đúng quyền. Giai đoạn đầu không phát triển hệ thống tính lương toàn diện hoặc video conference đa điểm từ đầu.
+1.1. Đã được mô tả trong tài liệu gốc — KHÔNG tự nhận đã chạy
+1.2. Phân định đầu ra
+2. Danh mục chức năng tổng thể
+2.1. Điều kiện nghiệm thu chức năng HR thiết yếu
+3. Vai trò, quyền và phạm vi dữ liệu
+3.1. Quy tắc thực thi
+1. Tất cả request lấy danh tính và workspace hiện hành từ token/phiên tin cậy; không tin userId, role hoặc orgUnitId tự khai trong body.
+2. Thực hiện kiểm tra quyền ở service trước query hoặc gắn predicate vào query; lọc dữ liệu ngay trong DB cho danh sách phân trang.
+3. Quyền thao tác = quyền theo vai trò ∩ phạm vi tổ chức ∩ quyền đối tượng ∩ quyền trường ∩ chính sách nhạy cảm. Mặc định từ chối khi thiếu bất kỳ điều kiện bắt buộc nào.
+4. Nhân viên có nhiều quan hệ tổ: có thể hợp các quyền cấp, nhưng không được vượt giới hạn tenant, thông tin tối mật hoặc luật DENY rõ ràng.
+5. Ẩn trường trái quyền ngay từ DTO response; ghi audit cho xem/xuất/sửa thông tin nhạy cảm.
+6. Kiểm tra tương tự ở tải file, WebSocket subscription, tìm kiếm, AI truy vấn tài liệu, import/export và API legacy.
+3.2. Ví dụ phân quyền dữ liệu
+4. Quy trình nghiệp vụ đầu-cuối
+4.1. Tuyển dụng → nhân viên mới → hội nhập
+1. HR tiếp nhận yêu cầu tuyển dụng, tạo ứng viên và các vòng tuyển (P2).
+2. Khi được nhận, HR tạo employee record và mã nhân viên, xác định ngày hiệu lực và người quản lý trực tiếp.
+3. Hệ thống gửi lời mời đặt mật khẩu (không dùng một mật khẩu mặc định chung), gán phòng/tổ và quyền sau kích hoạt.
+4. Tạo checklist onboarding: cấp thiết bị, tài liệu nội quy, đào tạo, cuộc gặp quản lý, đánh giá thử việc.
+5. Đến mốc thử việc, hệ thống nhắc đúng người; quyết định chính thức/không tiếp tục được người có thẩm quyền xác nhận.
+4.2. Nhân viên xin nghỉ phép
+1. Nhân viên xem số dư và chính sách áp dụng; nhập loại phép, từ/đến, buổi nghỉ, lý do và người bàn giao.
+2. Hệ thống kiểm tra trùng ngày, người thay thế và số dư dự kiến; tạo yêu cầu ở trạng thái PENDING.
+3. Gửi người duyệt theo workflow do công ty cấu hình: tổ trưởng → trưởng phòng → HR tùy loại phép.
+4. Người duyệt APPROVE/REJECT/REQUEST_CHANGES; ghi thời điểm, lý do, trạng thái, và idempotency.
+5. Chỉ khi duyệt xong mới ghi biến động số dư và tạo lịch nghỉ; khi hủy đơn thì thực hiện giao dịch đảo có audit.
+4.3. Họp → AI → xác nhận → việc của tổ
+1. Cuộc họp thuộc workspace + org_unit; lưu danh sách người tham dự và trạng thái cho phép ghi âm/cơ sở xử lý theo chính sách.
+

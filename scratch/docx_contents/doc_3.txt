@@ -1,0 +1,745 @@
+FILENAME: Kế hoạch tích hợp tính năng nội bộ doanh nghiệp vào Discord clone.docx
+
+Kế hoạch tích hợp tính năng nội bộ doanh nghiệp vào Discord clone
+Oct 20, 2026 · @nguyenminhthien
+Cập nhật 31/10/2026. Tài liệu này là nguồn chính của kế hoạch. Các mục 8, 9, 10, 11 và 12 là phần đang dùng cho hạn nộp 5/11. Các mục 4 đến 6 là lộ trình dài hạn đầy đủ, dùng làm hướng phát triển sau đồ án. File Word Tham_Khao_Lark_Chon_Loc_Va_Ke_Hoach_Thuc_Hien.docx có bản chi tiết các bước B1 đến B9.
+1. Tổng quan
+Ba việc bạn làm hằng ngày ở công ty (đọc tin nội bộ, chat theo tổ kèm hồ sơ đồng nghiệp, làm việc trên app riêng của tổ) đều ánh xạ được vào cấu trúc Discord: Server, Category, Channel. Kế hoạch này thêm ba khối đó vào clone, rồi nối khối họp AI đã có vào cùng một hệ thống.
+Thực tế ở công ty
+Tính năng trong Discord clone
+Dựa trên phần nào của Discord
+Trang web nội bộ: bài về nhân sự, luật mới hoặc luật sửa đổi, tin chung của công ty, tuyên dương nhân sự
+Kênh Bảng tin: bài viết có danh mục, ghim, bình luận; bài tuyên dương gắn người được khen; chỉ vai trò được cấp quyền mới đăng
+Kênh Announcement và Forum
+Chat riêng của tổ, nhóm để kiểm tra công việc
+Công ty = Server, phòng ban = Category, tổ hoặc nhóm = kênh private; nhân viên tự vào kênh theo tổ của mình
+Server, Category, kênh private theo vai trò
+Thông tin viên: tên, chức vụ, thâm niên, số ngày công
+Hồ sơ nhân sự hiện thành thẻ khi bấm vào tên trong chat; mỗi trường có quyền xem riêng
+Thẻ hồ sơ người dùng
+App base riêng theo tổ để giao nội dung làm việc
+Base: bảng công việc của tổ, có cột tùy chỉnh, xem dạng bảng hoặc Kanban, giao việc cho từng nhân sự
+Discord không có: là phần mới
+Họp (đã làm): ghi âm, phiên âm, tóm tắt, action items
+Kênh họp: sau họp, task do AI trích xuất rơi vào Base của đúng tổ
+Kênh voice, mở rộng bằng AI
+Thứ tự làm: tổ chức và quyền trước, vì mọi khối sau đều phải trả lời câu hỏi "ai được xem cái gì".
+2. Quyết định cần chốt trước
+Năm quyết định dưới đây chặn mọi việc sau nếu để trống; mỗi cái có một đề xuất mặc định để bạn có thể làm tiếp mà chưa cần trả lời hết.
+Quyết định
+Vì sao phải chốt trước
+Đề xuất mặc định
+Mô hình tổ chức
+Mọi quyền và mọi kênh đều gắn vào cây tổ chức
+Cây hai cấp: Phòng ban (Category) rồi Tổ hay nhóm (kênh private); mỗi nhân sự có một tổ chính, thêm được tổ phụ
+Ai xem được trường hồ sơ nào
+Lộ thông tin nhân sự sai người là lỗi nghiêm trọng nhất của khối này
+Ma trận quyền bên dưới; kiểm tra ở backend, không chỉ ẩn trên giao diện
+Số ngày công lấy từ đâu
+Thiếu nguồn thì thẻ hồ sơ chỉ là con số tự gõ
+Giai đoạn đầu: nhập CSV hằng tháng hoặc HR nhập tay; chấm công tự động để mở rộng
+Stack của Discord clone
+Quyết định bảng và API viết bằng gì
+Chưa biết clone đang dùng gì: xem câu hỏi ở mục 7; kế hoạch này viết theo bảng PostgreSQL của file đặc tả để áp được cho cả hai
+Dữ liệu demo
+Không nên đưa dữ liệu nhân sự thật vào bản demo
+Sinh nhân sự giả (tên, chức vụ, ngày vào làm, ngày công đều là dữ liệu tạo)
+Ma trận quyền xem hồ sơ nhân sự (đề xuất)
+Chỉnh để khớp quy định thật của công ty bạn; lương và đánh giá hiệu suất không đưa vào clone.
+Trường
+Chính chủ
+Cùng tổ
+Tổ trưởng
+Trưởng phòng
+HR
+Tên, ảnh, chức vụ
+Xem
+Xem
+Xem
+Xem
+Xem và sửa
+Tổ và phòng ban
+Xem
+Xem
+Xem
+Xem
+Xem và sửa
+Thâm niên (ngày vào làm)
+Xem
+Xem
+Xem
+Xem
+Xem và sửa
+Số ngày công
+Xem
+Không
+Xem (tổ mình)
+Xem (phòng mình)
+Xem và sửa
+Tuyên dương, khen thưởng
+Xem
+Xem
+Xem
+Xem
+Xem và sửa
+3. Mô hình dữ liệu
+Cần 15 bảng mới (chưa kể các bảng chat của giai đoạn 0) và hai thay đổi trên channels, chia bốn nhóm. Thâm niên không lưu thành số: tính từ ngày vào làm (hired_on) để không bao giờ lệch.
+Nhóm
+Bảng
+Mục đích
+Trường chính
+Tổ chức và nhân sự
+org_units
+Cây phòng ban và tổ
+workspace_id, parent_id, type (DEPARTMENT, TEAM), name
+Tổ chức và nhân sự
+org_unit_members
+Ai thuộc tổ nào, vai trò gì
+org_unit_id, user_id, role (HEAD, LEAD, MEMBER), is_primary
+Tổ chức và nhân sự
+employee_profiles
+Thẻ hồ sơ hiện trong chat
+user_id, employee_code, job_title, hired_on, employment_status
+Tổ chức và nhân sự
+attendance_records
+Ngày công theo tháng
+user_id, month, worked_days, source (CSV, MANUAL), imported_by
+Chat theo tổ
+channels (sửa)
+Gắn kênh vào tổ; thêm loại kênh Bảng tin
+thêm org_unit_id; thêm giá trị ANNOUNCEMENT vào channel_type
+Cổng tin nội bộ
+post_categories
+Danh mục bài: Nhân sự, Pháp luật, Công ty, Tuyên dương
+workspace_id, name, can_post_role
+Cổng tin nội bộ
+posts
+Bài viết
+channel_id, category_id, author_id, title, body, is_pinned, published_at, audience_org_unit_id
+Cổng tin nội bộ
+post_comments
+Bình luận dưới bài
+post_id, author_id, content
+Cổng tin nội bộ
+post_reads
+Đã đọc, để HR biết ai chưa xem thông báo bắt buộc
+post_id, user_id, read_at
+Cổng tin nội bộ
+commendations
+Tuyên dương gắn người được khen
+post_id, user_id, reason, awarded_by
+Base theo tổ
+bases
+Một app base của một tổ
+org_unit_id, name, created_by
+Base theo tổ
+base_fields
+Cột tùy chỉnh
+base_id, name, field_type (TEXT, NUMBER, DATE, SELECT, PERSON), options (JSONB), position
+Base theo tổ
+base_records
+Mỗi dòng công việc
+base_id, values (JSONB: mã cột sang giá trị), assignee_id, source_meeting_id
+Base theo tổ
+base_views
+Kiểu xem: bảng hay Kanban
+base_id, type (TABLE, KANBAN), config (JSONB)
+Họp đa ngôn ngữ
+glossary_terms
+Bảng thuật ngữ chuyên ngành
+workspace_id, term, translations (JSONB: mã ngôn ngữ sang bản dịch)
+Họp đa ngôn ngữ
+segment_translations
+Bản dịch từng đoạn transcript (làm nếu còn thời gian, xem mục 6)
+segment_id, lang, text
+Các bảng dùng lại: users, workspaces, workspace_members, meetings, transcripts, transcript_segments, tasks. Các bảng channels, channel_members, messages, message_reactions, notifications, audit_logs có trong file đặc tả DDL nhưng backend Spring Boot đã dựng chưa có, nên giai đoạn 0 tạo chúng; hai thay đổi trên channels (cột org_unit_id, loại ANNOUNCEMENT) đi cùng migration đó.
+Migration theo Flyway, mỗi nhóm việc một file. Bản nộp 5/11: V2__org_and_profiles.sql, V3__news.sql, V4__team_board.sql, V5__audit_and_consent.sql. Bản mở rộng ở mục 12: V6__notifications.sql, V7__preferences.sql, V8__leave_requests.sql. Base tùy biến (các bảng bases, base_fields, base_records, base_views) và bảng thuật ngữ để sau, đặt từ V9. Nếu clone dùng Prisma thì mỗi file tương ứng một migration Prisma.
+Nối họp với Base
+Mỗi tổ có sẵn một base mặc định tên "Việc từ cuộc họp" với các cột: Tiêu đề, Người làm, Hạn, Trạng thái, Nguồn.
+Cuộc họp phải biết thuộc tổ nào: thêm meetings.org_unit_id, hoặc lấy từ kênh họp nếu file đặc tả đã có channel_id. Cuộc họp không thuộc tổ nào thì action item chỉ nằm ở bảng tasks, không đẩy vào Base.
+Tiêu đề lấy từ tasks.title. Người làm chỉ điền khi tên khớp một thành viên của tổ, không khớp thì để trống, vì AI không được đoán. Hạn hiện nguyên văn deadline_text, không tự đổi thành ngày.
+Chống trùng: thêm base_records.source_task_id có ràng buộc duy nhất, để bấm xác nhận hai lần không tạo hai dòng.
+Cách áp quyền ở backend
+Một service duy nhất, tạm đặt tên ProfileAccessPolicy, nhận (người xem, người được xem) và trả về tập trường được phép. Controller và WebSocket đều gọi nó, không nơi nào tự lọc.
+Quan hệ dùng để tính: chính chủ, cùng tổ, tổ trưởng của tổ đó, trưởng phòng của phòng đó, HR.
+HR chưa có trong các vai trò OWNER, ADMIN, MEMBER, GUEST của file đặc tả: thêm cờ is_hr vào workspace_members, hoặc thêm một vai trò mới. Chọn một trong hai ở giai đoạn 1.
+Kiểm thử sinh thẳng từ ma trận ở mục 2: mỗi ô một ca kiểm thử.
+Ghi audit_logs mỗi lần có người xem số ngày công của người khác.
+Lương và đánh giá hiệu suất không có cột nào trong database, nên không thể bị lộ qua API.
+4. Lộ trình các giai đoạn
+lộ trình · 7 giai đoạn, 3 cổng kiểm
+Làm lần lượt từ giai đoạn 0 đến 6. Ba giai đoạn tô màu là bắt buộc, V2 đến V6 là số file migration Flyway của từng giai đoạn. Mỗi cổng kiểm phải qua thì mới sang giai đoạn kế tiếp.
+5. Công việc và tiêu chí hoàn thành từng giai đoạn
+Mỗi giai đoạn chỉ được coi là xong khi đạt hết tiêu chí ở cột cuối. Chưa đạt thì không sang giai đoạn sau.
+Giai đoạn
+Việc chính
+Tiêu chí hoàn thành
+0. Nền tảng chat
+Migration V2. Entity và API cho channels, channel_members, messages, audit_logs. Gửi và nhận tin theo thời gian thực bằng WebSocket. Giao diện danh sách kênh và khung chat.
+Hai tài khoản chat với nhau trong một kênh, tin nhắn còn sau khi tải lại trang. Người ngoài kênh riêng không đọc được tin.
+1. Tổ chức và hồ sơ nhân sự
+Migration V3. Cây phòng ban và tổ (org_units). Tạo kênh riêng tự động cho mỗi tổ. Thẻ hồ sơ hiện khi bấm vào tên thành viên: họ tên, chức vụ, thâm niên tính từ hired_on, ngày công tháng này. Nhập ngày công bằng file CSV. Áp ma trận quyền ở backend.
+Tổ trưởng xem được đủ thẻ của người trong tổ. Thành viên thường chỉ thấy các trường được phép. Gọi API trực tiếp bằng token của người không có quyền phải trả 403, không chỉ ẩn trên giao diện.
+2. Cổng tin nội bộ
+Migration V4. Kênh loại ANNOUNCEMENT chỉ vai trò được phép mới đăng. Bốn danh mục: Nhân sự, Pháp luật, Công ty, Tuyên dương. Ghim bài, bình luận, đánh dấu đã đọc. Bài tuyên dương gắn người được khen và hiện trên thẻ hồ sơ của họ.
+HR đăng bài, thành viên thấy trong Bảng tin và nhận thông báo. HR xem được danh sách ai chưa đọc bài bắt buộc. Thành viên thường không đăng được vào kênh Bảng tin.
+3. Base theo tổ
+Migration V5. Tạo base trong tổ, thêm cột tùy chỉnh (văn bản, số, ngày, chọn, người), thêm và sửa dòng, hai kiểu xem là bảng và Kanban. Gán dòng cho người trong tổ.
+Một tổ tự tạo base việc của mình và kéo thả thẻ giữa các cột trạng thái. Người ngoài tổ không thấy base. Giá trị lưu trong cột values dạng JSONB, không phải sửa schema khi thêm cột mới.
+4. Họp đa ngôn ngữ và nối với Base
+Migration V6. Bảng thuật ngữ cho Whisper và Claude. Bản dịch từng đoạn transcript nếu còn thời gian. Sau khi người dùng xác nhận action item, tạo một dòng trong base "Việc từ cuộc họp" của tổ theo quy tắc ở mục 3, lưu source_meeting_id và source_task_id.
+Họp bằng tiếng Việt kèm thuật ngữ tiếng Anh cho ra transcript đúng thuật ngữ. Action item đã xác nhận xuất hiện trong Base, bấm vào xem được đoạn trích nguyên văn từ cuộc họp. Item chưa xác nhận không tự lọt vào Base.
+5. Dữ liệu demo và hoàn thiện
+Seed dữ liệu giả: 2 phòng, 4 tổ, 25 người, 30 bài, 3 base, 5 cuộc họp. Xử lý lỗi, trạng thái trống, phân trang. Chạy thử theo kịch bản demo ở mục 6.
+Dựng lại toàn bộ từ database trống bằng một lệnh. Chạy hết kịch bản demo không lỗi hai lần liên tiếp.
+6. Báo cáo và bảo vệ
+Cập nhật báo cáo Word và file hỏi đáp với phần tính năng nội bộ. Chụp màn hình từng chức năng. Quay video demo dự phòng.
+Báo cáo có sơ đồ dữ liệu mới và ma trận quyền. Có video demo chạy được khi mất mạng.
+Quy tắc chung cho mọi giai đoạn: viết kiểm thử cho điều kiện phân quyền trước khi viết giao diện, vì đây là chỗ dễ sai nhất và hội đồng dễ hỏi nhất. Dữ liệu demo luôn là dữ liệu giả, không dùng thông tin thật của công ty hay đồng nghiệp. Nếu Discord clone của bạn đã có sẵn kênh và tin nhắn, bỏ giai đoạn 0 và chỉ thêm cột org_unit_id cùng loại kênh ANNOUNCEMENT vào giai đoạn 1.
+6. Ưu tiên và kịch bản demo
+Nếu thiếu thời gian thì cắt gì
+Mức
+Nội dung
+Lý do
+Bắt buộc
+Giai đoạn 0, 1 và 4
+Chat theo tổ, thẻ hồ sơ có phân quyền, và họp AI đổ việc vào Base. Đây là phần tạo khác biệt so với Discord thường.
+Nên có
+Giai đoạn 2 và 3
+Cổng tin và Base đầy đủ làm sản phẩm giống công cụ thật. Nếu thiếu thì bản rút gọn: Bảng tin chỉ cần đăng và xem, Base chỉ cần kiểu bảng, bỏ Kanban.
+Để sau
+Bình luận dưới bài, dịch transcript sang nhiều ngôn ngữ, nhập ngày công tự động từ phần mềm chấm công
+Đáng làm nhưng không ảnh hưởng câu chuyện chính của đồ án.
+Kịch bản demo 7 phút
+Đăng nhập bằng tài khoản thành viên. Cho thấy sidebar chia theo phòng ban và tổ, chỉ hiện kênh mình được vào.
+Vào Bảng tin. Mở một bài pháp luật mới và một bài tuyên dương, cho thấy thông báo chưa đọc.
+Bấm vào tên một đồng nghiệp trong kênh tổ. Thẻ hồ sơ hiện họ tên, chức vụ, thâm niên, ngày công.
+Đổi sang tài khoản tổ trưởng. Cùng thẻ đó nay hiện thêm trường. Đổi sang tài khoản người tổ khác, trường đó biến mất. Đây là điểm chứng minh phân quyền.
+Vào Base của tổ. Kéo một thẻ từ "Đang làm" sang "Xong".
+Upload bản ghi âm cuộc họp có tiếng Việt lẫn thuật ngữ tiếng Anh. Hiện transcript và bản tóm tắt.
+Xác nhận hai action item. Hai dòng mới xuất hiện trong Base, bấm vào để xem đoạn trích nguyên văn. Nói rõ AI không tự thêm gì khi chưa được người xác nhận.
+7. Rủi ro và câu hỏi còn mở
+Rủi ro chính
+Rủi ro
+Mức độ
+Cách xử lý
+Dùng dữ liệu nhân sự thật của công ty làm demo, vi phạm quy định nội bộ và bảo mật
+Cao
+Chỉ dùng dữ liệu giả do seed tạo. Không đưa mã nguồn hay tài liệu của công ty vào dự án.
+Phân quyền chỉ ẩn trên giao diện, gọi API vẫn lấy được dữ liệu
+Cao
+Viết kiểm thử phân quyền trước, lọc trường ở tầng dịch vụ backend.
+Phân tán: làm cả chat, cổng tin, Base và họp AI cùng lúc nên không cái nào xong
+Cao
+Làm đúng thứ tự giai đoạn, cổng kiểm ở mục 5. Cắt theo bảng ưu tiên ở mục 6.
+Backend Spring Boot chưa từng biên dịch trên máy thật, có thể lỗi khi chạy lần đầu
+Trung bình
+Giai đoạn 0 bắt đầu bằng việc build và chạy được bản hiện có, sửa lỗi trước khi thêm bảng mới.
+WebSocket và chat thời gian thực phức tạp hơn dự kiến
+Trung bình
+Bản đầu có thể dùng polling mỗi vài giây, nâng lên WebSocket sau nếu còn thời gian.
+Base tùy biến quá rộng, sa vào làm lại cả Airtable
+Trung bình
+Chỉ 5 kiểu cột và 2 kiểu xem. Không làm công thức, không làm liên kết giữa các bảng.
+Câu hỏi cần bạn trả lời
+Clone Discord hiện tại dùng stack gì? Spring Boot như backend đã dựng, hay Node/Prisma như bản kế hoạch seed bạn đã dán trước? Kế hoạch này viết theo bảng PostgreSQL nên áp cho cả hai, nhưng giai đoạn 0 khác nhau tùy câu trả lời.
+Hạn nộp và bạn làm một mình hay có nhóm? Còn bao nhiêu tuần quyết định độ dài mỗi giai đoạn và việc cắt ở mục 6.
+Ngày công lấy từ đâu? Phần mềm chấm công công ty có xuất file CSV không? Nếu không, nhập tay là đủ cho đồ án.
+Quy tắc quyền xem hồ sơ thật của công ty là gì? Bảng ở mục 2 là đề xuất của tôi. Bạn sửa cho đúng theo cách công ty đang làm, nhưng không cần gửi số liệu thật cho tôi.
+Thầy hướng dẫn có chấp nhận đồ án mở rộng phạm vi này không? Nên hỏi sớm, vì nó quyết định có làm giai đoạn 2 và 3 hay không.
+8. Kế hoạch rút gọn cho hạn nộp 5/11
+Từ 31/10 đến 5/11 còn 6 ngày, nên mục này thay cho lộ trình ở mục 4 và 5. Nguyên tắc: làm một luồng dọc chạy trọn được, mỏng nhưng đúng, thay vì làm sâu từng khối. Luồng đó là: nhân sự vào hệ thống, chia theo tổ, thấy thẻ hồ sơ đúng quyền, họp có người tham gia đồng ý ghi âm, việc từ cuộc họp vào bảng việc của tổ.
+Lịch từng ngày
+Ngày
+Việc
+Xong khi
+T7 31/10
+Chốt stack của clone, build backend. Tổ chức và kênh theo tổ (mục 10.1 đến 10.3).
+Backend chạy, đăng nhập được. Chỉ thấy kênh của tổ mình.
+CN 1/11
+Thẻ hồ sơ và phân quyền ba tầng, kèm kiểm thử (mục 10.4).
+Cùng một thẻ, đổi tài khoản thì hiện khác trường; thiếu quyền trả 403.
+T2 2/11
+Nối họp vào bảng việc của tổ, hai kiểu xem Bảng và Kanban, luật xác nhận việc (mục 10.7, 10.8).
+Action item đã xác nhận hiện đúng ở bảng việc của tổ.
+T3 3/11
+Đồng ý ghi âm cuộc họp (M1 ở mục 12). Seed dữ liệu giả. Đóng băng tính năng. Chạy kịch bản demo. Bảng tin bản tối thiểu (mục 10.6) nay là bắt buộc, xem mục 14 về bố cục và lịch chỉnh lại.
+Dựng lại từ database trống bằng một lệnh; kịch bản chạy không lỗi.
+T4 4/11
+Báo cáo, ảnh chụp, video dự phòng (mục 10.10). Nếu đã xong hết: nhập CSV (mục 10.5).
+Báo cáo và video xong.
+T5 5/11
+Dự phòng và nộp.
+Nếu một ngày trễ, cắt theo thứ tự: Bảng tin trước, rồi đến nhập CSV. Không cắt thẻ hồ sơ có phân quyền và việc nối họp vào bảng việc.
+Để ngoài phạm vi nộp và cách nói với thầy
+Điều còn thiếu
+Cách xử lý cho 5/11
+Ứng dụng điện thoại, ứng dụng máy tính Windows và Apple
+Chỉ bản web. Ghi vào phần hướng phát triển: web có thể đóng gói thành ứng dụng cài được mà không viết lại.
+Chưa có dữ liệu của công ty thật
+Dùng dữ liệu giả do seed tạo. Chức năng tải CSV chứng minh công ty thật chỉ cần đưa file của họ vào là chạy.
+Chưa có nguồn để cập nhật nhân sự và thông tin cấp trên ban hành
+Đã có trong kế hoạch: tải CSV cho nhân sự, kênh Bảng tin cho thông báo cấp trên.
+Nhiều quốc gia, nhiều ngôn ngữ
+Họp đa ngôn ngữ đã làm ở bộ AI (Whisper nhận dạng ngôn ngữ). Giao diện đa ngôn ngữ chỉ làm tiếng Việt và tiếng Anh nếu clone có sẵn hệ thống dịch giao diện, còn không thì bỏ.
+Chạy trên mạng công khai
+Demo chạy trên máy cá nhân; có video dự phòng.
+Base tùy biến, cổng tin đầy đủ (bình luận, tuyên dương gắn người)
+Để sau, ghi vào phần hướng phát triển.
+9. Bảng kế hoạch tổng hợp: hiện có và việc cần làm
+Bảng này gộp hiện trạng dự án (cập nhật 28/10) với lịch rút gọn ở mục 8. Khi có thay đổi, sửa ở đây trước.
+Hạng mục
+Hiện trạng
+Việc cần làm
+Ngày
+Xong khi
+Backend Spring Boot
+Đã viết (46 file, 10 bảng), chưa từng build
+Build trên máy bạn, sửa lỗi
+31/10
+Chạy được, đăng ký và đăng nhập được
+Discord clone trên web
+Chưa biết viết bằng gì, đã có kênh và tin nhắn chưa
+Chốt stack, chạy được trên máy; quyết định có làm giai đoạn 0
+31/10
+Biết rõ cần thêm gì vào clone
+Tổ chức và kênh theo tổ
+Chưa có
+org_units, kênh riêng cho mỗi tổ, sidebar chia theo phòng ban
+31/10
+Chỉ thấy kênh của tổ mình
+Thẻ hồ sơ và phân quyền
+Chưa có
+employee_profiles, ProfileAccessPolicy, kiểm thử theo ma trận mục 2
+1/11
+Đổi tài khoản thì hiện khác trường; thiếu quyền trả 403
+Dịch vụ AI họp (Python)
+Xong, đã chạy ở localhost:8000
+Thử với một file họp có tiếng Việt lẫn tiếng Anh
+2/11
+Transcript và action item hợp lý
+Nối họp vào bảng việc của tổ
+Backend đã có xác nhận action item (tasks); chưa gắn vào tổ
+Gắn cuộc họp vào tổ, hiện Kanban ba cột
+2/11
+Action item đã xác nhận hiện đúng tổ
+Đồng ý ghi âm cuộc họp (M1)
+Chưa có
+Thông báo ghi âm, người tham gia đồng ý, chặn tải ghi âm khi chưa đủ đồng ý
+3/11
+Chỉ xử lý ghi âm khi mọi người tham gia đã đồng ý
+Dữ liệu demo
+Chưa có; đã có danh sách nguồn dữ liệu thật để tham khảo
+Seed dữ liệu giả (phòng, tổ, nhân sự, bài, cuộc họp)
+3/11
+Dựng lại bằng một lệnh; kịch bản demo chạy không lỗi
+Bảng tin (thông báo cấp trên)
+Chưa có
+HR đăng, thành viên nhận thông báo và đánh dấu đã đọc
+3/11, nếu còn giờ
+Thành viên thường không đăng được
+Nhập nhân sự bằng CSV
+Chưa có
+HR tải file thêm và cập nhật nhân sự, nhập ngày công
+4/11, nếu đã xong hết
+Tải CSV mẫu thì nhân sự hiện đúng
+Báo cáo và bảo vệ
+Có 4 file Word (báo cáo, giới thiệu, hỏi đáp, tổng quan)
+Thêm phần tính năng nội bộ, ảnh chụp, video demo dự phòng
+4/11
+Báo cáo và video xong
+Nộp
+Dự phòng và nộp
+5/11
+Không làm trong đợt này: ứng dụng điện thoại và máy tính, Base cột tùy chỉnh, bình luận và tuyên dương gắn người, dịch transcript, dữ liệu công ty thật.
+10. Chi tiết từng hạng mục
+Mỗi hạng mục dưới đây khớp với một dòng ở mục 9. Tên bảng và đường dẫn API là đề xuất, đổi được cho khớp clone của bạn.
+10.1 Build backend Spring Boot (28/10)
+Cài JDK 21, Maven, Docker Desktop.
+Trong thư mục meeting-platform-backend: docker compose up -d để bật PostgreSQL, rồi mvn spring-boot:run.
+Kiểm tra application.yml: địa chỉ dịch vụ AI phải trỏ đúng http://localhost:8000, thông tin database khớp docker-compose.yml.
+Flyway tự chạy V1__init_schema.sql. Kiểm tra bằng cách gọi POST /api/auth/register rồi POST /api/auth/login, lấy token JWT.
+Lỗi hay gặp: cổng 5432 bị chiếm, sai phiên bản Java, lỗi ánh xạ kiểu ENUM của PostgreSQL. Gửi tôi nguyên dòng lỗi đầu tiên trong log.
+Xong khi: đăng ký và đăng nhập trả về token.
+10.2 Chốt stack của Discord clone (28/10)
+Mở thư mục clone, chụp hoặc chép: danh sách thư mục hai cấp, file package.json hoặc pom.xml, file cấu hình database. Không cần gửi toàn bộ dự án.
+Trả lời bốn câu: backend viết bằng gì; database là gì; tin nhắn thời gian thực dùng WebSocket hay cách khác; đăng nhập làm thế nào.
+Quyết định: nếu clone đã có backend và database riêng, không ghép hai backend trong 9 ngày. Thêm tính năng mới vào backend của clone, còn dịch vụ họp gọi qua HTTP như hiện tại. Backend Spring Boot chỉ làm mẫu tham khảo cho bảng và luật.
+Nếu clone chỉ là giao diện, chưa có backend: dùng luôn backend Spring Boot và làm giai đoạn 0 (kênh và tin nhắn).
+Xong khi: biết chính xác tính năng mới sẽ nằm ở backend nào.
+10.3 Tổ chức và kênh theo tổ (29/10)
+Bảng org_units (cây hai cấp) và org_unit_members như mục 3; cột channels.org_unit_id.
+Khi tạo một tổ, backend tự tạo một kênh riêng gắn vào tổ đó và thêm các thành viên của tổ vào kênh.
+API: GET /api/org-units/tree trả cây phòng ban và tổ; API danh sách kênh chỉ trả kênh mà người gọi là thành viên.
+Giao diện: sidebar nhóm kênh theo phòng ban (giống Category của Discord).
+Kiểm thử: người tổ A gọi API lấy tin nhắn của kênh tổ B phải bị từ chối.
+Xong khi: đăng nhập bằng tài khoản giả, chỉ thấy kênh của tổ mình.
+10.4 Thẻ hồ sơ và phân quyền (30/10)
+Bảng employee_profiles: employee_code, job_title, hired_on, employment_status. Thâm niên tính từ hired_on khi trả về, không lưu.
+API: GET /api/users/{id}/profile. Service ProfileAccessPolicy xác định quan hệ giữa người xem và người được xem, rồi chỉ trả những trường được phép theo ma trận ở mục 2. Trường không được phép thì bỏ hẳn khỏi kết quả, không trả giá trị rỗng.
+Giao diện: bấm vào tên trong chat thì hiện thẻ (họ tên, chức vụ, thâm niên, ngày công nếu được xem).
+Kiểm thử: sinh từ ma trận, 5 quan hệ nhân 4 trường (bỏ dòng tuyên dương vì chưa làm), tổng 20 ca, mỗi ô một ca. Thêm ca gọi API trực tiếp bằng token thành viên thường, mong 403 hoặc trường bị ẩn.
+Ghi audit_logs khi có người xem ngày công của người khác.
+Xong khi: cùng một thẻ, đổi tài khoản thì hiện khác trường.
+10.5 Nhập nhân sự bằng CSV (31/10)
+Cột file mẫu: employee_code, full_name, email, job_title, department, team, hired_on (định dạng YYYY-MM-DD), worked_days, month.
+API: POST /api/hr/import (tải file lên), chỉ HR dùng được. Cập nhật theo employee_code: có rồi thì sửa, chưa có thì thêm.
+Thêm một bước xem trước: trả về số dòng sẽ thêm, sẽ sửa, và danh sách dòng lỗi kèm số dòng. Không nhập một phần rồi báo thành công.
+Tạo tài khoản cho người mới với mật khẩu tạm, bắt đổi khi đăng nhập lần đầu. Ghi nhật ký ai nhập, lúc nào.
+Chuẩn bị một file mẫu 25 dòng dữ liệu giả, gồm cả tên Việt và tên nước ngoài.
+Xong khi: tải file mẫu lên thì 25 nhân sự hiện đúng ở đúng tổ.
+10.6 Bảng tin (1/11)
+Bản 5/11 để Bảng tin là một mục cố định trên sidebar, không phụ thuộc bảng kênh (backend Spring Boot chưa có kênh). Bảng post_categories, posts, post_reads trong migration V3__news.sql; bỏ post_comments và commendations trong đợt này. Nếu sau này clone có kênh Announcement thì nối thêm.
+API: POST /api/posts (chỉ HR, OWNER, ADMIN được đăng), GET /api/posts có phân trang, POST /api/posts/{id}/read, GET /api/posts/unread-count, và GET /api/posts/{id}/readers cho HR xem ai đã đọc.
+Đối tượng nhận: cột audience_org_unit_id để trống là gửi toàn công ty, điền vào là chỉ gửi một phòng hoặc một tổ.
+Thông báo: huy hiệu số bài chưa đọc trên sidebar là đủ, chưa cần email hay đẩy thông báo.
+Danh mục có sẵn: Nhân sự, Pháp luật, Công ty.
+Xong khi: HR đăng, thành viên thấy và đánh dấu đã đọc, thành viên thường không đăng được.
+10.7 Thử dịch vụ AI họp (2/11)
+Chuẩn bị một đoạn ghi âm 2 đến 3 phút, nói tiếng Việt có xen thuật ngữ tiếng Anh, có ít nhất hai việc được giao rõ người và hạn.
+Chạy qua /analyze-meeting. Kiểm tra: transcript có đúng thuật ngữ không, action item có đúng người và hạn không, trường nào không nói rõ thì để trống (AI không bịa).
+Lưu kết quả thật để đưa vào báo cáo. Nếu có thời gian, chạy tests/evaluate_wer.py để có con số sai số phiên âm.
+Xong khi: có một file ghi âm mẫu và kết quả dùng được cho demo.
+10.8 Nối họp vào bảng việc của tổ (2/11)
+Thêm meetings.org_unit_id (hoặc lấy từ kênh họp). Khi tạo cuộc họp, chọn tổ.
+Dùng bảng tasks hiện có làm bảng việc, chưa làm base_records trong đợt này. API: GET /api/org-units/{id}/tasks, chỉ thành viên của tổ được xem; đổi trạng thái dùng /api/tasks/{id}/status đã có.
+Giao diện: ba cột Tồn, Đang làm, Xong; kéo thẻ để đổi cột. Chỉ hiện action item đã được người xác nhận (is_human_confirmed).
+Người làm chỉ điền khi tên khớp thành viên của tổ, còn lại để trống.
+Xong khi: xác nhận action item sau họp thì thẻ hiện đúng ở bảng việc của tổ, người tổ khác không thấy.
+10.9 Dữ liệu demo (3/11)
+Một script seed chạy mỗi lần dựng lại database: 2 phòng, 4 tổ, 25 nhân sự, khoảng 12 bài (đủ cho demo, không cần 30), 1 đến 2 cuộc họp đã phân tích sẵn.
+Bốn tài khoản dùng cho demo: thành viên, tổ trưởng, trưởng phòng, HR. Ghi mật khẩu vào file riêng.
+Tên nhân sự trộn tên Việt và tên nước ngoài, để thể hiện môi trường nhiều quốc gia. Bài viết mẫu viết bằng tiếng Việt và vài bài tiếng Anh. Nội dung do tự viết, không chép từ công ty thật.
+Một lệnh dựng lại: xóa volume database, khởi động lại, chạy seed.
+Xong khi: dựng lại từ trống bằng một lệnh và chạy hết kịch bản demo ở mục 6 hai lần liền.
+10.10 Báo cáo và bảo vệ (4/11)
+Thêm vào báo cáo Word: sơ đồ dữ liệu mới, ma trận quyền, luồng họp đổ việc vào bảng việc của tổ.
+Chụp tám ảnh: sidebar theo phòng ban, Bảng tin, thẻ hồ sơ hai góc nhìn khác nhau, nhập CSV, họp có transcript, bảng việc Kanban.
+Quay video 5 đến 7 phút theo kịch bản mục 6, để dự phòng nếu demo trực tiếp lỗi.
+Bổ sung câu hỏi đáp cho phần mới: vì sao phân quyền ở backend, dữ liệu nhân sự thật xử lý thế nào, vì sao chỉ làm bản web.
+Xong khi: báo cáo và video xong trước tối 4/11.
+11. Tham khảo Lark: những gì đã lấy
+Đã đối chiếu Lark và Lark Base với nhu cầu của môi trường công ty. Bản phân tích đầy đủ, có nguồn và mức độ chắc chắn từng dòng, nằm trong file Word Tham_Khao_Lark_Chon_Loc_Va_Ke_Hoach_Thuc_Hien.docx. Dưới đây là bản tóm tắt và chỗ mỗi ý đi vào kế hoạch.
+Ý của Lark
+Lấy vào dự án như thế nào
+Ở đâu trong kế hoạch
+Nhóm chat theo đơn vị
+Kênh private của mỗi tổ
+10.3
+Thông báo ghim trong nhóm
+Bảng tin: HR đăng, ghim, đánh dấu đã đọc
+10.6
+Cây đơn vị và trang hồ sơ thành viên, có kiểm soát trường hiển thị
+Phòng ban, tổ và thẻ hồ sơ có ma trận quyền
+10.3, 10.4
+Quyền Base theo ba tầng: bảng, bản ghi, trường
+Một service quyền; quyền theo bản ghi cho việc của tổ
+10.4, 10.8
+Base: kiểu xem Grid và Kanban
+Bảng việc của tổ hai kiểu xem, dùng bảng tasks
+10.8
+Base: automation
+Một luật cố định: xác nhận việc thì vào đúng tổ
+10.8
+Admin xem thử với tư cách vai trò
+Bộ chuyển tài khoản khi chạy chế độ demo
+10.9
+Làm theo đối chiếu này, có ba điều chỉnh so với bản kế hoạch trước, đều do code backend hiện có: bảng tasks chỉ có assignee_name nên phải thêm assignee_id và org_unit_id; bảng meetings chưa có cột tổ nên phải thêm org_unit_id; và chỉ có đoạn trích nguyên văn (evidence_text) chứ chưa có mốc âm thanh, nên không hứa "nghe lại đoạn ghi âm".
+12. Tính năng bổ sung hợp lý
+Nghiên cứu thêm từ Lark, Microsoft Teams và quy định bảo vệ dữ liệu cá nhân của Việt Nam, chọn ra 9 tính năng nhỏ hợp với công ty nhiều phòng ban, nhiều quốc gia. Chỉ M1 nên làm trước 5/11, M2 và M3 làm nếu dư giờ, còn lại là hướng phát triển sau đồ án.
+Mã
+Tính năng
+Ý tưởng từ
+Hợp công ty vì
+Công sức
+Khi nào
+M1
+Đồng ý ghi âm cuộc họp
+Microsoft Teams hỏi đồng ý khi bắt đầu ghi; quy định dữ liệu cá nhân
+Giọng nói là dữ liệu cá nhân, người nước ngoài có thể có quy định riêng
+Nhỏ (3 đến 4 giờ)
+Trước 5/11
+M2
+Biên bản họp: xuất file và tìm trong transcript
+Lark AI meeting notes: tóm tắt và giao việc
+Sếp cần biên bản để gửi đi và để lưu
+Nhỏ (2 giờ cho bản Markdown)
+Trước 5/11 nếu dư giờ
+M3
+Nhắc việc và tự đánh dấu quá hạn
+Automation nhắc việc của Lark Base
+Việc có hạn, trưởng nhóm cần thấy việc trễ
+Nhỏ (2 giờ)
+Trước 5/11 nếu dư giờ
+M4
+Trung tâm thông báo
+Thông báo tập trung trong Lark
+Bài mới, việc mới, hạn sắp tới vào một chỗ
+Vừa (1 ngày)
+Sau 5/11
+M5
+Danh bạ nhân sự có tìm kiếm
+Danh bạ Lark
+Tìm đồng nghiệp ở nhiều phòng, tên nước ngoài
+Nhỏ (3 giờ)
+Sau 5/11
+M6
+Ngôn ngữ và múi giờ cá nhân
+Lark có dịch tin nhắn; ý của mục này là cài đặt riêng từng người
+Công ty nhiều quốc gia họp chênh múi giờ
+Vừa (1 ngày)
+Sau 5/11
+M7
+Đơn từ (nghỉ phép) duyệt nhiều bước
+Lark Approval
+Quy trình nhân sự cơ bản nhất
+Lớn (2 ngày)
+Sau 5/11
+M8
+Nhật ký kiểm toán cho admin
+Yêu cầu lưu vết trong doanh nghiệp
+Biết ai xem dữ liệu nhạy cảm, ai nhập liệu
+Nhỏ đến vừa
+Sau 5/11
+M9
+Việc của tôi
+Lark Task
+Nhân viên thuộc nhiều tổ cần một danh sách chung
+Nhỏ (2 giờ)
+Sau 5/11
+Mỗi tính năng dưới đây có các bước làm, cách kiểm tra và điều cần lưu ý. Migration đánh số tiếp theo V4 của bản 5/11.
+M1. Đồng ý ghi âm cuộc họp
+Vì sao cần. Dự án ghi âm cuộc họp rồi gửi nội dung đi phiên âm và tóm tắt. Giọng nói và nội dung cuộc họp là dữ liệu cá nhân của người tham gia. Microsoft Teams hiện hỏi đồng ý khi ai đó bấm bắt đầu ghi; người từ chối vẫn ở trong cuộc họp nhưng không bật được micro hay chia sẻ màn hình. Đây cũng là điểm câu hỏi bảo mật và an toàn mà hội đồng dễ hỏi.
+Căn cứ quy định. Điều 11 Nghị định 13/2023/NĐ-CP yêu cầu sự đồng ý phải tự nguyện, người đồng ý biết rõ loại dữ liệu, mục đích và ai xử lý, thể hiện rõ ràng, có thể kiểm chứng được, và sự im lặng không được coi là đồng ý; khi có tranh chấp, bên xử lý phải chứng minh đã có đồng ý. Luật Bảo vệ dữ liệu cá nhân 2025 có hiệu lực từ 1/1/2026, có Nghị định 356/2025/NĐ-CP hướng dẫn. Tôi chưa đọc được nội dung chi tiết của luật mới và không phải luật sư, nên phần này dùng làm nguyên tắc thiết kế, không phải tư vấn pháp lý; hãy hỏi thầy hướng dẫn hoặc pháp chế trước khi nói trong báo cáo.
+Migration V5__audit_and_consent.sql:
+CREATE TABLE audit_logs (  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),  workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,  actor_id    UUID REFERENCES users(id),  action      VARCHAR(60) NOT NULL,  target_type VARCHAR(40),  target_id   UUID,  detail      JSONB NOT NULL DEFAULT '{}'::jsonb,  created_at  TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP);CREATE INDEX idx_audit_workspace_time ON audit_logs(workspace_id, created_at DESC);CREATE TABLE meeting_participants (  meeting_id     UUID NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,  user_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,  consent_status VARCHAR(10) NOT NULL DEFAULT 'PENDING'                 CHECK (consent_status IN ('PENDING','AGREED','DECLINED')),  responded_at   TIMESTAMPTZ,  PRIMARY KEY (meeting_id, user_id));ALTER TABLE meetings  ADD COLUMN recording_notice_by UUID REFERENCES users(id),  ADD COLUMN recording_notice_at TIMESTAMPTZ;
+Các bước:
+Khi tạo cuộc họp, người tạo chọn người tham gia (mặc định là thành viên của tổ được chọn). Backend ghi mỗi người vào meeting_participants với trạng thái PENDING.
+Thêm nút "Thông báo ghi âm" cho người tạo. Khi bấm, backend ghi recording_notice_by và recording_notice_at, rồi hiện thông báo cho từng người tham gia. Nội dung thông báo cố định nêu rõ: cuộc họp sẽ được ghi âm (và ghi hình nếu bật ghi hình); bản ghi âm được phiên âm và tóm tắt bằng AI; ai xem được kết quả (thành viên tổ và cấp quản lý); văn bản phiên âm được gửi tới nhà cung cấp AI nào (ghi tên nhà cung cấp bạn đang dùng).
+Người tham gia trả lời bằng POST /api/meetings/{id}/consent với decision là AGREED hoặc DECLINED. Mỗi lần trả lời ghi audit_logs (CONSENT_AGREED hoặc CONSENT_DECLINED) cùng thời điểm, để sau này chứng minh được. Cho đổi ý khi ghi âm chưa được xử lý.
+Chặn ở POST /api/meetings/{id}/recording: trả mã 409 nếu recording_notice_at còn trống, hoặc còn người PENDING hay DECLINED. Kèm danh sách ai chưa trả lời để hiện lên giao diện. Đây là chế độ nghiêm ngặt, đúng với nguyên tắc "im lặng không phải đồng ý".
+Cho người tạo gỡ một người khỏi danh sách tham gia khi người đó từ chối (nghĩa là người đó không có mặt trong cuộc họp). Ghi audit_logs với PARTICIPANT_REMOVED.
+Giao diện: người tham gia thấy banner "Cuộc họp này sẽ được ghi âm. Bạn có đồng ý không?" với hai nút. Người tạo thấy bảng tên và trạng thái từng người, nút tải ghi âm bị khóa cho đến khi đủ điều kiện.
+Kiểm tra Python service: truyền tham số language đúng khi gọi /analyze-meeting (service nhận tham số này qua đường dẫn, ví dụ ?language=vi, để trống là tự nhận dạng; AiServiceClient.analyzeMeeting hiện chưa gửi nên phải sửa để thêm vào URI).
+Kiểm thử: tải ghi âm khi chưa thông báo trả 409; khi còn một người PENDING trả 409; khi mọi người AGREED trả 200 và chạy AI; khi một người DECLINED trả 409, gỡ người đó rồi tải lại trả 200; người không thuộc cuộc họp gọi /consent bị từ chối.
+Lưu ý: rút lại sự đồng ý sau khi ghi âm đã xử lý (xóa bản ghi và phiên âm) chưa làm trong đợt này; ghi vào phần giới hạn của báo cáo. Làm đúng mục này là trả lời được hai câu hỏi dễ gặp khi bảo vệ: "AI xử lý giọng nói người dùng có xin phép không?" và "bằng chứng đồng ý ở đâu?".
+M2. Biên bản họp: xuất file và tìm trong transcript
+Vì sao cần. Lark AI meeting notes tạo tóm tắt và giao việc sau cuộc họp. Dự án đã có đủ dữ liệu (tóm tắt, quyết định chính, action item đã xác nhận) nhưng chưa đóng gói thành một biên bản gửi đi được.
+Các bước:
+Viết GET /api/meetings/{id}/minutes?format=md. Quyền giống bảng việc của tổ: thành viên tổ của cuộc họp, tổ trưởng, trưởng phòng cha. Người ngoài nhận 403.
+Ghép dữ liệu từ: meetings (tiêu đề, giờ, tên tổ), meeting_participants (tên người tham gia), meeting_ai_reports (tóm tắt, quyết định chính; kiểm tra đúng tên cột trong entity MeetingAiReport), tasks đã xác nhận (tiêu đề, người làm, hạn, đoạn trích evidence_text).
+Chỉ đưa vào các việc is_human_confirmed = true. Đầu biên bản ghi một dòng: "Bản tóm tắt do AI tạo; các việc dưới đây đã được người xác nhận."
+Mẫu Markdown:
+# <Tiêu đề cuộc họp>Ngày: <giờ bắt đầu>   Tổ: <tên tổ>Tham gia: <danh sách tên>## Tóm tắt<summary>## Quyết định chính- <key_decision>## Việc cần làm (đã xác nhận)| Việc | Người làm | Hạn | Trích nguyên văn |
+Tên file có dấu tiếng Việt: đặt header Content-Disposition với filename*=UTF-8''<tên mã hóa phần trăm>, kèm filename ASCII dự phòng, nếu không tên file sẽ vỡ chữ.
+Tìm trong transcript: GET /api/meetings/{id}/transcript/search?q=, so khớp trên transcript_segments.text không phân biệt hoa thường và không phân biệt dấu (dùng chung cách làm unaccent ở M5). Trả về đoạn trùng khớp kèm mốc thời gian nếu bảng có cột đó. Lưu ý: bảng này hiện chưa được ghi dữ liệu, nên phải làm bước lưu đoạn ở mục 13.3 trước.
+Xuất Word (.docx) để sau, có thể dùng thư viện Apache POI.
+Kiểm tra: tải biên bản của cuộc họp mẫu, mở được, chữ tiếng Việt không vỡ, không có việc chưa xác nhận; người tổ khác gọi trả 403.
+M3. Nhắc việc và tự đánh dấu quá hạn
+Vì sao cần. Automation của Lark Base có hành động nhắc việc và cập nhật bản ghi. Trạng thái OVERDUE đã có trong enum task_status nhưng chưa có gì tự đặt nó.
+Các bước:
+Bật @EnableScheduling trên lớp cấu hình. Tạo lớp OverdueJob chạy mỗi đêm, ví dụ @Scheduled(cron = "0 5 0 * * *", zone = "Asia/Ho_Chi_Minh").
+Câu lệnh cập nhật:
+@Modifying@Query(value = "UPDATE tasks SET status = 'OVERDUE', updated_at = now() "  + "WHERE due_date < now() AND status IN ('TODO','IN_PROGRESS') "  + "AND is_human_confirmed = TRUE", nativeQuery = true)int markOverdue();
+Nếu gặp lỗi "operator does not exist: task_status = character varying" khi truyền tham số, dùng CAST(:s AS task_status). Dùng giá trị cố định như trên thì không bị.
+Khi AI chỉ biết ngày mà không có giờ, lưu due_date là cuối ngày theo giờ Việt Nam (23:59), để việc có hạn "5/11" không bị đánh dấu trễ từ 0 giờ sáng 5/11. Việc chỉ có deadline_text mà không có due_date thì không bao giờ bị đánh dấu tự động.
+Nhắc hạn: mỗi sáng, việc có due_date trong 24 giờ tới và chưa DONE thì tạo một thông báo cho assignee_id (cần M4; chưa có M4 thì chỉ ghi log). Mỗi việc chỉ nhắc một lần mỗi ngày.
+Cho phép kéo việc OVERDUE sang IN_PROGRESS hoặc DONE. Khi có người sửa due_date sang ngày sau, đưa việc về TODO hoặc IN_PROGRESS tùy trạng thái trước.
+Giao diện: nhãn đỏ "Quá hạn" trên thẻ Kanban và ở kiểu xem Bảng; tổ trưởng có bộ lọc "chỉ xem việc quá hạn".
+Kiểm thử: viết test với database PostgreSQL thật (Testcontainers hoặc database thử riêng). Không dùng H2 vì không có kiểu ENUM của PostgreSQL. Tạo ba việc: hạn hôm qua đang TODO, hạn hôm qua đã DONE, hạn ngày mai. Chạy job, mong chỉ việc đầu chuyển thành OVERDUE.
+M4. Trung tâm thông báo
+Vì sao cần. Bài mới ở Bảng tin, việc mới được giao, hạn sắp tới, đơn từ cần duyệt đều là thông báo. Nếu mỗi chỗ tự hiện huy hiệu riêng thì người dùng phải mở từng nơi. Một trung tâm thông báo gom tất cả.
+Migration V6__notifications.sql:
+CREATE TABLE notifications (  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,  type       VARCHAR(40) NOT NULL,  title      VARCHAR(200) NOT NULL,  link       VARCHAR(255),  is_read    BOOLEAN NOT NULL DEFAULT FALSE,  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP);CREATE INDEX idx_notifications_user ON notifications(user_id, is_read, created_at DESC);
+Các bước:
+Viết NotificationService.notify(userId, type, title, link). Các nơi khác không ghi thẳng vào bảng, chỉ gọi hàm này.
+Nối các sự kiện: TaskConfirmedEvent (thông báo cho assignee_id nếu có), bài mới ở Bảng tin (thông báo cho mọi người trong nhóm nhận bài), nhắc hạn ở M3, yêu cầu cần duyệt ở M7, yêu cầu đồng ý ghi âm ở M1.
+API: GET /api/notifications?unread=true&page=0&size=20, POST /api/notifications/{id}/read, POST /api/notifications/read-all, GET /api/notifications/unread-count. Mỗi API chỉ đọc thông báo của người gọi; đánh dấu đã đọc thông báo của người khác phải trả 404.
+Giao diện: biểu tượng chuông trên thanh đầu, huy hiệu số chưa đọc, bấm vào một thông báo thì đánh dấu đã đọc và chuyển đến link. Lấy số chưa đọc bằng cách hỏi lại mỗi 30 giây; nhớ dọn bộ đếm khi rời trang để không chạy chồng.
+Giới hạn: chỉ giữ 90 ngày thông báo đã đọc, dọn bằng một job như M3.
+Kiểm thử: HR đăng một bài gửi toàn công ty thì mỗi thành viên có đúng một thông báo; đọc xong thì số chưa đọc giảm đúng một; người A không đánh dấu được thông báo của người B.
+Lưu ý: với công ty hàng nghìn người, ghi một dòng cho mỗi người nhận sẽ nặng. Demo 25 người thì đủ; ghi vào báo cáo là bản thật sẽ cần hàng đợi xử lý nền.
+M5. Danh bạ nhân sự có tìm kiếm
+Vì sao cần. Trong công ty nhiều phòng ban và nhiều quốc gia, người dùng cần tìm đồng nghiệp theo tên mà không phải nhớ đúng dấu. Gõ "dang" phải ra "Đặng".
+Các bước:
+Bật tiện ích trong PostgreSQL bằng migration: CREATE EXTENSION IF NOT EXISTS unaccent;. Kiểm tra bằng SELECT unaccent('Đặng Văn Ân'); và xem kết quả có ra "Dang Van An" không (nếu chữ đ không đổi thì phải tự thay thế đ thành d ở code).
+GET /api/directory?q=&unitId=&page=0&size=20. Tìm theo tên, mã nhân viên, chức vụ; có thể lọc theo phòng hoặc tổ. Chỉ trả nhóm trường cơ bản mà ma trận cho phép mọi người xem (tên, ảnh, chức vụ, tổ, phòng). Không bao giờ trả ngày công ra danh bạ.
+Chỉ trả người ACTIVE cùng workspace với người gọi.
+Giao diện: ô tìm kiếm trên thanh đầu (phím tắt Ctrl+K), danh sách kết quả, bấm vào một người thì mở thẻ hồ sơ đã làm ở B3 (vẫn qua ProfileAccessPolicy).
+Chống gọi dồn: chờ 300 mili giây sau lần gõ cuối mới gọi API.
+Kiểm thử: gõ "dang" ra Đặng Văn Ân; gõ "emily" ra Emily Carter; người workspace khác không xuất hiện; kết quả không có trường số ngày công.
+M6. Ngôn ngữ và múi giờ cá nhân
+Vì sao cần. Công ty có người Việt và người nước ngoài ở nhiều múi giờ. Cuộc họp lúc 10 giờ sáng ở Hà Nội là giờ khác ở London; nếu hiện sai giờ thì người dùng vào nhầm.
+Migration V7__preferences.sql:
+ALTER TABLE users  ADD COLUMN preferred_language VARCHAR(10) NOT NULL DEFAULT 'vi'             CHECK (preferred_language IN ('vi','en')),  ADD COLUMN time_zone VARCHAR(60) NOT NULL DEFAULT 'Asia/Ho_Chi_Minh';ALTER TABLE meetings ADD COLUMN spoken_language VARCHAR(10); -- NULL = tu nhan dang
+Các bước:
+Viết PATCH /api/me/preferences nhận language và timeZone. Kiểm tra timeZone có nằm trong ZoneId.getAvailableZoneIds() rồi mới lưu.
+Backend trả mọi thời điểm ở dạng ISO-8601 giờ UTC, không tự đổi múi giờ. Giao diện định dạng bằng Intl.DateTimeFormat(language, { timeZone, dateStyle, timeStyle }). Không lưu độ lệch giờ cố định vì giờ mùa hè ở một số nước làm độ lệch đổi theo mùa.
+Trang chi tiết cuộc họp hiện giờ theo múi giờ của người xem; nếu người tạo ở múi giờ khác thì thêm một dòng ghi giờ theo người tạo.
+Giao diện hai ngôn ngữ: hai file vi.json và en.json, khoảng 60 khóa cho các nhãn chính (sidebar, thẻ hồ sơ, bảng việc, các nút). Hàm t('khoa') quay về tiếng Việt khi thiếu khóa. Không dịch nội dung người dùng viết (bài, tên việc, đoạn trích).
+Khi tạo cuộc họp cho chọn ngôn ngữ nói: Tự nhận dạng, Tiếng Việt, Tiếng Anh. Lưu vào meetings.spoken_language và truyền thành tham số language cho /analyze-meeting (service Python nhận qua đường dẫn ?language=..., còn AiServiceClient.analyzeMeeting hiện chưa gửi nên phải sửa để thêm vào URI). Với cuộc họp lẫn Việt và Anh, hãy thử cả hai cách trên file mẫu và giữ cách cho kết quả tốt hơn.
+Kiểm tra: hai người, một ở múi giờ Hà Nội, một ở London, cùng mở một cuộc họp và thấy giờ khác nhau đúng; đổi sang English thì các màn chính hết nhãn tiếng Việt; giờ gửi lên là UTC khi xem trong tab mạng.
+Để sau: dịch tin nhắn tức thì và dịch transcript sang ngôn ngữ của người xem. Lark có dịch tin nhắn tức thì trong Messenger, nhưng đó là khối riêng, không đưa vào đợt này.
+M7. Đơn từ (nghỉ phép) duyệt nhiều bước
+Vì sao cần. Lark Approval có mẫu sẵn cho nghỉ phép, công tác và hoàn chi phí. Yêu cầu đi qua từng người duyệt theo thứ tự và chỉ được thông qua khi mọi người đồng ý. Nghỉ phép là quy trình nhân sự cơ bản nhất và tận dụng được cây tổ chức đã dựng.
+Migration V8__leave_requests.sql:
+CREATE TABLE leave_requests (  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),  workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,  requester_id UUID NOT NULL REFERENCES users(id),  leave_type   VARCHAR(20) NOT NULL               CHECK (leave_type IN ('ANNUAL','SICK','UNPAID','OTHER')),  start_date   DATE NOT NULL,  end_date     DATE NOT NULL CHECK (end_date >= start_date),  reason       TEXT,  status       VARCHAR(20) NOT NULL DEFAULT 'PENDING'               CHECK (status IN ('PENDING','APPROVED','REJECTED','CANCELLED')),  current_step INT NOT NULL DEFAULT 1,  created_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP);CREATE TABLE leave_approvals (  request_id  UUID NOT NULL REFERENCES leave_requests(id) ON DELETE CASCADE,  step        INT NOT NULL,  approver_id UUID NOT NULL REFERENCES users(id),  decision    VARCHAR(10) CHECK (decision IN ('APPROVED','REJECTED')),  comment     TEXT,  decided_at  TIMESTAMPTZ,  PRIMARY KEY (request_id, step));
+Luật duyệt:
+Chuỗi người duyệt tính lúc gửi đơn: bước 1 là tổ trưởng của tổ chính, bước 2 là trưởng phòng. Bỏ một bước nếu người duyệt là chính người gửi hoặc không có ai giữ vai trò đó. Nếu chuỗi rỗng thì HR là người duyệt duy nhất.
+Mọi bước đều phải đồng ý thì đơn mới APPROVED. Một bước từ chối thì đơn REJECTED và dừng.
+Người gửi hủy được khi đơn còn PENDING, đơn chuyển sang CANCELLED.
+Chỉ người đang ở đúng current_step mới được quyết định. Không ai tự duyệt đơn của mình.
+Lý do nghỉ chỉ người gửi và các người duyệt đọc được. HR thấy loại nghỉ và ngày của đơn đã duyệt, không thấy lý do.
+Các bước:
+Viết entity, repository và LeaveService với các API: POST /api/leave-requests, GET /api/leave-requests/mine, GET /api/leave-requests/to-approve, POST /api/leave-requests/{id}/decision (gồm decision và comment), POST /api/leave-requests/{id}/cancel.
+Khi gửi: tính chuỗi duyệt, tạo các dòng leave_approvals với decision rỗng, đặt current_step = 1.
+Khi quyết định: chống hai người bấm cùng lúc bằng câu cập nhật có điều kiện WHERE id = ? AND status = 'PENDING' AND current_step = ?; nếu số dòng được cập nhật khác 1 thì trả 409.
+Gửi thông báo (M4) cho người duyệt kế tiếp khi đơn chuyển bước, và cho người gửi khi đơn có kết quả cuối. Ghi audit_logs mỗi quyết định (LEAVE_DECIDED).
+Giao diện: trang "Đơn của tôi" (tạo đơn và xem trạng thái từng bước), trang "Chờ tôi duyệt" với hai nút Đồng ý và Từ chối kèm ô ghi chú.
+Kiểm thử: viết bảng ca cho máy trạng thái: đơn 2 bước đồng ý cả hai thì APPROVED; bước 1 từ chối thì REJECTED và bước 2 không còn nhận được; người không ở current_step quyết định bị 403; người gửi tự duyệt bị 403; hai người bấm cùng lúc thì một người nhận 409; hủy khi đã APPROVED bị từ chối; trưởng tổ gửi đơn thì bước 1 bị bỏ và chỉ còn trưởng phòng.
+Ngoài phạm vi: số ngày phép còn lại, tự động trừ vào ngày công, lịch nghỉ của tổ, và các loại đơn khác như công tác hay hoàn chi phí.
+M8. Nhật ký kiểm toán cho admin
+Vì sao cần. Công ty cần biết ai đã xem dữ liệu nhạy cảm, ai nhập dữ liệu nhân sự, ai đồng ý ghi âm. Bảng audit_logs đã có ở M1; mục này là phần ghi đầy đủ và màn hình để xem.
+Các bước:
+Viết AuditService.log(workspaceId, actorId, action, targetType, targetId, detail) và gọi trong cùng giao dịch với hành động được ghi, để hành động thất bại thì nhật ký cũng không để lại dòng sai.
+Các mã hành động: PROFILE_ATTENDANCE_VIEW, HR_IMPORT, POST_PUBLISHED, CONSENT_AGREED, CONSENT_DECLINED, PARTICIPANT_REMOVED, RECORDING_UPLOADED, LEAVE_DECIDED.
+Chỉ ghi mã định danh và loại hành động, không ghi nội dung nhạy cảm (không ghi số ngày công, không ghi lý do nghỉ). Nhật ký không được thành nơi rò rỉ dữ liệu.
+GET /api/admin/audit?actor=&action=&from=&to=&page=0&size=50, chỉ OWNER và ADMIN gọi được; HR không tự xem nhật ký của chính mình.
+Giao diện: bảng có bộ lọc theo người, loại hành động và khoảng ngày.
+Thời hạn lưu nhật ký do công ty quyết định; ghi số tháng vào cấu hình, không đặt cứng.
+Kiểm thử: mỗi hành động trong danh sách ở bước 2 đều để lại đúng một dòng; thành viên thường gọi API nhật ký nhận 403; hành động bị hủy giao dịch thì không có dòng nhật ký.
+M9. Việc của tôi
+Vì sao cần. Một nhân viên có thể thuộc tổ chính và tổ phụ, nên việc của họ nằm ở nhiều bảng việc. Lark có mục Task gom việc của một người vào một chỗ.
+Các bước:
+Không cần migration mới, dùng cột assignee_id đã thêm ở V4.
+GET /api/me/tasks?status=&page=0&size=20: lấy việc có assignee_id là người gọi và is_human_confirmed = true; sắp theo due_date tăng dần, việc không có hạn để cuối.
+Việc chỉ có assignee_name mà chưa khớp được người nào thì không hiện ở đây, chỉ hiện ở bảng việc của tổ. Ghi rõ điều này trên giao diện.
+Giao diện: trang "Việc của tôi" chia nhóm Quá hạn, Hôm nay, Tuần này, Về sau. Bấm vào việc thì mở thẻ việc trong bảng việc của tổ.
+Đổi trạng thái ngay từ trang này qua API /api/tasks/{id}/status đã có.
+Kiểm thử: người A chỉ thấy việc được giao cho mình; việc của người khác trong cùng tổ không xuất hiện; việc chưa xác nhận không xuất hiện.
+Thứ tự làm sau 5/11
+Nên làm M4 trước vì M3 (nhắc hạn) và M7 (thông báo duyệt) đều cần nó. Sau đó là M7, M8 (vì M7 sinh ra nhiều hành động cần ghi nhật ký), M6, M5, M9. M1 đã nằm trong bản nộp; M2 và M3 làm trong bản nộp nếu dư giờ.
+13. Phòng họp có ghi hình và phiên dịch: kiểm tra và bổ sung
+13.1 Kết luận kiểm tra (1/11)
+Chưa ổn. Kế hoạch và code hiện có xử lý bản ghi âm sau cuộc họp: tải file lên, phiên âm, tóm tắt, trích việc. Chưa có phòng họp video trực tiếp, chưa có nút ghi hình trong ứng dụng, và chưa có phiên dịch. Mục M6 chỉ là ngôn ngữ giao diện và múi giờ, không phải phiên dịch.
+Yêu cầu
+Hiện có trong code
+Còn thiếu
+Làm trước 5/11?
+Phòng họp video nhiều người, trực tiếp
+Không. Backend đã bỏ livekit_room_name ở bản MVP.
+WebRTC (LiveKit hoặc tương đương)
+Không
+Ghi âm, ghi hình
+Tải file lên được: .mp3 .wav .m4a .mp4 .webm, tối đa 500MB
+Nút ghi ngay trong trình duyệt; đồng ý ghi hình
+Có bản nhỏ (13.2)
+Phiên âm đa ngôn ngữ
+Whisper tự nhận dạng ngôn ngữ; model mặc định base
+Thử họp lẫn Việt và Anh; chọn model và cấu hình phù hợp (13.5)
+Có, dưới dạng thử nghiệm
+Phiên dịch sau họp
+Không
+Bảng bản dịch, API dịch
+Bản dịch tóm tắt nếu dư giờ (13.3)
+Phiên dịch trực tiếp
+Không
+Phiên âm luồng và dịch từng đoạn ngắn
+Không (13.4)
+Transcript theo đoạn có mốc thời gian
+Python đã trả danh sách đoạn, nhưng Spring chưa lưu (xem chú thích trong AiAnalysisService)
+Sửa Python trả danh sách đoạn; Spring lưu vào transcript_segments
+Chỉ khi cần tìm trong transcript hoặc dịch từng đoạn
+Hai lỗi nhỏ đã phát hiện khi đối chiếu code, ảnh hưởng các mục trước: (1) bảng transcript_segments hiện rỗng nên bước tìm trong transcript ở M2 chưa chạy được cho tới khi làm bước lưu đoạn ở mục 13.3; (2) service Python nhận language là tham số trên đường dẫn (?language=vi), không phải trường trong form, và hàm AiServiceClient.analyzeMeeting hiện không gửi tham số này. M6 và M1 phải thêm nó vào URI.
+13.2 Phiên bản làm được: phòng họp ghi hình (khoảng 1 ngày)
+Định nghĩa nói cho đúng với hội đồng: trang Cuộc họp có nút "Bắt đầu ghi" ghi từ thiết bị của người tổ chức (camera và micro, hoặc chia sẻ màn hình của một cuộc họp đang chạy trên công cụ khác). Kết thúc thì tải lên và chạy chuỗi xử lý AI. Nền tảng không tự là hệ thống gọi video; nó là phần biến cuộc họp thành biên bản và việc.
+Các bước:
+Sửa nội dung thông báo ở M1 thành "ghi âm và ghi hình", nêu rõ nơi lưu và thời gian giữ. Khóa nút "Bắt đầu ghi" cho đến khi mọi người tham gia đã AGREED (giao diện hỏi trạng thái đồng ý trước), và vẫn giữ kiểm tra ở backend khi tải lên.
+Giao diện dùng navigator.mediaDevices.getUserMedia({ audio: true, video: true }) cho camera và micro, hoặc getDisplayMedia({ video: true, audio: true }) cho chia sẻ màn hình. Âm thanh khi chia sẻ màn hình phụ thuộc trình duyệt và loại cửa sổ được chọn, nên thử trước.
+Ghi bằng MediaRecorder. Chọn định dạng bằng MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus'); nếu không được thì hỏi trình duyệt định dạng nào hỗ trợ. Gom dữ liệu theo mỗi 10 giây (start(10000)), khi dừng ghép thành một Blob.
+Quan trọng: getUserMedia và getDisplayMedia chỉ chạy trên trang HTTPS hoặc localhost. Nếu demo bằng địa chỉ IP qua HTTP thì camera và micro sẽ bị chặn. Demo bằng localhost, hoặc dựng HTTPS bằng một reverse proxy có chứng chỉ.
+Khi dừng, tải Blob lên POST /api/meetings/{id}/recording dưới tên meeting.webm. Backend đã lưu thành recording.<đuôi file> nên đuôi .webm được giữ khi chuyển sang Python, và Python chấp nhận .webm.
+Hiện thanh tiến trình tải lên và báo lỗi rõ khi file vượt 500MB (giới hạn đang đặt trong application.yml). Đo dung lượng thật của một bản ghi 10 phút trên máy của bạn để ước lượng cuộc họp dài nhất đủ dùng.
+Ghi âm hình xử lý đồng bộ: lời gọi sang Python đang đặt giới hạn 300 giây (timeout-seconds: 300). Cuộc họp dài trên CPU sẽ vượt giới hạn này. Demo dùng cuộc họp ngắn (2 đến 5 phút), và ghi vào giới hạn: bản thật sẽ chuyển sang xử lý nền có hàng đợi (bảng ai_jobs đã có sẵn trạng thái QUEUED, RUNNING, SUCCEEDED).
+Giữ ít dữ liệu nhất có thể: mặc định xóa file ghi hình sau khi AI xử lý xong và chỉ giữ bản phiên âm. Hình ảnh người là dữ liệu nhạy cảm hơn giọng nói, và demo không cần phát lại. Đặt cờ cấu hình recording.retain (mặc định false).
+Phát lại video chỉ làm khi recording.retain = true: GET /api/meetings/{id}/recording/stream hỗ trợ Range, cùng quyền như biên bản (M2), hiển thị bằng thẻ <video>. Để sau nếu thiếu giờ.
+Kiểm tra: trên Chrome hoặc Edge bản mới, ở localhost, ghi 2 phút có tiếng Việt, dừng, tải lên, nhận được transcript và action item; nút ghi bị khóa khi còn người chưa đồng ý; sau xử lý không còn file video trên đĩa (khi retain = false). Safari và trình duyệt khác chưa kiểm tra, ghi vào giới hạn.
+13.3 Phiên dịch sau họp
+Phạm vi bản nhỏ (khoảng nửa ngày): dịch bản tóm tắt và các quyết định chính sang tiếng Việt hoặc tiếng Anh. Đây là phần người nước ngoài cần nhất. Việc (action item) giữ nguyên gốc; evidence_text không dịch.
+Migration V9__translations.sql:
+CREATE TABLE meeting_translations (  meeting_id    UUID NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,  language      VARCHAR(10) NOT NULL CHECK (language IN ('vi','en')),  summary       TEXT NOT NULL,  key_decisions JSONB NOT NULL DEFAULT '[]'::jsonb,  model_name    VARCHAR(60),  translated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,  PRIMARY KEY (meeting_id, language));
+Các bước:
+Thêm vào service Python một endpoint POST /translate nhận summary, key_decisions và target_language, gọi Claude bằng tool-use giống extraction.py để nhận JSON có cấu trúc.
+Lời nhắc gửi cho Claude phải nói rõ: dịch đúng ý, không thêm thông tin, giữ nguyên tên người, con số, ngày tháng và thuật ngữ kỹ thuật.
+Spring: thêm AiServiceClient.translate(...), API POST /api/meetings/{id}/translate?lang=en và GET /api/meetings/{id}/translation?lang=en. Dịch khi có người yêu cầu rồi lưu vào bảng, lần sau lấy từ bảng để không tốn tiền gọi lại. Quyền giống biên bản (M2).
+Giao diện: hai cột, bản gốc bên trái và bản dịch bên phải, có dòng "Bản dịch máy do AI tạo, đối chiếu bản gốc khi cần". Mặc định hiện ngôn ngữ giao diện của người xem (M6).
+Tự kiểm tra đơn giản: trích mọi con số trong bản gốc và trong bản dịch; nếu hai tập con số khác nhau thì gắn cờ "cần xem lại" và ghi log. Đây là cách rẻ để bắt lỗi dịch sai giá trị, không thay cho việc đọc lại.
+Kiểm tra: cuộc họp tiếng Việt, dịch sang tiếng Anh, các con số và tên riêng khớp bản gốc; dịch lần hai trả bản đã lưu (không gọi Claude lại); người ngoài tổ gọi nhận 403.
+Bản mở rộng, để sau: dịch từng đoạn transcript. Cần làm ba việc: sửa main.py để /analyze-meeting trả danh sách segments (mỗi đoạn có start, end, text; TranscriptionResult đã có sẵn); sửa AiAnalysisService lưu các đoạn vào transcript_segments; rồi thêm bảng segment_translations(segment_id, language, text) và dịch theo lô vài chục đoạn mỗi lần gọi. Phần lưu đoạn cũng mở khóa bước tìm trong transcript ở M2.
+13.4 Phiên dịch trực tiếp: vì sao chưa làm
+Phiên dịch trực tiếp cần ba thứ cùng lúc: phòng họp video nhiều người, phiên âm theo luồng từng đoạn ngắn, và dịch ngay từng đoạn đó. Mô hình Whisper trên CPU hiện đặt ở cấu hình xử lý cả file, chưa đo độ trễ theo luồng. Không đưa vào bản nộp và không nói với hội đồng là đã có. Hướng phát triển: cắt âm thanh mỗi 5 đến 10 giây gửi qua WebSocket, phiên âm, dịch, rồi đẩy về người xem; đo độ trễ trước khi cam kết.
+13.5 Chất lượng phiên âm khi họp lẫn Việt và Anh
+Service đang chạy model base (biến môi trường WHISPER_MODEL_SIZE, mặc định base) với faster-whisper==1.2.1 và chưa bật tùy chọn multilingual. Ghi chú phát hành của faster-whisper 1.1.0 nói tùy chọn multilingual được thêm để phiên âm âm thanh đa ngôn ngữ, và các model Large đã có khả năng chuyển ngôn ngữ, nên tùy chọn này chủ yếu có ích cho model medium trở xuống. Việc đó chưa được kiểm chứng trên file của bạn, nên cần thử.
+Cách thử (khoảng 1 đến 2 giờ):
+Ghi một đoạn 3 phút, nói tiếng Việt có xen các thuật ngữ tiếng Anh và ít nhất một câu tiếng Anh trọn vẹn.
+Chạy ba cấu hình: base mặc định; small kèm multilingual=True; medium kèm multilingual=True nếu máy đủ mạnh. Đổi model bằng biến môi trường WHISPER_MODEL_SIZE; thêm multilingual=True vào lời gọi self.model.transcribe(...) trong transcription.py.
+Với mỗi cấu hình, ghi thời gian xử lý (service đã trả processing_time_seconds) và đếm tay số thuật ngữ bị nghe sai. Nếu có bản gô tay chuẩn, chạy tests/evaluate_wer.py.
+Chọn cấu hình cho kết quả ổn định nhất trong thời gian chấp nhận được (nhớ giới hạn 300 giây ở 13.2). Ghi bảng kết quả vào báo cáo, đây là dữ liệu thật cho phần đa ngôn ngữ.
+13.6 Chỉnh lịch 5/11 cho phần này
+Còn 4 ngày (2/11 đến 5/11), nên phần này chỉ được chèn vào theo thứ tự ưu tiên:
+Ưu tiên
+Việc
+Thời gian
+Khi nào
+1
+13.5 Thử phiên âm họp lẫn Việt và Anh (cùng lúc với mục 10.7)
+1 đến 2 giờ
+2/11
+2
+M1 + 13.2 bước 1 đến 5 (đồng ý và ghi hình trong trình duyệt)
+4 đến 6 giờ
+3/11
+3
+13.3 Dịch bản tóm tắt
+4 giờ
+4/11, nếu đã xong hết
+Sau 5/11
+13.2 bước 7 đến 9, dịch từng đoạn, phiên dịch trực tiếp
+Thời gian ở cột 3 là ước lượng của tôi, chưa đo trên máy bạn.
+14. Bố cục màn hình (chốt 2/11)
+Dự án hiện ra như một Discord của công ty: một khu thông báo kiểu Lark, và khu chat riêng cho từng tổ làm việc, kèm xem thông tin bản thân. Đây là cách sắp xếp các khối đã có trong kế hoạch, không thêm khối mới.
+14.1 Ba khung
+Khung
+Nội dung
+Khối trong kế hoạch
+Trái (sidebar)
+Bảng tin (có huy hiệu số bài chưa đọc), Việc của tôi, rồi cây phòng ban với kênh của từng tổ, cuối cùng Hồ sơ của tôi
+B5, B2, M9, B3
+Giữa
+Đổi theo mục đang chọn: bài Bảng tin; chat kênh tổ; bảng việc dạng Bảng hoặc Kanban; cuộc họp (ghi âm, biên bản, việc)
+B5, chat của clone, B6, B7
+Phải
+Thành viên của tổ đang xem; bấm tên thì hiện thẻ hồ sơ theo quyền, hoặc hồ sơ của chính mình
+B3
+14.2 Thay đổi so với kế hoạch trước
+Bảng tin không còn là mục cắt được. Nó là một nửa giao diện chính nên chuyển thành bắt buộc. Bản tối thiểu: HR đăng bài, ghim, người khác thấy và đánh dấu đã đọc, HR xem danh sách đã đọc. Chưa làm bình luận và lọc theo phòng.
+Nhập CSV (B4) trở thành mục cắt đầu tiên, thay cho Bảng tin. Dữ liệu giả ở B8 đã đủ để demo.
+Kênh chat theo tổ phụ thuộc clone Discord. Backend Spring Boot hiện chưa có kênh và tin nhắn. Nếu clone đã có chat thật thì gắn kênh vào cây phòng ban qua cột org_unit_id; nếu chưa thì không kịp tự viết chat đủ dùng, hãy giữ mục kênh là màn hình tĩnh (danh sách tổ kèm thành viên) và nói rõ chat là phần của clone.
+14.3 Lịch chỉnh lại (2/11 đến 5/11)
+Ngày
+Việc
+Cắt được không
+2/11
+B1, B2 tối thiểu, B3 có kiểm thử; khảo sát clone (ngôn ngữ, đã có chat thật chưa)
+Không
+3/11
+B6 + B7 (nối họp với tổ); B5 Bảng tin bản tối thiểu; sửa hai API cũ của TaskService (xem kết quả kiểm tra trong file Word, B6)
+Không
+4/11
+B8 dữ liệu giả + đổi tài khoản; M1 đồng ý ghi âm; đóng băng tính năng; chạy demo hai lần; báo cáo, ảnh, video
+M1 cắt được nếu phải chọn; ghi vào hạn chế
+5/11
+Dự phòng và nộp. Mục 13 (ghi hình, dịch tóm tắt) chỉ làm nếu đã xong hết
+Cắt
+Thứ tự cắt khi thiếu giờ: mục 13, rồi B4 CSV, rồi M1. Không cắt thẻ hồ sơ có kiểm tra quyền, Bảng tin bản tối thiểu, và liên kết họp đến bảng việc của tổ.
+Lịch chỉ là gợi ý, vì chưa biết bạn đã build backend đến đâu và clone dùng công nghệ gì.

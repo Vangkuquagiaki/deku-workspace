@@ -1,0 +1,672 @@
+FILENAME: Thiet_Ke_He_Thong_Nhan_Su_Giao_Tiep_AI_Doanh_Nghiep.docx
+
+TÀI LIỆU ĐẶC TẢ TỔNG THỂ
+NỀN TẢNG QUẢN TRỊ NHÂN SỰ,GIAO TIẾP DOANH NGHIỆPVÀ TRỢ LÝ AI
+Enterprise HRM + Workplace Collaboration + AI Meeting Intelligence
+Thông tin
+Nội dung
+Loại tài liệu
+Đặc tả chức năng + kiến trúc + dữ liệu + phân quyền + lộ trình triển khai
+Bối cảnh
+Công ty đa phòng ban: nhân sự, kế toán, kinh doanh, công nghệ, vận hành, ban giám đốc
+Cơ sở
+Tài liệu tham khảo Lark/Lark Base 13 trang lập ngày 31/10/2026; bản đề xuất mở rộng ngày 02/11/2026
+Mốc đồ án
+05/11/2026 — chỉ bàn giao phạm vi MVP đã xác minh
+Trạng thái
+Bản thiết kế đề xuất; KHÔNG đồng nghĩa các tính năng đã triển khai
+Nguyên tắc cốt lõi: Một danh tính — Một tổ chức — Một cơ chế phân quyền — AI chỉ đề xuất, con người phê duyệt.
+1. Tóm tắt điều hành và ranh giới phạm vi
+Mục tiêu: xây dựng nền tảng nội bộ giúp doanh nghiệp quản lý cơ cấu tổ chức và nhân viên, giao tiếp theo phòng/tổ, giao và theo dõi việc, xử lý đề xuất/nghỉ phép, tổ chức cuộc họp có AI hỗ trợ và giám sát hoạt động theo đúng quyền. Giai đoạn đầu không phát triển hệ thống tính lương toàn diện hoặc video conference đa điểm từ đầu.
+1.1. Đã được mô tả trong tài liệu gốc — KHÔNG tự nhận đã chạy
+Cấu trúc phòng ban/tổ và kênh chat private gắn org_unit_id; bảng tin, xác nhận đã đọc.
+Hồ sơ nhân viên rút gọn; phân quyền theo bảng/kênh, bản ghi và trường; Grid/Kanban.
+Luồng AI họp: Whisper + LLM, đề xuất action item, người xác nhận, giữ evidence_text; tự động đưa việc vào bảng của tổ.
+Backend Spring Boot + PostgreSQL + Flyway và một Discord clone có stack chưa xác minh; dịch vụ Python AI ở localhost:8000 được đề cập.
+M1–M9 (đồng ý ghi âm, biên bản, nhắc việc, danh bạ, đa ngôn ngữ, nghỉ phép, audit, việc của tôi…) được dẫn chiếu từ tài liệu kế hoạch chính chưa đính kèm ở yêu cầu này.
+1.2. Phân định đầu ra
+Mức
+Ý nghĩa
+Quyết định
+P0 — Demo 05/11
+Luồng end-to-end đủ bảo vệ, cắt giảm rủi ro tích hợp
+Không mở thêm nhiều mô-đun ngoài lõi
+P1 — Pilot nội bộ
+Nghiệp vụ HR thiết yếu cho 1 công ty thật
+Hồ sơ, vòng đời, nghỉ phép, audit, onboarding/offboarding, SSO/MFA
+P2 — Vận hành mở rộng
+Quy trình liên phòng ban, theo dõi và tích hợp
+Dashboard, tuyển dụng, đào tạo, attendance, tài liệu, tích hợp
+P3 — Enterprise nâng cao
+Đa chi nhánh/quốc gia, hiệu năng, chính sách phức tạp
+Tích hợp payroll, chính sách theo quốc gia, HA/DR và phân tích AI chuyên sâu
+2. Danh mục chức năng tổng thể
+Ký hiệu N = lấy từ hướng trong tài liệu 13 trang; M = tính năng thuộc kế hoạch chính được tài liệu dẫn chiếu nhưng chưa kiểm chứng; Đ = phần đề xuất bổ sung. Mức ưu tiên P0/P1/P2/P3 là đề xuất triển khai, KHÔNG phải trạng thái hoàn thành.
+Mã
+Danh mục và phạm vi
+Nguồn
+Ưu tiên
+ID
+Danh tính: đăng nhập/đăng ký, JWT, refresh token, quên mật khẩu, MFA/SSO, khóa phiên
+N + Đ
+P0/P1
+ORG
+Cơ cấu công ty/phòng ban/tổ, chức danh, trưởng phòng/tổ, điều chuyển, lịch sử
+N + Đ
+P0/P1
+EMP
+Danh bạ/hồ sơ nhân sự, mã nhân viên, hợp đồng, trạng thái, tệp, trường nhạy cảm
+N + M + Đ
+P0/P1
+LIFE
+Onboarding, thử việc, bổ nhiệm, chuyển tổ, offboarding, bàn giao, thu hồi quyền
+Đ
+P1
+CHAT
+Chat 1-1/nhóm, kênh tổ/private, tìm kiếm trong phạm vi được phép, file
+N
+P0/P1
+NEWS
+Bảng tin, ghim, đối tượng nhận, chưa đọc/đã đọc, xác nhận bắt buộc
+N + Đ
+P1
+TASK
+Việc của tôi/việc tổ, Grid, Kanban, deadline, ưu tiên, bình luận, nhắc việc
+N + M + Đ
+P0/P1
+MEET
+Lịch họp, người tham gia, quyền ghi âm, ghi hình, transcript, biên bản
+N + M + Đ
+P0/P1
+AI
+Whisper ASR, nhận dạng ngôn ngữ, tóm tắt, action items, dẫn chứng, người xác nhận
+N + Đ
+P0/P1
+LEAVE
+Chính sách phép, số dư, yêu cầu, quy trình duyệt, lịch nghỉ, hoàn phép
+M + Đ
+P1
+APP
+Quy trình duyệt nghỉ phép/công tác/đề xuất/chi phí với bản ghi quyết định
+N + Đ
+P1/P2
+ATT
+Ngày công, import CSV, điều chỉnh có phê duyệt, tích hợp thiết bị
+N + Đ
+P1/P2
+DOC
+Kho tài liệu, bản cập nhật, phân loại, chia sẻ có hạn, xem/tải theo quyền
+Đ
+P2
+NOTI
+Thông báo ứng dụng/email, badge, nhắc deadline, inbox, digest
+N + M + Đ
+P0/P1
+DASH
+Dashboard HR, quản lý, nhân viên, chỉ số theo quyền, xuất dữ liệu
+N + Đ
+P2
+REC
+Tuyển dụng: tin tuyển, ứng viên, pipeline, lịch phỏng vấn, thư mời
+Đ
+P2
+LMS
+Đào tạo/hội nhập: chương trình, chứng chỉ, kỹ năng, đánh giá
+Đ
+P2
+PERF
+Đánh giá hiệu suất theo kỳ, mục tiêu công việc và phản hồi có kiểm soát
+Đ
+P2
+PAY
+Tích hợp bảng lương, dữ liệu đầu vào, đối soát, KHÔNG tự viết engine luật thuế/lương ngay
+Đ
+P3
+GOV
+Quản trị quyền RBAC+ABAC, audit, bảo vệ dữ liệu, lưu giữ/xóa, export control
+N + M + Đ
+P0/P1
+INTEG
+API, import/export, webhook, email, lịch, SSO, HRIS/payroll bên ngoài
+N + Đ
+P2
+OPS
+Cấu hình, backup/restore, monitoring, health check, incident response
+Đ
+P1
+2.1. Điều kiện nghiệm thu chức năng HR thiết yếu
+Nhân sự nhập mới: cấp mã duy nhất trong công ty; gán phòng/tổ; kích hoạt tài khoản; ghi lịch sử.
+Điều chuyển: quyền kênh/tổ cũ bị thu hồi; quyền mới được cấp đúng thời điểm; việc chưa xong được rà soát/bàn giao.
+Nghỉ phép: kiểm tra số dư/chính sách; không tự trừ ngày trước khi được phê duyệt; lưu người duyệt và lịch sử.
+Nghỉ việc: thu hồi phiên/token và quyền, xử lý dữ liệu theo thời hạn lưu giữ áp dụng, bàn giao việc trước khi đóng hồ sơ.
+Thông báo nội bộ: gửi đúng nhóm nhận; hiển thị đã đọc và có thể yêu cầu xác nhận thông báo quan trọng.
+3. Vai trò, quyền và phạm vi dữ liệu
+Trục quyền 1: tenant (công ty/workspace); 2: module/chức năng; 3: tài nguyên/bản ghi theo tổ hoặc tuyến quản lý; 4: trường dữ liệu; 5: thao tác xem/tạo/sửa/duyệt/xuất. Hệ thống phải DENY nếu khác tenant; không sử dụng vai trò quản trị kỹ thuật như quyền xem mặc định toàn bộ dữ liệu nhân sự.
+Vai trò
+Phạm vi sử dụng
+Hạn chế quan trọng
+Nhân viên
+Hồ sơ của mình, kênh được mời, việc của mình/tổ; xin phép
+Không xem hồ sơ lương/ngày công người khác
+Tổ trưởng
+Việc và thông tin vận hành trong tổ, duyệt cấp tổ nếu được ủy quyền
+Không mặc định xem dữ liệu HR nhạy cảm
+Trưởng phòng
+Dữ liệu vận hành các tổ trực thuộc, phê duyệt theo quy trình
+Không xem tổ thuộc phòng khác
+HR Specialist
+Dữ liệu nhân sự theo nhiệm vụ, hồ sơ/hợp đồng/nghỉ phép
+Không mặc định xem chat và nội dung việc riêng của tổ
+HR Manager
+Quản trị chính sách phép, phê duyệt và báo cáo HR
+Thông tin lương có quyền bổ sung riêng
+Ban giám đốc
+KPI tổng hợp, duyệt các cấp khi phân công
+Chỉ drill-down cá nhân khi có quyền/cơ sở hợp lệ
+IT Administrator
+Cấu hình, tài khoản, bảo trì, phân quyền hệ thống
+Không tự động đọc dữ liệu HR; hỗ trợ đặc biệt theo quy trình có audit
+Auditor / Compliance
+Đọc log, trạng thái kiểm soát, bằng chứng được cấp phép
+Không tự sửa dữ liệu nghiệp vụ
+3.1. Quy tắc thực thi
+1. Tất cả request lấy danh tính và workspace hiện hành từ token/phiên tin cậy; không tin userId, role hoặc orgUnitId tự khai trong body.
+2. Thực hiện kiểm tra quyền ở service trước query hoặc gắn predicate vào query; lọc dữ liệu ngay trong DB cho danh sách phân trang.
+3. Quyền thao tác = quyền theo vai trò ∩ phạm vi tổ chức ∩ quyền đối tượng ∩ quyền trường ∩ chính sách nhạy cảm. Mặc định từ chối khi thiếu bất kỳ điều kiện bắt buộc nào.
+4. Nhân viên có nhiều quan hệ tổ: có thể hợp các quyền cấp, nhưng không được vượt giới hạn tenant, thông tin tối mật hoặc luật DENY rõ ràng.
+5. Ẩn trường trái quyền ngay từ DTO response; ghi audit cho xem/xuất/sửa thông tin nhạy cảm.
+6. Kiểm tra tương tự ở tải file, WebSocket subscription, tìm kiếm, AI truy vấn tài liệu, import/export và API legacy.
+3.2. Ví dụ phân quyền dữ liệu
+Dữ liệu
+Nhân viên
+Tổ trưởng
+Trưởng phòng
+HR
+IT Admin
+Tên, chức vụ, tổ
+Trong danh bạ được phép
+Trong phạm vi tổ
+Trong phạm vi phòng
+Theo nhiệm vụ
+Chỉ phạm vi quản trị tài khoản
+Ngày công chi tiết
+Của mình
+Tổ mình khi chính sách cho phép
+Phòng mình khi chính sách cho phép
+Theo nhiệm vụ
+Không
+Lương/hợp đồng riêng
+Của mình qua luồng bảo mật
+Không mặc định
+Không mặc định
+Chỉ nhóm được cấp
+Không
+Chat private của tổ
+Khi là thành viên
+Khi là thành viên
+Chỉ khi là thành viên
+Không mặc định
+Không mặc định
+Xuất toàn bộ hồ sơ
+Không
+Không
+Không
+Vai trò chuyên trách + mục đích + audit
+Không
+4. Quy trình nghiệp vụ đầu-cuối
+4.1. Tuyển dụng → nhân viên mới → hội nhập
+1. HR tiếp nhận yêu cầu tuyển dụng, tạo ứng viên và các vòng tuyển (P2).
+2. Khi được nhận, HR tạo employee record và mã nhân viên, xác định ngày hiệu lực và người quản lý trực tiếp.
+3. Hệ thống gửi lời mời đặt mật khẩu (không dùng một mật khẩu mặc định chung), gán phòng/tổ và quyền sau kích hoạt.
+4. Tạo checklist onboarding: cấp thiết bị, tài liệu nội quy, đào tạo, cuộc gặp quản lý, đánh giá thử việc.
+5. Đến mốc thử việc, hệ thống nhắc đúng người; quyết định chính thức/không tiếp tục được người có thẩm quyền xác nhận.
+4.2. Nhân viên xin nghỉ phép
+1. Nhân viên xem số dư và chính sách áp dụng; nhập loại phép, từ/đến, buổi nghỉ, lý do và người bàn giao.
+2. Hệ thống kiểm tra trùng ngày, người thay thế và số dư dự kiến; tạo yêu cầu ở trạng thái PENDING.
+3. Gửi người duyệt theo workflow do công ty cấu hình: tổ trưởng → trưởng phòng → HR tùy loại phép.
+4. Người duyệt APPROVE/REJECT/REQUEST_CHANGES; ghi thời điểm, lý do, trạng thái, và idempotency.
+5. Chỉ khi duyệt xong mới ghi biến động số dư và tạo lịch nghỉ; khi hủy đơn thì thực hiện giao dịch đảo có audit.
+4.3. Họp → AI → xác nhận → việc của tổ
+1. Cuộc họp thuộc workspace + org_unit; lưu danh sách người tham dự và trạng thái cho phép ghi âm/cơ sở xử lý theo chính sách.
+2. Nhận audio an toàn, lưu object storage; đẩy background job sang Python AI service.
+3. Whisper phiên âm và lưu transcript_segments có thời gian start/end; LLM đề xuất summary/action_items bằng JSON schema.
+4. AI trả assignee_name, deadline_text, evidence_text và confidence; trường mơ hồ = null, không phỏng đoán.
+5. Người được cấp quyền xem đoạn trích và chỉnh người làm/hạn/độ ưu tiên trước khi xác nhận.
+6. Sau DB commit, tạo event TaskConfirmed qua outbox; cập nhật bảng việc tổ và gửi thông báo bất đồng bộ.
+7. Quản lý xem Task Board Grid/Kanban; việc có thể được thay đổi, hủy hoặc đánh dấu hoàn thành cùng audit.
+4.4. Điều chuyển / nhân viên nghỉ việc
+1. HR tạo quyết định có effective_date; hệ thống lập danh sách quyền cũ, kênh, việc chưa xong, tài sản và dữ liệu cá nhân.
+2. Quản lý duyệt bàn giao công việc; quyền được cập nhật theo thời điểm hiệu lực.
+3. Khi nghỉ việc: khóa đăng nhập, thu hồi refresh token và mọi phiên đang hoạt động, xử lý ownership cuộc họp/tệp/việc.
+4. Lưu chứng từ hợp pháp theo chính sách; xóa/ẩn dữ liệu hết thời hạn áp dụng với bản ghi audit phù hợp.
+5. Kiến trúc kỹ thuật tổng thể
+Đề xuất: modular monolith Spring Boot cho nghiệp vụ lõi, tách AI Python thành service độc lập. Không ưu tiên kiến trúc hàng chục microservice ở giai đoạn đồ án hoặc pilot quy mô vừa; tách riêng từng domain khi có nhu cầu tải, nhóm phát triển và ranh giới dữ liệu đã đủ rõ.
+Sơ đồ 1. Kiến trúc logic đề xuất; Redis, mobile và worker queue có thể bật dần theo giai đoạn.
+Lớp
+Công nghệ đề xuất
+Nhiệm vụ
+Web
+React + TypeScript hoặc giữ stack web của Discord clone nếu đã ổn định
+Điều hướng, chat, Grid/Kanban, HR Portal, quyền hiển thị
+Backend lõi
+Spring Boot, Spring Security, JPA, Flyway, PostgreSQL
+Auth, HRM, tổ chức, dữ liệu và giao dịch, API, permissions
+Realtime
+Spring WebSocket/STOMP hoặc gateway realtime hiện có
+Chat, presence, notification event; phải kiểm tra quyền subscription
+AI
+FastAPI Python + Whisper + LLM provider abstraction
+ASR, tóm tắt, action items, phiên dịch sau họp; kiểm schema
+Storage
+PostgreSQL + object storage S3-compatible
+Dữ liệu nghiệp vụ, recording/transcript/attachment và file hợp đồng
+Async
+Transactional outbox + worker; Redis/RabbitMQ khi cần
+Gửi thông báo, retry xử lý AI, chống mất sự kiện sau commit
+Ops
+Docker Compose dev; CI/CD, TLS, secrets, monitoring prod
+Triển khai lặp lại, sao lưu, giám sát và quản trị sự cố
+5.1. Backend theo module và quy tắc biên
+Module
+Chịu trách nhiệm
+Không được phụ thuộc trực tiếp
+identity
+Đăng nhập, phiên, tài khoản, liên kết SSO
+Không biết chi tiết lương/biên bản họp
+organization
+Workspace, org unit, membership, roles
+Không tự quản lý bảng chấm công
+hr
+Employee, hợp đồng, lịch sử, chính sách phép
+Không ghi trực tiếp message tables
+collaboration
+Chat, channels, posts, files, notifications
+Không truy cập hợp đồng nhạy cảm
+meetings
+Cuộc họp, người tham dự, recording, transcript, AI jobs
+Không tự xác nhận việc thay người dùng
+tasks
+Tasks, assignee, evidence, trạng thái, team board
+Không quyết định chính sách HR
+approvals
+Workflow, step, quyết định, delegations
+Không trừ phép trước trạng thái APPROVED
+security-audit
+Policy enforcement, audit, data retention, export controls
+Không ghi secret/token plaintext
+5.2. Cấu trúc thư mục tham khảo
+backend/src/main/java/.../  →  identity/ | organization/ | hr/ | collaboration/ | meetings/ | tasks/ | approvals/ | notifications/ | security/ | audit/ | shared/ai-service/  →  api/ | transcription/ | diarization/ | summarization/ | action_items/ | providers/ | evaluation/ | jobs/web/  →  app/ | features/hr/ | features/chat/ | features/tasks/ | features/meetings/ | features/admin/ | shared/infra/  →  compose/ | nginx/ | migrations/ | monitoring/ | backup/
+6. Thiết kế cơ sở dữ liệu logic
+Mọi bảng nghiệp vụ có phạm vi công ty đều cần workspace_id hoặc đường liên kết bắt buộc về workspace; API phải kiểm tra cùng tenant khi gán khóa ngoại. Các bảng P0 có thể giữ theo V1–V4 hiện tại rồi migration từng bước, không xóa dữ liệu cũ để thiết kế lại.
+Miền
+Các bảng/đối tượng chính
+Ràng buộc đáng chú ý
+Identity
+users, sessions, refresh_tokens, workspaces, workspace_members
+Một user có thể thuộc nhiều workspace; phiên có khả năng thu hồi
+Organization
+org_units, org_unit_members, employee_assignments
+Parent cùng workspace; history with effective_from/to; chống vòng lặp
+HR
+employees, employee_profiles, employee_contracts, employee_documents, employment_events
+UNIQUE(workspace_id,employee_code); tách dữ liệu nhạy cảm
+Leave
+leave_policies, leave_balances, leave_requests, leave_request_days, approval_steps
+Biến động phép có nhật ký; ngày phép thuộc policy
+Attendance
+attendance_records, attendance_import_batches, attendance_corrections
+Chống nhập trùng cùng nhân viên + ngày/kỳ; idempotency
+Chat
+channels, channel_members, messages, message_attachments, message_reads
+Private channel, permissions cho file và lịch sử
+News
+post_categories, posts, post_audiences, post_reads
+Có đối tượng nhận và confirmed read
+Meetings
+meetings, meeting_attendees, recording_consents, recordings, transcript_segments, ai_jobs, meeting_summaries
+Recording state, timestamps, nguồn dẫn chứng, TTL
+Tasks
+tasks, task_events, task_comments, task_attachments
+is_human_confirmed; source_meeting_id; evidence_text/start/end
+Ops
+notifications, notification_deliveries, audit_logs, outbox_events, data_retention_policies
+Audit không chứa bí mật; outbox có retry/status
+6.1. Các trường cốt lõi cho hồ sơ
+Đối tượng
+Ví dụ trường
+Phân loại quyền
+employee
+id, workspace_id, user_id?, employee_code, status, start_date, end_date
+HR-managed
+employment_assignment
+employee_id, org_unit_id, job_title, manager_employee_id, effective_from/to
+HR, manager theo phạm vi
+employee_profile
+display_name, work_email, avatar, phone_work, work_location, preferred_language
+Một phần public nội bộ
+employee_private
+identity_document, home_address, birth_date, emergency_contact
+Thông tin nhạy cảm, cần cơ sở xử lý, không trả trong directory
+employee_contract
+type, start_on, end_on, document_key, signed_on
+Chỉ HR được giao và chính chủ theo chính sách
+attendance_record
+employee_id, date/month, days/hours, source, import_batch_id
+Chính chủ/HR/manager hạn chế
+6.2. Tính toàn vẹn và migration
+Lưu timestamp UTC, hiển thị theo timezone của workspace hoặc người dùng; lưu DATE cho nghiệp vụ ngày công/nghỉ phép nếu không cần giờ.
+Có created_at, updated_at, created_by, version cho entity quan trọng, lịch sử quyết định không cập nhật đè.
+Thêm unique/index cho (workspace_id, employee_code), (workspace_id, parent_id), (org_unit_id, user_id), (org_unit_id, status) ở task.
+Dùng FK/chính sách query đảm bảo không thể dùng employee từ công ty A gán vào tổ/meeting của công ty B.
+Tránh ON DELETE CASCADE cho dữ liệu lịch sử nhân sự/nghiệp vụ cần giữ theo chính sách; archive và retention phải có thiết kế riêng.
+Migration theo Flyway; backup trước khi chạy và kiểm thử trên bản sao dữ liệu. Không dựa vào Hibernate auto-ddl ở production.
+7. Hợp đồng API đề xuất
+Nhóm
+Endpoint tham khảo
+Quyền/điều kiện
+Auth
+POST /api/auth/login ; POST /api/auth/refresh ; POST /api/auth/logout
+Rate limit, refresh rotation, revoke
+Organization
+GET /api/org-units/tree ; POST /api/org-units
+Scope workspace; HR/manager có grant
+Employee
+GET /api/employees/{id}; PATCH /api/employees/{id}
+DTO theo field policy; audit
+History
+POST /api/employees/{id}/assignments
+HR authorized; ngày hiệu lực
+Employee import
+POST /api/hr/import?dryRun=true
+Dry-run, validate, transaction, no partial write
+Leave
+POST /api/leave-requests; GET /api/leave-requests/mine
+Employee + policy/entitlement
+Approvals
+POST /api/approvals/{id}/decisions
+Chỉ người ở approval step; concurrency control
+Chat
+GET /api/channels; POST /api/channels/{id}/messages
+Channel member; attachment policy
+News
+GET /api/posts; POST /api/posts/{id}/read
+Đúng audience
+Meeting
+POST /api/meetings; POST /api/meetings/{id}/recording-consents
+Meeting scope; consent/cơ sở xử lý
+AI
+POST /api/meetings/{id}/ai-jobs; GET /api/ai-jobs/{id}
+Async, chỉ người có quyền
+Tasks
+GET /api/org-units/{id}/tasks; PATCH /api/tasks/{id}/confirm
+Scope tổ, ai chưa được confirm không xuất hiện trong board
+Notifications
+GET /api/notifications; PATCH /api/notifications/{id}/read
+Owner only
+Audit
+GET /api/audit-logs; POST /api/exports
+Role chuyên trách; ghi lại export
+Quy tắc API: OpenAPI 3, DTO rõ ràng, pagination, validation, optimistic locking, idempotency key cho hành động có thể lặp và response lỗi thống nhất; kiểm quyền cả đối tượng con (file, evidence, transcript, comment).
+8. Thiết kế AI Meeting Intelligence có kiểm soát
+8.1. AI job và dữ liệu đầu ra
+Bước
+Input
+Output / kiểm tra
+1. Upload
+File audio/video + meeting_id + người gửi
+Quyền/đồng ý/cơ sở xử lý, file type, size, virus scan
+2. ASR
+Audio chunks + language hint nếu có
+transcript_segments(start_ms,end_ms,speaker_id?,text)
+3. Tóm tắt
+Transcript đã chuẩn hóa + ngữ cảnh cấp phép
+summary có nguồn đoạn/segment
+4. Action item
+Transcript + schema JSON
+title, assignee_name?, deadline_text?, evidence_text, segment_ids, confidence
+5. Review
+Bản đề xuất + danh sách nhân viên hợp lệ cùng phạm vi
+Người dùng chọn assignee_id/due_date/priority; xác nhận
+6. Commit & notify
+Task confirmed + org_unit
+Outbox event, team board và thông báo, retries
+8.2. Guardrail bắt buộc
+Không suy đoán tên, hạn hoàn thành, quyết định HR hoặc trách nhiệm nếu dữ liệu không chắc: để null và yêu cầu người dùng chỉnh.
+Mọi action item hiển thị evidence_text và nếu có thì timestamp/start/end; click để mở transcript được cấp quyền.
+Tài liệu/đoạn transcript là dữ liệu đầu vào không đáng tin cậy: phòng prompt injection, yêu cầu AI xuất JSON schema, xác thực JSON ở backend.
+Không đưa hồ sơ riêng, hợp đồng, thông tin lương, nội dung ngoài scope sang nhà cung cấp LLM nếu chưa có phê duyệt/chính sách xử lý phù hợp.
+Mỗi job có status QUEUED/RUNNING/SUCCEEDED/FAILED/CANCELLED, số lần thử, hash đầu vào, lỗi tóm tắt không chứa dữ liệu nhạy cảm.
+Cho phép xóa recording và bản dẫn xuất theo chính sách, quan tâm cả cache, object và bản sao.
+8.3. Đánh giá chất lượng AI
+Chỉ số
+Cách đo
+Ghi chú
+WER/CER
+So với transcript chuẩn kiểm thủ công trên bộ audio tiếng Việt/Anh
+Không khẳng định chính xác nếu chưa đo
+Task precision/recall
+So sánh action items trích xuất với danh sách gán nhãn chuyên gia
+Phân biệt bỏ sót và tạo việc ảo
+Evidence coverage
+Tỷ lệ đề xuất có đúng đoạn trích nguồn
+Mục tiêu kiểm soát hallucinaton
+Human acceptance
+Số đề xuất được chấp nhận/sửa/từ chối
+Giám sát giá trị thực tế
+Pipeline latency/cost
+Thời gian và chi phí cho mỗi phút audio
+Đánh giá trước khi mở rộng
+9. Giao diện và trải nghiệm theo vai trò
+9.1. Cấu trúc menu đề xuất
+Nhân viên
+Tổ trưởng / trưởng phòng
+HR / Admin / CEO
+Trang chủ; Chat; Bảng tin; Lịch/ cuộc họp; Việc của tôi; Xin nghỉ; Hồ sơ cá nhân
+Tất cả phần nhân viên + Việc của tổ; Phê duyệt; Nhân sự trực thuộc; Báo cáo tổ/phòng
+HR: Hồ sơ; Cơ cấu; Nhập dữ liệu; Hợp đồng; Nghỉ phép; Onboarding; Báo cáo HR. IT: Cấu hình/bảo mật. CEO: Dashboard tổng hợp
+9.2. Danh sách màn hình nên có trong prototype
+Màn hình
+Thành phần chính
+Giai đoạn
+Login / Workspace switcher
+Đăng nhập, chọn công ty, demo-only profile selector
+P0
+Company sidebar
+Phòng ban/tổ, channel visibility
+P0
+Employee profile modal
+Trường dữ liệu theo policy và vai trò
+P0
+Meetings center
+Tạo họp, upload, transcript, summary, action review
+P0
+Team tasks
+Grid + Kanban, evidence, chuyển trạng thái
+P0
+HR directory
+Danh sách, bộ lọc trạng thái, xem chi tiết và lịch sử
+P1
+Leave portal
+Đơn của tôi, số dư, lịch nghỉ, hàng chờ phê duyệt
+P1
+Admin / Audit
+Roles, grants, truy cập, retention, exports
+P1
+Dashboard
+Headcount, nhân sự mới, nghỉ việc, yêu cầu chờ duyệt
+P2
+10. Yêu cầu phi chức năng, bảo mật và pháp lý
+10.1. Thiết kế kiểm soát bảo mật
+Authentication: MFA đối với HR/admin; SSO/OIDC khi triển khai công ty; refresh rotation, revoke token, khóa phiên khi nghỉ việc; chống brute force.
+Authorization: deny-by-default; kiểm tra BOLA/BOPLA/BFLA theo OWASP API Top 10 2023 cho tất cả API chứa UUID hoặc field nhạy cảm.
+Data security: TLS, encryption at rest và backup; mật khẩu hash bằng Argon2id hoặc BCrypt với cấu hình cập nhật; secret manager; không ghi token vào log.
+Vận hành: audit bất biến tương đối, người thực hiện/hành động/đối tượng/mốc thời gian/kết quả; alert đăng nhập bất thường và export số lượng lớn.
+Backup/DR: kiểm thử khôi phục định kỳ; backup được mã hóa, tách khóa, xác định RPO/RTO cùng doanh nghiệp trước khi triển khai thật.
+Tích hợp AI: đánh giá nhà cung cấp về chính sách lưu/training, hợp đồng xử lý dữ liệu và chuyển dữ liệu ra nước ngoài nếu áp dụng.
+10.2. Dữ liệu cá nhân tại Việt Nam (mốc kiểm tra 02/11/2026)
+Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 có hiệu lực từ 01/01/2026; Nghị định 356/2025/NĐ-CP có hiệu lực từ 01/01/2026. Điều 25 của Luật có quy định cụ thể về dữ liệu trong tuyển dụng, quản lý và sử dụng người lao động. Cần rà soát cơ sở pháp lý của từng hoạt động, thông báo minh bạch, quyền của chủ thể dữ liệu, thời hạn lưu, việc xóa/hủy và các ngoại lệ theo luật trước khi vận hành thật. Đây là yêu cầu cần đối chiếu với tư vấn pháp lý của doanh nghiệp, không chỉ lập trình giao diện tick đồng ý.
+Tạo data inventory theo loại: ứng viên, nhân viên, hợp đồng, ngày công, chat, ghi âm, transcript, log, hồ sơ nhạy cảm.
+Mỗi mục đích xử lý có chủ thể xử lý, phạm vi, quyền và thời hạn lưu giữ; không dùng một giá trị retention cố định cho mọi loại.
+Ghi âm cuộc họp: thiết kế bước thông báo và quản lý đồng ý/cơ sở xử lý theo từng tình huống; không mặc nhiên coi tất cả bản ghi là được phép dùng để huấn luyện AI.
+Ứng viên không trúng tuyển và nhân viên nghỉ việc cần workflow xử lý/xóa/giữ theo điều kiện luật và nghĩa vụ lưu trữ khác; tránh xóa cứng ngay mọi dữ liệu nếu pháp luật yêu cầu giữ.
+Nhân viên có quy trình gửi yêu cầu về dữ liệu, quyền riêng tư và khiếu nại; có người phụ trách xử lý và nhật ký.
+10.3. Chỉ tiêu vận hành đề xuất, chưa kiểm chứng
+Đối với pilot khoảng 100–500 người (giả định cần được công ty xác nhận), nên lập mục tiêu kiểm thử tải: tần suất kết nối WebSocket, thời gian phản hồi p95 của API, thời gian xử lý audio, dung lượng lưu trữ và RPO/RTO. Không ghi những thông số chưa đo là “đã đạt”.
+11. Kiến trúc triển khai và vận hành
+11.1. Môi trường
+Môi trường
+Cấu hình
+Mục tiêu
+Local / demo
+Docker Compose: PostgreSQL, Spring Boot, FastAPI; file/object storage local; tài khoản giả
+Chạy một lệnh, demo không phụ thuộc dữ liệu thật
+Staging
+Tương đương production về cấu hình bảo mật; dữ liệu đã ẩn danh
+Test chức năng, migration, phân quyền, tải
+Production
+Reverse proxy TLS, backend private network, DB managed/backup, object storage, worker, secret store, monitoring
+Vận hành kiểm soát; không lộ database/AI internal trực tiếp ra Internet
+11.2. Quy trình release
+1. Developer commit → CI chạy format, lint, unit tests, SAST và kiểm dependencies.
+2. Integration test với PostgreSQL thật (Testcontainers), migration Flyway và API contract tests.
+3. Kiểm thử bảo mật phân quyền theo ma trận; test upload file độc hại/URL độc hại; đánh giá AI trên tập dữ liệu mẫu.
+4. Deploy staging → chạy smoke tests → duyệt migration + rollback plan.
+5. Deploy production theo từng đợt, quan sát log/metrics/traces, thực hiện backup restore drill.
+12. Lộ trình triển khai dựa trên trạng thái thực tế
+12.1. Trước 05/11/2026 — ưu tiên bảo vệ đồ án
+Thứ tự
+Hạng mục
+Tiêu chí “xong”
+0
+Chốt một backend là nguồn sự thật cho identity/organization/tasks; bảo đảm build, login, database
+API login + workspace thành công
+1
+org_units + membership + profile access policy; đóng API legacy hở quyền
+Test cross-team, cross-tenant 403/404 phù hợp
+2
+Meeting -> Whisper/LLM -> action item review -> confirm -> team task
+Một cuộc họp tạo được việc cho đúng tổ
+3
+Task Board Grid/Kanban, evidence_text và trạng thái
+Kéo thả, reload không mất dữ liệu
+4
+Seed demo 4 vai trò, kiểm thử, ảnh và quay demo dự phòng
+Chạy 2 lần từ DB sạch, không cần dữ liệu thật
+Các phần nhập CSV, bảng tin, nghỉ phép mới, dashboard chi tiết, live video là mục cắt nếu gây rủi ro deadline. Không trình bày khả năng chưa làm như đã hoàn thành.
+12.2. Sau đồ án — thứ tự phát triển thành phần mềm dùng thật
+Giai đoạn
+Mục tiêu
+Phân hệ và đầu ra
+P1A — Foundation
+Pilot nội bộ có bảo mật và tài khoản nhân sự chuẩn
+SSO/MFA, audit, HR profile + employment, invitations, onboarding/offboarding
+P1B — HR workflow
+Giảm xử lý thủ công
+Leave balance, approval, attendance CSV, reminders, quyền cấp quản lý
+P2A — Collaboration
+Làm việc liên phòng ban
+Announcements, notifications, files, search theo ACL, dashboards
+P2B — HR mở rộng
+Quản trị nhân sự đầy đủ hơn
+Recruitment, training, performance và APIs tích hợp
+P3 — Enterprise
+Đa chi nhánh, quy mô lớn, tích hợp tài chính
+Payroll adapter, quốc gia/chi nhánh, BI, HA/DR, compliance chuyên sâu
+13. Kiểm thử, minh chứng và tiêu chí chấp nhận
+13.1. Kiểm thử bảo mật tối thiểu
+Ca
+Thao tác
+Kết quả mong đợi
+SEC-01
+Tài khoản tổ B gọi GET task của tổ A
+Không lấy được dữ liệu (403 hoặc 404 theo chính sách API)
+SEC-02
+Dùng ID employee công ty khác trong request
+Không truy cập/không sửa được
+SEC-03
+Nhân viên sửa body role/is_hr/compensation
+Field không được chấp nhận/được bỏ và có audit phù hợp
+SEC-04
+HR không thuộc kênh private tải transcript/file của kênh
+Từ chối
+SEC-05
+IT admin không có HR grant xem hợp đồng riêng
+Từ chối
+SEC-06
+Nhân viên nghỉ việc sử dụng refresh token cũ
+Token không còn hiệu lực
+SEC-07
+Mở endpoint demo trên profile production
+Không tồn tại endpoint
+SEC-08
+Export dữ liệu trái quyền hoặc filter bỏ qua ACL
+Từ chối; không xuất được dữ liệu
+13.2. Kiểm thử nghiệp vụ
+HR chuyển nhân viên sang tổ khác, verify hiển thị kênh và việc mới đồng bộ với quyền.
+Kịch bản xin phép trùng ngày, không đủ phép, rút đơn trước/sau duyệt, người duyệt vắng mặt.
+Nhập CSV thử dryRun, sai dữ liệu ở dòng cuối, duplicate employee code và rollback toàn bộ transaction.
+AI trích đúng hai việc có evidence; tên trùng không gán người bừa; deadline mơ hồ không tự chuyển ngày.
+Kiểm thử người duyệt nhấn phê duyệt hai lần; chỉ ghi một quyết định và một biến động phép.
+Khôi phục file từ backup được kiểm tra bằng test thay vì chỉ dựa trên “backup thành công”.
+13.3. Kịch bản demo 7 phút
+Thời lượng
+Nội dung minh chứng
+0:00–1:00
+Đăng nhập nhân viên; sidebar theo phòng ban và tổ; phòng/tổ không có quyền bị ẩn và API bị chặn.
+1:00–2:00
+Mở hồ sơ thành viên; so sánh trường hiển thị ở nhân viên và tổ trưởng.
+2:00–4:30
+Mở cuộc họp mẫu; transcript → summary → đề xuất action items + evidence; người dùng xác nhận.
+4:30–6:00
+Bảng việc Grid/Kanban; việc về đúng tổ, đổi trạng thái, reload vẫn giữ.
+6:00–7:00
+Nhân sự khác tổ thử truy cập và bị từ chối; tổng kết hướng phát triển HR.
+14. Rủi ro và những quyết định phải chốt
+Rủi ro/điểm chưa rõ
+Ảnh hưởng
+Quyết định khuyến nghị
+Discord clone có backend nào?
+Có thể có hai nguồn user, channel, message khác nhau
+Chốt nguồn sự thật; tạm không merge hai auth stack trong 3 ngày
+Whisper/LLM chưa đo chất lượng tiếng Việt
+Action item sai người, bỏ sót, tốn chi phí
+Human-in-the-loop, evidence, test set gắn nhãn
+Quyền chồng chéo HR/manager/IT
+Rò dữ liệu nhân viên
+ABAC theo tài nguyên + default-deny + audit
+Tài liệu chính M1–M9 chưa được cung cấp
+Không xác minh được tình trạng đã làm
+Đối chiếu theo mã nguồn/test khi lập backlog sprint
+Dữ liệu họp có thể nhạy cảm
+Rủi ro pháp lý, mất uy tín
+Data classification, TTL, consent/legal-basis workflow, hạn chế AI provider
+Scope mở rộng quá nhanh
+Không kịp MVP/khó vận hành
+Cắt P2/P3; đóng băng demo đúng hạn
+15. Tài liệu tham khảo và giới hạn
+Tài liệu cơ sở: “Tham_Khao_Lark_Chon_Loc_Va_Ke_Hoach_Thuc_Hien.docx”, 13 trang, lập 31/10/2026, phần bổ sung 02/11/2026; các mục 1–9 và M1–M9 được dẫn chiếu. Nội dung tài liệu gốc phản ánh kế hoạch thiết kế, không thay thế kiểm chứng code/repository thực tế.
+Nguồn ngoài dùng để cập nhật tiêu chí an toàn/pháp lý (truy cập 02/11/2026):
+• Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 – https://congbao.chinhphu.vn/van-ban/luat-so-91-2025-qh15-45578/57730.htm
+• Nghị định 356/2025/NĐ-CP – https://congbao.chinhphu.vn/van-ban/nghi-dinh-so-356-2025-nd-cp-468371.htm
+• Điều 25 về tuyển dụng, quản lý người lao động (Cổng TT Chính phủ) – https://xaydungchinhsach.chinhphu.vn/doanh-nghiep-phai-xoa-du-lieu-ca-nhan-nguoi-lao-dong-khi-cham-dut-hop-dong-119250728094419409.htm
+• OWASP API Security Top 10 (2023) – https://api-security.owasp.org/editions/2023/en/0x11-t10/
+• OWASP ASVS 5.0.0 – https://asvs.owasp.org/
+• Spring Boot Observability – https://docs.spring.io/spring-boot/reference/actuator/observability.html
+Miễn trừ: Đây là thiết kế hệ thống và định hướng tuân thủ, không phải ý kiến pháp lý. Các module P1–P3, KPI, SLO và công nghệ triển khai cần được xác nhận qua yêu cầu của công ty, ngân sách, nguồn lực, mã nguồn hiện có và kiểm thử.
+16. Checklist trước khi thử nghiệm với doanh nghiệp thật
+Nhóm
+Điều kiện đạt trước khi Go-live
+Phạm vi
+Có quy trình được HR, IT và trưởng phòng xác nhận; không dùng dữ liệu nhân viên thật trong demo công khai.
+Bảo mật
+MFA cho tài khoản nhạy cảm; quản lý phiên; test cross-tenant và cross-team; không có endpoint demo trên production.
+Dữ liệu
+Phân loại dữ liệu; retention policy; import/export có audit; kiểm tra backup và quy trình khôi phục thực tế.
+AI
+Cho phép tắt AI theo workspace/meeting; thông báo và cơ sở xử lý phù hợp; evidence, xác nhận người dùng, đánh giá sai lệch.
+Nghiệp vụ
+Kịch bản onboarding, chuyển tổ, nghỉ phép, offboarding có người phụ trách và tiêu chí nghiệm thu.
+Vận hành
+Giám sát uptime, tỷ lệ lỗi, chi phí AI, dung lượng storage, quy trình báo lỗi và phản ứng sự cố.
+Pháp lý
+Bộ phận có trách nhiệm rà soát Luật 91/2025/QH15, Nghị định 356/2025/NĐ-CP và chính sách công ty.

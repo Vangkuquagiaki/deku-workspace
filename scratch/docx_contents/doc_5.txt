@@ -1,0 +1,468 @@
+FILENAME: Tham_Khao_Lark_Chon_Loc_Va_Ke_Hoach_Thuc_Hien.docx
+
+Tham khảo Lark và Lark Base
+Chọn lọc tính năng phù hợp môi trường công ty và các bước thực hiện chi tiết cho dự án
+Dự án: Xây dựng nền tảng giao tiếp và cộng tác doanh nghiệp tích hợp trí tuệ nhân tạo hỗ trợ cuộc họp  |  Ngày lập: 31/10/2026  |  Hạn nộp: 05/11/2026
+1. Kết luận ngắn
+Lark là bộ công cụ làm việc hoàn chỉnh của doanh nghiệp, Lark Base là phần bảng dữ liệu tùy biến nằm trong đó. Dự án của bạn không cạnh tranh với Lark. Cách dùng đúng là học cách Lark tổ chức công việc trong công ty, rồi lấy những phần nhỏ nhất đủ để chứng minh ý tưởng của bạn trong thời gian còn lại trước hạn 5/11.
+Sau khi đối chiếu từng tính năng, kết quả chọn lọc như sau:
+Lấy 9 ý (mục 3): nhóm chat theo tổ, thông báo ghim cho Bảng tin, cây phòng ban, hồ sơ thành viên có kiểm soát trường hiển thị, ba tầng phân quyền theo kiểu Lark Base, bảng việc của tổ với hai kiểu xem (Bảng và Kanban), một luật tự động duy nhất, trích xuất việc từ cuộc họp bằng AI, và bộ chuyển tài khoản để xem thử theo vai trò.
+Để sau: Gantt, Gallery, Lịch, Form, Dashboard, Phê duyệt (nghỉ phép, chi phí), chấm công tự động, dịch tin nhắn tức thời, bot.
+Không lấy: chat bí mật tự xóa, hệ thống gọi video (chỉ có ghi hình ngay trong trình duyệt, xem mục 9), soạn tài liệu đồng thời, OKR, Wiki, Mail. Chat tự xóa còn mâu thuẫn với nhu cầu lưu vết trong môi trường công ty.
+Điểm khác biệt giữ nguyên: AI chỉ đề xuất, người xác nhận mới thành việc; trường nào AI không chắc thì để trống; mỗi việc giữ đoạn trích nguyên văn từ cuộc họp.
+Giới hạn của việc tham khảo (cần biết khi viết báo cáo). Nhiều trang trợ giúp chính thức của Lark chỉ tải được phần mở đầu, nên chi tiết về trang hồ sơ thành viên, đơn vị (units) và các loại trigger của automation chưa đọc được đầy đủ. Phần phân quyền của Base lấy từ bài hướng dẫn của bên thứ ba (Exabytes), không phải trang chính thức. Những chỗ này được đánh dấu ở cột "Độ chắc chắn" và nên đối chiếu lại trong Lark thật trước khi trích dẫn.
+2. Lark và Lark Base gồm những gì
+2.1 Các mô-đun chính của Lark
+Mô-đun
+Làm gì
+Nguồn
+Độ chắc chắn
+Messenger
+Chat 1-1 và nhóm, trả lời theo luồng, dịch tức thời, ghim tin, đặt thông báo nhóm, tìm kiếm. Có chat bí mật tự xóa sau 1 phút đến 1 tuần.
+[5] [6]
+Trung bình (bài của bên thứ ba)
+Meetings
+Họp video, chia sẻ tài liệu ngay trong cuộc họp (Magic Share). Số người tối đa khác nhau giữa các bài (350 và 500), nên không dùng con số này.
+[5] [6]
+Thấp về số liệu
+AI meeting notes / Minutes
+Phiên âm thời gian thực, tóm tắt cuộc họp, giao việc, đồng bộ lịch.
+[8]
+Cao (trang sản phẩm, chỉ có mô tả ngắn)
+Docs, Drive, Wiki
+Soạn tài liệu đồng thời, lưu trữ, kho tri thức nội bộ.
+[5]
+Trung bình
+Calendar, Task, OKR
+Lịch dùng chung, giao việc có hạn và việc con, mục tiêu công ty.
+[5]
+Trung bình
+Approval
+Admin dựng form và quy trình duyệt; mẫu có sẵn cho nghỉ phép, công tác, hoàn chi phí. Yêu cầu đi qua từng người duyệt theo thứ tự và chỉ qua khi mọi người đồng ý. Có thể chuyển yêu cầu vào chat.
+[7]
+Trung bình
+Attendance và HR
+Chấm công, check-in và quy trình nhân sự.
+[5]
+Thấp (chỉ một dòng mô tả)
+Admin: đơn vị, trang hồ sơ
+Admin tạo và quản lý đơn vị (phòng ban), cấu hình các trường trên trang hồ sơ thành viên và ai được xem trường nào. Chỉ đọc được tiêu đề và quyền cần có, chưa đọc được các bước.
+[10] [11]
+Thấp
+Open Platform
+API và bot để tích hợp.
+[5]
+Trung bình
+2.2 Lark Base
+Thành phần
+Làm gì
+Nguồn
+Độ chắc chắn
+Kiểu xem
+Grid (bảng mặc định), Kanban, Gantt, Gallery, Calendar, Form. Cùng một dữ liệu hiện được nhiều kiểu xem.
+[1] [2]
+Cao
+Kiểu trường
+Có trường Progress, Attachment, Group (liên kết nhóm chat), AI content (truy cập sớm).
+[1]
+Cao
+Automation
+Chạy khi dữ liệu đổi, theo điều kiện kích hoạt. Hành động gồm gửi cảnh báo vào chat, cập nhật bản ghi, nhắc việc, tạo sự kiện, tạo việc, tạo nhóm, thêm hoặc bớt thành viên nhóm. Danh sách trigger đầy đủ chưa đọc được.
+[1] [12]
+Trung bình
+Dashboard
+Biểu đồ cập nhật theo dữ liệu, chia sẻ không cần cấp quyền cả base. Chỉ Owner và Administrator được sửa dashboard.
+[1] [4]
+Cao
+Form
+Biến các trường thành câu hỏi để thu dữ liệu, kết quả ghi ngược vào bảng.
+[1]
+Cao
+Quyền nâng cao
+Bật bằng nút riêng. Có vai trò hệ thống và vai trò tùy chỉnh. Quyền theo bảng (quản lý, sửa, chỉ xem, không truy cập), theo bản ghi (tất cả, liên quan đến thành viên, theo điều kiện lọc), theo trường (xem, thêm, sửa). Quyền chi tiết không bao giờ vượt quyền bảng. Quyền theo kiểu xem, tải tệp đính kèm, sao chép và xuất dữ liệu cũng cấu hình được. Admin xem thử với tư cách một vai trò để kiểm tra.
+[3] [4] [9]
+Trung bình (bài của bên thứ ba, khớp với tiêu đề trang chính thức)
+3. Bảng chọn lọc: lấy gì, để sau gì, bỏ gì
+Ba tiêu chí chấm: hợp môi trường công ty (nhân viên, sếp, nhân sự, nhiều nước), làm được trước hạn 5/11, và hợp với Discord clone đã có. Cột "Cách làm" chỉ rõ phần tối thiểu để nộp.
+Tính năng của Lark
+Quyết định
+Lý do (môi trường công ty)
+Cách làm trong dự án
+Nhóm chat theo phòng ban và tổ
+Lấy
+Công ty chia việc theo tổ; mỗi tổ có chat riêng để kiểm tra công việc (đúng thực tế bạn mô tả).
+Kênh private gắn với tổ qua cột org_unit_id. Kênh Discord là chỗ chat, tổ là chỗ phân quyền.
+Thông báo ghim trong nhóm
+Lấy
+Cấp trên ban hành thông tin, toàn thể nhân sự phải thấy và biết ai chưa xem.
+Mục Bảng tin: HR đăng, ghim, đánh dấu đã đọc, HR xem danh sách đã đọc. Không làm bình luận.
+Cây đơn vị (phòng ban, tổ)
+Lấy
+Mọi quyền trong công ty đều bám vào cơ cấu tổ chức.
+Hai cấp: Phòng ban rồi Tổ. Bảng org_units và org_unit_members.
+Trang hồ sơ thành viên, kiểm soát trường hiển thị
+Lấy
+Lộ thông tin nhân sự sai người là rủi ro lớn nhất trong công ty.
+Thẻ hồ sơ khi bấm tên; mỗi trường có luật xem riêng, kiểm tra ở backend.
+Quyền theo ba tầng (bảng, bản ghi, trường)
+Lấy
+Đây là mô hình quyền gọn và dễ giải thích với hội đồng.
+Một service quyền duy nhất, áp ba tầng (mục 4).
+Base: kiểu xem Grid và Kanban
+Lấy bản rút gọn
+Mỗi tổ cần bảng việc chung; hai kiểu xem chứng minh khái niệm "một dữ liệu, nhiều cách xem".
+Dùng bảng tasks đã có làm bảng việc; chưa làm cột tùy chỉnh. Giao diện có nút đổi Bảng và Kanban.
+Base: quyền theo bản ghi
+Lấy
+Nhân viên chỉ thấy việc của tổ mình.
+Điều kiện lọc tasks.org_unit_id khớp tổ của người xem.
+Base: automation
+Lấy bản rút gọn
+Bản chất của họp có AI là biến cuộc họp thành việc.
+Một luật cố định: khi người dùng xác nhận action item thì gán tổ, gán người làm, báo vào kênh tổ. Không làm trình dựng luật.
+AI meeting notes
+Đã có, giữ
+Đã làm bằng Whisper và Claude.
+Giữ: người xác nhận, trường không chắc để trống, đoạn trích nguyên văn (evidence_text).
+Admin xem thử với tư cách vai trò
+Lấy bản demo
+Giúp chứng minh quyền chạy đúng mà không cần mở nhiều trình duyệt.
+Ô chọn tài khoản trên màn hình đăng nhập, chỉ bật khi chạy chế độ demo.
+Base: Gantt, Gallery, Calendar
+Để sau
+Tốn thời gian giao diện, không đổi câu chuyện chính.
+Ghi vào hướng phát triển.
+Base: Form và Dashboard
+Để sau
+Hữu ích cho HR thu dữ liệu và sếp xem số liệu, nhưng phụ.
+Hướng phát triển; nếu dư thời gian thì làm ba con số đếm việc theo trạng thái.
+Approval (nghỉ phép, chi phí)
+Để sau
+Rất đúng môi trường công ty nhưng là một khối riêng, cần quy trình nhiều bước.
+Hướng phát triển chính sau đồ án.
+Chấm công tự động
+Để sau
+Cần tích hợp phần mềm chấm công thật.
+Thay bằng nhập CSV hằng tháng.
+Dịch tin nhắn tức thời, bot, Open Platform
+Để sau
+Giá trị cao cho công ty nhiều quốc gia nhưng ngoài thời gian còn lại.
+Phần họp đa ngôn ngữ đã có ở bộ AI.
+Chat bí mật tự xóa
+Không lấy
+Công ty cần lưu vết; tự xóa đi ngược yêu cầu kiểm toán.
+Bỏ.
+Video call, Docs đồng soạn, OKR, Wiki, Mail
+Không lấy
+Ngoài phạm vi, trùng với công cụ công ty đã có.
+Bỏ. Riêng ghi hình cuộc họp: bản nhỏ ở mục 9.
+4. Ba tầng phân quyền, áp từ Lark Base
+Lark Base kiểm soát quyền theo đúng ba tầng, và có một quy tắc đơn giản: quyền chi tiết không bao giờ lớn hơn quyền ở tầng trên. Dự án lấy lại nguyên cấu trúc này vì dễ viết, dễ kiểm thử và dễ giải thích.
+Tầng
+Lark Base
+Dự án làm
+Ví dụ kiểm thử
+1. Bảng hoặc kênh
+Quản lý, sửa, chỉ xem, không truy cập.
+Người xem phải là thành viên của tổ hoặc kênh thì mới thấy tầng dưới.
+Người tổ B gọi API lấy việc của tổ A, mong 403.
+2. Bản ghi (dòng)
+Tất cả, liên quan đến thành viên, hoặc theo điều kiện lọc.
+Việc chỉ hiện với thành viên tổ đó, tổ trưởng và trưởng phòng cha. HR không xem việc.
+Tổ trưởng thấy việc tổ mình, không thấy việc tổ khác cùng phòng. Trưởng phòng thấy cả hai tổ.
+3. Trường (cột)
+Ẩn hoặc chỉ đọc theo vai trò (ví dụ lương chỉ HR thấy).
+Ma trận hồ sơ dưới đây.
+Bấm vào một thẻ hồ sơ bằng 5 vai trò khác nhau.
+Ma trận trường hồ sơ của bản nộp 5/11 (rút gọn từ ma trận ở kế hoạch trước, bỏ dòng tuyên dương vì chưa làm):
+Trường
+Chính chủ
+Cùng tổ
+Tổ trưởng
+Trưởng phòng
+HR
+Tên, ảnh, chức vụ
+Xem
+Xem
+Xem
+Xem
+Xem và sửa
+Tổ và phòng ban
+Xem
+Xem
+Xem
+Xem
+Xem và sửa
+Thâm niên (tính từ ngày vào làm)
+Xem
+Xem
+Xem
+Xem
+Xem và sửa
+Số ngày công
+Xem
+Không
+Xem (tổ mình)
+Xem (phòng mình)
+Xem và sửa
+Lương và đánh giá hiệu suất không có cột nào trong database, nên không thể lộ qua API. Đây là cách đơn giản nhất để đảm bảo hai trường nhạy cảm nhất không bị lộ.
+5. Những điều chỉnh vào kế hoạch cũ
+Đối chiếu với code backend hiện có (file V1__init_schema.sql) cho thấy mấy chỗ cần sửa so với kế hoạch trước:
+Chỗ cần sửa
+Thực tế trong code
+Điều chỉnh
+Người làm việc
+Bảng tasks chỉ có assignee_name (chữ tự do), chưa có assignee_id.
+Thêm assignee_id và org_unit_id vào tasks. Giữ assignee_name để lưu đúng chữ AI nghe được.
+Cuộc họp thuộc tổ nào
+Bảng meetings không có cột tổ và không có channel_id (đã bỏ ở MVP).
+Thêm meetings.org_unit_id, chọn tổ khi tạo cuộc họp.
+Vai trò HR
+Enum workspace_role chỉ có OWNER, ADMIN, MEMBER, GUEST.
+Thêm cột workspace_members.is_hr (không sửa enum để tránh lỗi ánh xạ Hibernate).
+Bấm vào để xem đoạn gốc
+Có tasks.evidence_text lưu đoạn trích nguyên văn, nhưng không có mốc âm thanh trong bảng tasks.
+Hiện đoạn trích nguyên văn trên thẻ việc. Không hứa "nghe lại đoạn ghi âm" trong bản nộp này.
+Trạng thái việc
+Enum task_status có 4 giá trị: TODO, IN_PROGRESS, DONE, OVERDUE.
+Kanban 3 cột TODO, IN_PROGRESS, DONE; OVERDUE hiện thành nhãn đỏ trên thẻ.
+Kiểu dữ liệu bảng mới
+V1 dùng CREATE TYPE ... AS ENUM kèm ánh xạ Hibernate riêng.
+Bảng mới dùng VARCHAR kèm CHECK cho đỡ lỗi ánh xạ. Hàm sinh UUID của V1 là uuid_generate_v4(), dùng lại cho đồng nhất.
+Tên file migration
+Kế hoạch cũ đặt V2 đến V6 cho 5 giai đoạn.
+Bản rút gọn chỉ cần V2 (tổ chức, hồ sơ), V3 (Bảng tin), V4 (việc theo tổ).
+Nếu Discord clone của bạn có backend riêng (không phải Spring Boot này): giữ nguyên tên bảng, tên cột và luật ở các bước dưới, chỉ đổi cú pháp migration và code cho đúng ngôn ngữ của clone. Phần dữ liệu chat, kênh và tin nhắn nằm ở clone; ở đây chỉ thêm cột org_unit_id vào bảng kênh của clone.
+6. Các bước tiến hành chi tiết
+6.0 Kiểm tra điểm xuất phát (làm trước, mất 15 phút)
+File này lập ngày 31/10; tính từ 2/11 chỉ còn 4 ngày làm việc (2, 3, 4 và 5/11). Tôi chưa biết bạn đã làm đến đâu nên bắt đầu bằng năm câu kiểm tra. Mỗi câu "chưa" nghĩa là phải làm bước tương ứng trước.
+Câu hỏi
+Nếu chưa
+Làm bước
+Backend Spring Boot đã build và chạy được, đăng nhập lấy được token?
+Chưa
+B1
+Đã biết clone Discord viết bằng gì, và đã có kênh với tin nhắn thật chưa?
+Chưa
+B1
+Đã có bảng tổ chức và tài khoản gán vào tổ?
+Chưa
+B2
+Thẻ hồ sơ đã chạy theo vai trò?
+Chưa
+B3
+Cuộc họp mẫu đã chạy qua bộ AI và có action item?
+Chưa
+B7
+6.1 Lịch gợi ý và thứ tự cắt
+Ngày
+Bước
+Có thể cắt không
+2/11 (T2)
+Chốt B1 và B2 ở mức tối thiểu, làm B3 kèm kiểm thử. Nếu B1 đến B3 đã xong thì sang B6.
+Không
+3/11 (T3)
+B6 Bảng việc của tổ và B7 luật tự động. Cuộc họp mẫu chạy qua AI.
+Không. Đây là phần nối họp với tổ.
+4/11 (T4)
+B8 Dữ liệu giả, đóng băng tính năng, chạy kịch bản demo hai lần. B9 báo cáo, ảnh, video.
+Không
+5/11 (T5)
+Dự phòng và nộp. B4 Nhập CSV và B5 Bảng tin chỉ làm nếu mọi bước trên đã xong.
+B4 và B5 cắt được
+So với lịch ban đầu (31/10), lịch này đã dồn lại vì hai ngày đầu đã qua; B4 và B5 bị đẩy xuống cuối. Dữ liệu giả ở B8 đã có đủ nhân sự nên demo vẫn chạy được mà chưa cần nhập CSV.
+B1. Chốt nền: build backend và chốt stack của clone
+Mục tiêu: có một backend chạy được và biết chính xác tính năng mới nằm ở đâu.
+Cài JDK 21, Maven và Docker Desktop. Kiểm tra bằng java -version, mvn -v, docker -v.
+Giải nén meeting-platform-backend.zip, mở terminal trong thư mục đó, chạy docker compose up -d để bật PostgreSQL 16.
+Mở src/main/resources/application.yml: địa chỉ dịch vụ AI phải là http://localhost:8000, thông tin database phải khớp docker-compose.yml.
+Chạy mvn spring-boot:run. Flyway tự chạy V1 và tạo 10 bảng.
+Thử đăng ký rồi đăng nhập: POST /api/auth/register rồi POST /api/auth/login; lấy token JWT, thử gọi GET /api/workspaces với header Authorization: Bearer ....
+Với clone Discord: mở thư mục clone, ghi lại bốn thông tin: ngôn ngữ backend, database, cách gửi tin nhắn thời gian thực, cách đăng nhập. Nếu clone đã có backend và database riêng, không ghép hai backend trong 5 ngày; thêm tính năng mới vào backend của clone và để dịch vụ họp gọi qua HTTP như hiện tại.
+Kiểm tra: đăng nhập trả về token, và bạn nói được "tính năng mới sẽ nằm ở backend nào".
+Lỗi hay gặp: cổng 5432 đã bị chiếm (đổi cổng trong docker-compose.yml); sai phiên bản Java; lỗi ánh xạ ENUM của PostgreSQL. Nếu gặp lỗi, gửi cho tôi dòng báo lỗi đầu tiên trong log.
+B2. Tổ chức và kênh theo tổ
+Mục tiêu: đăng nhập bằng tài khoản giả, chỉ thấy phòng ban và kênh của tổ mình.
+Migration V2__org_and_profiles.sql (kiểm tra tên bảng workspaces, users, workspace_members khớp V1):
+CREATE TABLE org_units (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  parent_id    UUID REFERENCES org_units(id) ON DELETE CASCADE,
+  type         VARCHAR(20) NOT NULL CHECK (type IN ('DEPARTMENT','TEAM')),
+  name         VARCHAR(120) NOT NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+ 
+CREATE TABLE org_unit_members (
+  org_unit_id UUID NOT NULL REFERENCES org_units(id) ON DELETE CASCADE,
+  user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role        VARCHAR(10) NOT NULL CHECK (role IN ('HEAD','LEAD','MEMBER')),
+  is_primary  BOOLEAN NOT NULL DEFAULT FALSE,
+  PRIMARY KEY (org_unit_id, user_id)
+);
+ 
+CREATE TABLE employee_profiles (
+  user_id           UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  employee_code     VARCHAR(30) UNIQUE NOT NULL,
+  job_title         VARCHAR(120),
+  hired_on          DATE,
+  employment_status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+);
+ 
+CREATE TABLE attendance_records (
+  user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  month        DATE NOT NULL,            -- luon la ngay 1 cua thang
+  worked_days  NUMERIC(4,1) NOT NULL,
+  source       VARCHAR(10) NOT NULL CHECK (source IN ('CSV','MANUAL')),
+  imported_by  UUID REFERENCES users(id),
+  PRIMARY KEY (user_id, month)
+);
+ 
+ALTER TABLE workspace_members ADD COLUMN is_hr BOOLEAN NOT NULL DEFAULT FALSE;
+Chạy ứng dụng để Flyway áp V2. Kiểm tra bằng cách mở database xem có đủ 4 bảng mới và cột is_hr.
+Viết entity và repository cho OrgUnit, OrgUnitMember, EmployeeProfile, AttendanceRecord. Dùng kiểu String cho cột type và role, không dùng enum PostgreSQL.
+Viết GET /api/org-units/tree: trả cây phòng ban và tổ trong workspace của người gọi, mỗi nút có id, name, type, children.
+Viết API tạo tổ (chỉ OWNER, ADMIN hoặc HR). Khi tạo một tổ TEAM, tự tạo một kênh riêng cho tổ đó: nếu clone đã có bảng kênh thì thêm cột org_unit_id vào bảng kênh và đặt kênh ở chế độ private; thêm thành viên tổ làm thành viên kênh. Lưu ý: backend Spring Boot hiện có chưa có bảng kênh và tin nhắn (đã kiểm tra V1). Nếu chat nằm ở clone thì làm bước này ở clone; nếu không thì tạo thêm channels, channel_members, messages trước, hoặc bỏ bước này và để tổ chỉ phục vụ phân quyền và bảng việc.
+Danh sách kênh trả cho người dùng chỉ gồm kênh mà họ là thành viên.
+Giao diện: sidebar nhóm kênh theo phòng ban (giống Category của Discord), bấm tên tổ để vào kênh.
+Kiểm tra: đăng nhập một tài khoản thành viên, thấy đúng phòng và tổ của mình. Dùng token của người tổ B gọi API lấy tin nhắn của kênh tổ A phải bị từ chối (403).
+B3. Hồ sơ nhân sự và phân quyền ba tầng
+Mục tiêu: cùng một thẻ hồ sơ, đổi tài khoản thì hiện khác trường; gọi API thiếu quyền thì bị chặn.
+Viết service ProfileAccessPolicy với một hàm duy nhất: allowedFields(viewerId, targetId) trả về tập tên trường được phép. Controller, WebSocket và mọi nơi khác đều gọi hàm này, không nơi nào tự lọc.
+Trong hàm, tính các quan hệ giữa người xem và người được xem: chính chủ (hai id trùng); cùng tổ (cả hai cùng nằm trong một TEAM qua org_unit_members); tổ trưởng (người xem có vai trò LEAD ở một tổ mà người được xem là thành viên); trưởng phòng (người xem có vai trò HEAD ở phòng là cha của tổ của người được xem); HR (workspace_members.is_hr = true).
+Với mỗi quan hệ thỏa, gộp các trường được phép theo bảng ở mục 4. Một người có thể có nhiều quan hệ cùng lúc, kết quả là hợp của các tập trường.
+Viết GET /api/users/{id}/profile: chỉ đưa vào kết quả những trường nằm trong tập được phép. Trường không được phép thì bỏ hẳn khỏi JSON, không trả giá trị rỗng, để người ngoài không biết trường đó tồn tại.
+Tính thâm niên khi trả về từ hired_on (số năm và tháng đến hôm nay), không lưu thành số.
+Ghi một dòng vào nhật ký (nếu có audit_logs) mỗi khi ai đó xem số ngày công của người khác.
+Giao diện: bấm vào tên trong chat hiện thẻ hồ sơ; thẻ chỉ vẽ những trường có trong JSON.
+Kiểm thử (viết trước giao diện): tạo test sinh từ ma trận ở mục 4, chạy trên PostgreSQL thật (Testcontainers hoặc cùng container của docker compose), không dùng H2 vì schema có kiểu và hàm riêng của PostgreSQL. Có 5 quan hệ nhân 4 trường, tổng 20 ca; mỗi ca kiểm tra trường có xuất hiện hay không đúng như ma trận. Thêm 2 ca: gọi API bằng token thành viên thường để lấy ngày công của người khác phải không có trường đó; gọi hồ sơ của người ở workspace khác phải bị từ chối.
+Kiểm tra: đổi tài khoản từ thành viên sang tổ trưởng thì thẻ cùng một người hiện thêm số ngày công; đổi sang người tổ khác thì trường đó biến mất.
+B4. Nhập nhân sự bằng CSV (cắt được)
+Mục tiêu: HR tải một file là cập nhật được nhân sự và ngày công; chứng minh công ty thật chỉ cần đưa file của họ vào.
+File mẫu (dùng tên giả, email dùng đuôi example.com là tên miền dành riêng cho ví dụ):
+employee_code,full_name,email,job_title,department,team,hired_on,month,worked_days
+E001,Nguyen Van An,an.nguyen@example.com,Trưởng tổ,Kinh doanh,Kinh doanh nội địa,2021-03-15,2026-10-01,20
+E002,Emily Carter,emily.carter@example.com,Account Executive,Kinh doanh,Kinh doanh quốc tế,2023-06-01,2026-10-01,21
+E003,Kim Min-jun,minjun.kim@example.com,Backend Engineer,Công nghệ,Backend,2022-09-12,2026-10-01,19.5
+Tên phòng và tổ trong file phải trùng đúng (kể cả dấu) với tên trong database, nếu không bước kiểm tra dòng sẽ báo lỗi. Lưu file bằng mã hóa UTF-8; Excel hay thêm ký tự BOM ở đầu file nên phải bỏ nó khi đọc, nếu không tên cột đầu tiên bị sai.
+Viết POST /api/hr/import nhận file và tham số dryRun. Chỉ người có is_hr = true được gọi.
+Đọc toàn bộ file và kiểm tra từng dòng: đủ cột, hired_on đúng định dạng YYYY-MM-DD, worked_days là số, month là ngày 1 của tháng, phòng và tổ có tồn tại.
+Nếu có dòng lỗi: trả về mã 422 kèm danh sách (số dòng, tên cột, lý do) và không ghi gì vào database. Không bao giờ nhập một phần rồi báo thành công.
+Nếu dryRun=true: chỉ trả về số dòng sẽ thêm, số dòng sẽ sửa, không ghi.
+Nếu hợp lệ: cập nhật theo employee_code (có rồi thì sửa, chưa có thì thêm). Đặt toàn bộ phần ghi trong một phương thức @Transactional của service và gọi nó từ controller, không gọi từ phương thức khác cùng class, vì khi đó @Transactional không có tác dụng.
+Người mới được tạo tài khoản với mật khẩu tạm đọc từ cấu hình. Schema hiện tại chưa có cột bắt đổi mật khẩu lần đầu nên đây là hạn chế cần ghi vào báo cáo.
+Ghi nhật ký: ai nhập, lúc nào, bao nhiêu dòng.
+Kiểm tra: tải file mẫu 25 dòng thì 25 nhân sự hiện đúng tổ; tải file có một dòng sai ngày thì không có ai được thêm và nhận được thông báo lỗi nêu đúng dòng.
+B5. Bảng tin: thông báo cấp trên ban hành (cắt được)
+Mục tiêu: HR đăng thông báo, toàn thể nhân sự thấy và đánh dấu đã đọc, HR biết ai chưa đọc.
+Migration V3__news.sql:
+CREATE TABLE post_categories (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  name         VARCHAR(80) NOT NULL
+);
+ 
+CREATE TABLE posts (
+  id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  workspace_id         UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  category_id          UUID REFERENCES post_categories(id),
+  author_id            UUID NOT NULL REFERENCES users(id),
+  title                VARCHAR(255) NOT NULL,
+  body                 TEXT NOT NULL,
+  is_pinned            BOOLEAN NOT NULL DEFAULT FALSE,
+  audience_org_unit_id UUID REFERENCES org_units(id),  -- NULL = toan cong ty
+  published_at         TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+ 
+CREATE TABLE post_reads (
+  post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  read_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (post_id, user_id)
+);
+Bản rút gọn này để Bảng tin là một mục cố định trên sidebar, không phụ thuộc bảng kênh. Nếu sau này clone có kênh Announcement thì nối thêm.
+POST /api/posts: chỉ HR, OWNER hoặc ADMIN được đăng; kiểm tra trong service. Thành viên thường gọi phải nhận 403.
+GET /api/posts?page=0&size=10: trả bài mà người xem được nhận: audience_org_unit_id rỗng, hoặc trỏ tới tổ hay phòng chứa người xem. Bài ghim lên đầu.
+POST /api/posts/{id}/read: ghi đã đọc, gọi lại nhiều lần không lỗi (kiểm tra tồn tại trước khi thêm).
+GET /api/posts/unread-count: số bài chưa đọc, hiện thành huy hiệu cạnh mục Bảng tin.
+GET /api/posts/{id}/readers: chỉ HR gọi được; trả danh sách đã đọc và chưa đọc trong nhóm nhận bài.
+Tạo sẵn ba danh mục: Nhân sự, Pháp luật, Công ty.
+Kiểm tra: HR đăng, thành viên thấy huy hiệu số 1, mở bài thì huy hiệu về 0, HR xem danh sách thấy người đó đã đọc; thành viên thường đăng bài bị 403.
+B6. Bảng việc của tổ với hai kiểu xem
+Mục tiêu: việc từ cuộc họp hiện trong bảng việc của đúng tổ, xem được dạng Bảng và dạng Kanban.
+Migration V4__team_board.sql:
+ALTER TABLE tasks
+  ADD COLUMN org_unit_id UUID REFERENCES org_units(id),
+  ADD COLUMN assignee_id UUID REFERENCES users(id);
+ 
+ALTER TABLE meetings
+  ADD COLUMN org_unit_id UUID REFERENCES org_units(id);
+ 
+CREATE INDEX idx_tasks_org_unit ON tasks(org_unit_id);
+Cập nhật Task và Meeting entity với các cột mới. Khi tạo cuộc họp, nhận thêm orgUnitId.
+GET /api/org-units/{id}/tasks: chỉ trả việc có is_human_confirmed = true. Kiểm tra quyền tầng bản ghi: người xem là thành viên của tổ, hoặc tổ trưởng, hoặc trưởng phòng cha. HR không có quyền này.
+Sửa các API đã có, vì hiện chúng chỉ kiểm tra người gọi là thành viên workspace (đã đọc TaskService): GET /api/workspaces/{workspaceId}/tasks trả việc của mọi tổ, kể cả việc chưa xác nhận; PATCH /api/tasks/{taskId}/confirm cho bất kỳ thành viên nào xác nhận việc. Đổi để danh sách chỉ trả việc đã xác nhận theo quyền tầng bản ghi, và chỉ thành viên tổ của cuộc họp hoặc tổ trưởng được xác nhận. Nếu bỏ bước này, ba tầng quyền ở mục 4 bị vòng qua bằng API cũ.
+Bổ sung kiểm tra quyền vào API đổi trạng thái đã có (PATCH /api/tasks/{taskId}/status): chỉ thành viên của tổ chứa việc mới được đổi.
+Giao diện: một nút đổi giữa hai kiểu xem. Kiểu Bảng: các cột tiêu đề, người làm, hạn, trạng thái, ưu tiên, sắp xếp được. Kiểu Kanban: ba cột TODO, IN_PROGRESS, DONE; kéo thẻ sang cột khác thì gọi API đổi trạng thái. Việc OVERDUE hiện nhãn đỏ.
+Thẻ việc hiện deadline_text nguyên văn khi chưa có due_date, và hiện evidence_text trong phần chi tiết.
+Kiểm tra: tổ trưởng thấy việc của tổ mình; người tổ khác gọi API nhận 403; kéo một thẻ sang "Xong" rồi tải lại trang vẫn giữ.
+B7. Luật tự động duy nhất: xác nhận việc thì vào đúng tổ
+Mục tiêu: nối phần AI họp với bảng việc, theo kiểu automation của Lark Base nhưng chỉ có một luật cố định.
+Trong service xác nhận action item (đã có endpoint /api/tasks/{id}/confirm), sau khi đặt is_human_confirmed = true thì làm ba việc trong cùng một giao dịch: (1) gán tasks.org_unit_id bằng tổ của cuộc họp; (2) tìm người làm; (3) phát một sự kiện TaskConfirmedEvent.
+Tìm người làm: chuẩn hóa assignee_name (bỏ dấu, chữ thường) rồi so với tên thành viên của tổ. Lưu ý chữ "đ" và "Đ" không bị tách dấu bởi Normalizer nên phải đổi riêng thành "d" và "D". Chỉ gán assignee_id khi khớp đúng một người; khớp nhiều người hoặc không khớp thì để rỗng. AI không được đoán. Vì trong cuộc họp người ta thường chỉ gọi tên riêng ("An làm giúp anh"), so cả họ tên sẽ ít khi khớp: thử khớp họ tên trước, rồi khớp tên riêng (từ cuối) và chỉ gán nếu tên riêng đó duy nhất trong tổ.
+Bộ lắng nghe sự kiện: nếu clone có API tin nhắn, gửi một tin hệ thống vào kênh tổ ("Việc mới: ..."). Nếu chưa có, tăng một bộ đếm việc mới để hiện huy hiệu trên mục Bảng việc.
+Giữ assignee_name và deadline_text nguyên văn; không tự đổi thành ngày.
+Viết kiểm thử cho hàm so tên: "Nguyễn Văn An" khớp "nguyen van an"; hai người trùng tên trong một tổ cho kết quả rỗng; tên không có trong tổ cho kết quả rỗng; "An" khớp khi tổ chỉ có một người tên An, và rỗng khi có hai người tên An.
+Kiểm tra: tạo cuộc họp gắn tổ A, xác nhận hai action item thì cả hai xuất hiện ở bảng việc của tổ A, người làm được điền đúng khi tên khớp.
+B8. Dữ liệu giả và bộ chuyển tài khoản demo
+Mục tiêu: dựng lại toàn bộ từ database trống bằng một lệnh, và đổi vai trò nhanh khi demo.
+Viết lớp CommandLineRunner gắn @Profile("demo"). Chạy được nhiều lần: nếu workspace mẫu đã có thì bỏ qua.
+Dữ liệu: 1 workspace; 2 phòng (Kinh doanh, Công nghệ); 4 tổ (Kinh doanh nội địa, Kinh doanh quốc tế, Backend, QA); 25 nhân sự trộn tên Việt và tên nước ngoài; khoảng 12 bài viết (Nhân sự, Pháp luật, Công ty) tự viết, không chép từ công ty thật và không trích số hiệu văn bản pháp luật nếu chưa kiểm chứng; 1 đến 2 cuộc họp với action item đã phân tích.
+Bốn tài khoản dùng cho demo: thành viên, tổ trưởng, trưởng phòng, HR. Lưu mật khẩu vào một file riêng không đưa vào báo cáo công khai.
+Ô chọn tài khoản trên màn hình đăng nhập chỉ hiện khi biến môi trường demo bật. Endpoint đăng nhập nhanh không cần mật khẩu phải được đăng ký bằng @Profile("demo"), để khi chạy không có profile demo thì endpoint đó không tồn tại, không chỉ bị ẩn trên giao diện. Đây là phiên bản đơn giản của chức năng "xem thử với tư cách vai trò" trong Lark Base.
+Viết script dựng lại: docker compose down -v rồi docker compose up -d rồi mvn spring-boot:run -Dspring-boot.run.profiles=demo.
+Chạy kịch bản demo 7 phút ở mục 6 của kế hoạch chính ít nhất hai lần liên tiếp.
+Kiểm tra: xóa database, chạy script, đăng nhập bằng cả bốn tài khoản, chạy hết kịch bản không lỗi.
+B9. Báo cáo, ảnh chụp và video
+Mục tiêu: có đủ tài liệu để nộp và một video dự phòng.
+Cập nhật báo cáo Word: thêm sơ đồ dữ liệu mới (các bảng ở B2, B3, B5, B6), ma trận quyền ở mục 4, và luồng "họp rồi việc vào bảng của tổ".
+Thêm một đoạn "So sánh và học hỏi từ Lark Base": nói rõ bạn lấy mô hình phân quyền ba tầng và khái niệm một dữ liệu nhiều kiểu xem, còn phần AI họp là phần của dự án.
+Chụp tám ảnh: sidebar theo phòng ban; thẻ hồ sơ ở hai vai trò khác nhau; bảng việc dạng Bảng; bảng việc dạng Kanban; transcript cuộc họp; hai action item sau khi xác nhận; Bảng tin (nếu đã làm); nhập CSV (nếu đã làm).
+Quay video 5 đến 7 phút theo kịch bản demo, để dự phòng nếu demo trực tiếp lỗi hoặc mất mạng.
+Bổ sung câu hỏi đáp (mục 7).
+Ghi mục "Hướng phát triển": Phê duyệt, Dashboard, Form, nhập chấm công tự động, bình luận bài viết, dịch tin nhắn tức thời, ứng dụng điện thoại và máy tính.
+7. Câu hỏi có thể gặp khi bảo vệ
+Câu hỏi
+Gợi ý trả lời
+Đã có Lark rồi, em làm lại để làm gì?
+Em không làm lại Lark. Em học cách Lark tổ chức công việc và phân quyền trong công ty, rồi dựng bản nhỏ của riêng mình để đặt phần họp có AI vào bên trong. Phần khác biệt là AI chỉ đề xuất, người xác nhận mới thành việc, và trường nào không chắc thì để trống.
+Vì sao phân quyền ở backend chứ không chỉ ẩn trên giao diện?
+Ẩn trên giao diện thì gọi API trực tiếp vẫn lấy được. Em đặt một service quyền duy nhất, mọi API đều qua đó, và có 20 ca kiểm thử sinh từ ma trận.
+Dữ liệu nhân sự thật xử lý thế nào?
+Bản demo chỉ dùng dữ liệu giả. Nếu đã làm bước nhập CSV (B4), công ty thật chỉ cần đưa file theo mẫu vào; nếu chưa làm thì nói rõ đây là hướng phát triển. Lương và đánh giá hiệu suất không có cột trong database nên không thể lộ qua API.
+Vì sao không làm Phê duyệt, Dashboard như Lark?
+Đó là các khối riêng, em ghi vào hướng phát triển. Em ưu tiên phần nối họp với việc của tổ vì đó là giá trị cốt lõi của đề tài.
+AI xử lý giọng nói của nhân viên, có xin phép không?
+Có, nếu đã làm mục M1 trong kế hoạch chính: người tạo thông báo ghi âm (và ghi hình), từng người tham gia đồng ý hoặc từ chối, hệ thống ghi lại thời điểm, và chặn tải bản ghi lên khi chưa đủ đồng ý. Nếu chưa làm thì phải nói đây là hạn chế đã biết, không nói là đã có.
+AI sai thì sao?
+AI không tự tạo việc. Người xác nhận từng việc; chỗ AI không chắc thì để trống; mỗi việc giữ đoạn trích nguyên văn để đối chiếu.
+Vì sao chỉ có bản web?
+Bản web đủ để chứng minh luồng nghiệp vụ trong thời hạn. Giao diện web có thể bọc thành ứng dụng cài được (PWA, hoặc đóng gói cho máy tính), nhưng em chưa thử nên ghi vào hướng phát triển.
+8. Nguồn tham khảo
+[1]  Lark: Base for project management (trang chính thức)
+[2]  Lark Help: Use views in Base (chính thức, chỉ đọc được phần mở đầu)
+[3]  Exabytes: Lark Base Advanced Permissions guide (bên thứ ba)
+[4]  Exabytes: How to configure advanced permissions in Lark Base (bên thứ ba)
+[5]  Exabytes: What Lark can do (bên thứ ba)
+[6]  Exabytes: What is Lark Suite (bên thứ ba)
+[7]  Lark: Approval workflow guide (chính thức)
+[8]  Lark: AI meeting notes (trang sản phẩm)
+[9]  Lark Help: Use advanced permissions in Base (chính thức, chỉ đọc được phần mở đầu)
+[10]  Lark Help: Admin, configure members' profile pages (chính thức, chỉ đọc được phần mở đầu)
+[11]  Lark Help: Admin, create and manage units (chính thức, chỉ đọc được phần mở đầu)
+[12]  Lark Help: Use automations in Base (chính thức, chỉ đọc được phần mở đầu)
+9. Bổ sung ngày 2/11: phần chưa có trong file này
+File này chỉ gồm phần học từ Lark và các bước B1 đến B9. Hai phần sau nằm trong kế hoạch chính (Claude Doc), chưa được chép vào đây:
+Mục 12, các tính năng bổ sung M1 đến M9: đồng ý ghi âm (M1, quan trọng nhất vì giọng nói là dữ liệu cá nhân), biên bản họp, nhắc việc quá hạn, thông báo, danh bạ, ngôn ngữ và múi giờ, nghỉ phép, nhật ký truy cập, việc của tôi.
+Mục 13, phòng họp có ghi hình và phiên dịch: hiện chưa có. Làm được trước hạn là ghi hình trong trình duyệt (chỉ chạy trên HTTPS hoặc localhost), dịch bản tóm tắt sang tiếng Việt hoặc Anh, và thử phiên âm cuộc họp lẫn Việt và Anh. Phiên dịch trực tiếp và phòng họp video nhiều người không làm, và không nói với hội đồng là đã có.
+Hai lỗi nhỏ phát hiện khi đối chiếu code: bảng transcript_segments đang rỗng, và AiServiceClient chưa gửi tham số language sang service Python. Các mục liên quan ở kế hoạch chính đã ghi chú.

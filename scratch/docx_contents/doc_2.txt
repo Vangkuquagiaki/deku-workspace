@@ -1,0 +1,506 @@
+FILENAME: Kế hoạch chi tiết Phòng họp công ty có phiên dịch và ghi hình.docx
+
+Kế hoạch chi tiết: Phòng họp công ty có phiên dịch và ghi hình
+Oct 10, 2026 · @nguyenminhthien
+Tổng quan và mục tiêu
+Mục tiêu là xây phòng họp video nội bộ giống Google Meet, có phụ đề dịch Việt–Anh theo thời gian thực và ghi hình kèm biên bản, dựa trên nền Next.js, Clerk, Prisma và LiveKit mà dự án hiện tại đã có.
+Các chỉ tiêu dưới đây là đề xuất ban đầu, cần điều chỉnh theo quy mô thực tế của công ty:
+Chỉ tiêu
+Mức đề xuất
+Số người tối đa mỗi phòng
+20 (giả định, cần xác nhận)
+Thời gian từ bấm link đến vào phòng
+dưới 5 giây
+Độ trễ phụ đề sau khi người nói dứt câu
+dưới 3 giây
+Bản ghi sẵn sàng xem lại sau khi họp kết thúc
+dưới 10 phút
+Ngôn ngữ ban đầu
+Việt, Anh
+Thành công của dự án được hiểu là: nhân viên tự tạo và tham gia họp không cần hướng dẫn, người nói tiếng Việt và tiếng Anh theo dõi được nhau qua phụ đề, và host lấy được bản ghi cùng biên bản sau mỗi cuộc họp.
+Phạm vi và yêu cầu
+Bản đầu tiên gồm họp video cơ bản, ghi hình và phụ đề dịch; phiên dịch bằng giọng nói và các tính năng nâng cao để sau khi ba phần này ổn định.
+Nhóm
+Chức năng
+Bản đầu
+Họp
+Tạo họp, link mời, màn hình chờ, mic, camera, chia sẻ màn hình, chat
+Có
+Quản lý
+Host tắt mic, mời ra khỏi phòng, kết thúc họp, phòng chờ
+Có
+Ghi hình
+Bấm ghi, dừng ghi, lưu bản ghi, xem lại
+Có
+Phụ đề
+Nhận giọng nói, dịch Việt–Anh, hiện phụ đề theo ngôn ngữ mỗi người chọn
+Có
+Biên bản
+Lưu transcript, tìm kiếm, tóm tắt, việc cần làm
+Giai đoạn 4
+Giọng dịch
+Đọc bản dịch thành tiếng, chỉnh âm lượng giọng gốc và giọng dịch
+Giai đoạn 5
+Lịch họp
+Đặt lịch, gửi email mời, gắn Google Calendar
+Sau
+Ứng dụng di động
+PWA hoặc ứng dụng riêng
+Sau
+Ngoài phạm vi: tự dựng hạ tầng video (dùng LiveKit), tổng đài điện thoại (SIP) và webinar hàng nghìn người.
+Yêu cầu phi chức năng: chạy tốt trên Chrome, Edge, Safari bản mới; máy chủ đặt tại Singapore; token phòng hết hạn sau khi họp; mọi thao tác quản trị được kiểm tra quyền ở phía server.
+Kiến trúc hệ thống
+Trình duyệt kết nối thẳng với LiveKit để truyền video và âm thanh, còn máy chủ Next.js chỉ cấp quyền, điều khiển ghi hình và lưu dữ liệu.
+kiến trúc hệ thống · 8 thành phần
+Bot dịch chạy thành một dịch vụ riêng: nó vào phòng như người tham gia, nhận âm thanh qua LiveKit, gọi các dịch vụ AI để nhận dạng, dịch và đọc, rồi gửi phụ đề về phòng. Bản ghi hình do Egress của LiveKit ghi thẳng vào kho lưu trữ.
+Thành phần
+Công nghệ
+Lý do chọn
+Giao diện và API
+Next.js, Clerk
+Đã có trong dự án
+Video, âm thanh, ghi hình
+LiveKit (SFU, Egress, Agents)
+Một nhà cung cấp cho cả họp, ghi và bot
+Dữ liệu
+Neon Postgres, Prisma
+Đã có trong dự án; đổi sang vùng Singapore
+Lưu bản ghi
+S3 hoặc Cloudflare R2
+Bucket riêng tư, đặt gần Việt Nam
+Nhận dạng, dịch, đọc
+Chọn sau khi thử với cuộc họp thật
+Chất lượng tiếng Việt khác nhau giữa các nhà cung cấp
+Mô hình dữ liệu
+Cần thêm năm bảng vào schema Prisma hiện có, liên kết với bảng Profile của dự án Discord thông qua userId của Clerk.
+model Meeting {  id          String   @id @default(uuid())  code        String   @unique            // dạng abc-defg-hij  title       String  hostId      String                      // userId của Clerk  status      MeetingStatus @default(SCHEDULED)  startsAt    DateTime?  startedAt   DateTime?  endedAt     DateTime?  lobby       Boolean  @default(true)     // bật phòng chờ  createdAt   DateTime @default(now())  participants Participant[]  recordings   Recording[]  segments     TranscriptSegment[]}enum MeetingStatus { SCHEDULED LIVE ENDED }model Participant {  id         String   @id @default(uuid())  meetingId  String  userId     String?                      // trống nếu là khách  name       String  role       ParticipantRole @default(GUEST)  language   String   @default("vi")      // ngôn ngữ người này nói  joinedAt   DateTime @default(now())  leftAt     DateTime?  meeting    Meeting  @relation(fields: [meetingId], references: [id])  @@index([meetingId])}enum ParticipantRole { HOST COHOST MEMBER GUEST }model Recording {  id          String   @id @default(uuid())  meetingId   String  egressId    String   @unique            // id của LiveKit Egress  fileUrl     String?  durationSec Int?  sizeBytes   BigInt?  status      RecordingStatus @default(STARTING)  startedBy   String  createdAt   DateTime @default(now())  meeting     Meeting  @relation(fields: [meetingId], references: [id])}enum RecordingStatus { STARTING ACTIVE COMPLETE FAILED }model TranscriptSegment {  id          String   @id @default(uuid())  meetingId   String  speakerId   String  lang        String                      // vi, en  text        String  translation Json?                       // { "en": "...", "vi": "..." }  startMs     Int                         // mốc thời gian từ lúc họp bắt đầu  endMs       Int  meeting     Meeting  @relation(fields: [meetingId], references: [id])  @@index([meetingId, startMs])}model GlossaryTerm {  id        String @id @default(uuid())  orgId     String  source    String                        // thuật ngữ gốc  target    String                        // cách dịch bắt buộc  lang      String  @@unique([orgId, source, lang])}
+Bảng GlossaryTerm lưu từ điển thuật ngữ công ty để bước dịch luôn dùng đúng tên sản phẩm, tên riêng và từ chuyên ngành. Sau khi thêm, chạy npx prisma migrate dev thay vì db push để có lịch sử thay đổi.
+API và route chính
+Mười hai route dưới đây đủ cho cả năm giai đoạn; mọi route đều kiểm tra đăng nhập và vai trò ở server trước khi làm việc. Tên route là đề xuất, có thể đổi theo quy ước của dự án.
+Route
+Phương thức
+Người gọi
+Việc làm
+/api/meetings
+POST
+Thành viên
+Tạo họp, sinh mã abc-defg-hij
+/api/meetings/[code]
+GET
+Người có link
+Lấy thông tin và trạng thái họp
+/api/livekit/token
+POST
+Thành viên hoặc khách đã được duyệt
+Cấp token ngắn hạn kèm quyền
+/api/meetings/[id]/lobby
+POST
+Host, cohost
+Duyệt hoặc từ chối người trong phòng chờ
+/api/meetings/[id]/participants/[pid]
+PATCH, DELETE
+Host, cohost
+Tắt mic hoặc mời ra khỏi phòng
+/api/meetings/[id]/end
+POST
+Host
+Kết thúc họp cho tất cả
+/api/meetings/[id]/recording
+POST, DELETE
+Host, cohost
+Bắt đầu và dừng ghi hình
+/api/meetings/[id]/captions
+POST, DELETE
+Host, cohost
+Bật hoặc tắt bot phụ đề dịch
+/api/meetings/[id]/transcript
+GET
+Người tham dự
+Lấy transcript, có lọc theo ngôn ngữ
+/api/meetings/[id]/summary
+GET, POST
+Người tham dự, host
+Xem hoặc tạo lại tóm tắt
+/api/glossary
+GET, POST, DELETE
+Quản trị
+Quản lý từ điển thuật ngữ
+/api/livekit/webhook
+POST
+LiveKit
+Nhận sự kiện phòng và ghi hình, kiểm tra chữ ký
+Vai trò và quyền
+Bốn vai trò là đủ cho bản đầu: host toàn quyền, cohost giúp điều hành, thành viên công ty và khách bên ngoài. Bảng dưới là đề xuất, cần chốt với bộ phận phụ trách trước giai đoạn 1.
+Hành động
+Host
+Cohost
+Thành viên
+Khách
+Vào phòng
+Có
+Có
+Có
+Sau khi được duyệt ở phòng chờ
+Bật mic, camera, chat
+Có
+Có
+Có
+Có
+Chia sẻ màn hình
+Có
+Có
+Có
+Khi host cho phép
+Chọn ngôn ngữ phụ đề của mình
+Có
+Có
+Có
+Có
+Duyệt phòng chờ
+Có
+Có
+Không
+Không
+Tắt mic người khác, mời ra
+Có
+Có
+Không
+Không
+Bắt đầu, dừng ghi hình
+Có
+Có
+Không
+Không
+Bật, tắt bot phụ đề dịch
+Có
+Có
+Không
+Không
+Kết thúc họp cho tất cả
+Có
+Không
+Không
+Không
+Xem bản ghi, transcript, tóm tắt
+Có
+Có
+Nếu đã tham dự
+Khi host chia sẻ
+Xóa bản ghi, sửa từ điển thuật ngữ
+Có
+Không
+Không
+Không
+Vai trò được lưu ở bảng Participant và nhúng vào token LiveKit khi cấp; mọi API ở mục trên đọc vai trò từ database, không tin dữ liệu gửi lên từ trình duyệt.
+Màn hình chính
+Giao diện gồm sáu màn hình; bốn màn hình đầu thuộc giai đoạn 1, các phần ghi hình và phụ đề được thêm vào đúng màn hình đó ở giai đoạn sau.
+Màn hình
+Đường dẫn
+Nội dung chính
+Giai đoạn
+Trang họp
+/meetings
+Nút "Họp ngay", ô nhập mã, danh sách họp gần đây
+1
+Màn hình chờ
+/meet/[code] trước khi vào
+Xem trước camera, chọn mic và loa, nhập tên, chọn ngôn ngữ nói
+1
+Phòng họp
+/meet/[code]
+Lưới video, thanh điều khiển, thanh bên (người tham gia, chat, bản ghi trực tiếp), dải phụ đề, biểu tượng đang ghi
+1, 2, 3
+Cài đặt của host
+Hộp thoại trong phòng
+Bật phòng chờ, bật phụ đề dịch, bắt đầu ghi, danh sách chờ duyệt
+1, 2, 3
+Cuộc họp đã kết thúc
+/meetings/[id]
+Trình phát video, transcript có nhảy tới đoạn, tóm tắt, việc cần làm
+2, 4
+Quản trị
+/admin/meetings
+Từ điển thuật ngữ, thời gian lưu bản ghi, danh sách bản ghi
+3, 4
+Nên dựng giao diện phòng họp trên @livekit/components-react trước rồi mới tùy biến, vì thư viện này đã có sẵn lưới video, thanh điều khiển và màn hình chờ.
+Giai đoạn 0 và 1: Nền tảng và phòng họp cơ bản
+Giai đoạn 0 xử lý các vấn đề nền để khỏi vướng về sau, giai đoạn 1 cho ra một phòng họp dùng được; cả hai mất khoảng 1,5 tuần.
+Giai đoạn 0: Chuẩn bị (2–3 ngày)
+Tạo lại toàn bộ khóa đã lộ trong .env (Clerk, Neon, LiveKit) và thêm .env vào .gitignore.
+Đưa database sang Neon vùng Singapore (ap-southeast-1) để giảm độ trễ truy vấn.
+Gỡ @next/swc-wasm-nodejs và @next/swc-win32-x64-msvc khỏi package.json, cài lại bằng Node 20 LTS.
+Nâng Next.js lên bản ổn định mới hơn 13.4 cùng React tương ứng, rồi cập nhật @livekit/components-react theo.
+Tạo project LiveKit Cloud (hoặc chọn vùng gần Việt Nam) và ghi lại URL, API key mới vào .env.
+Giai đoạn 1: Họp cơ bản (khoảng 1 tuần)
+Việc
+Chi tiết
+Kết quả kiểm tra
+Tạo họp
+Nút "Họp ngay", sinh mã abc-defg-hij, lưu Meeting
+Link mở được trên máy khác
+API cấp token
+/api/livekit/token: kiểm tra Clerk, kiểm tra phòng còn mở, cấp token ngắn hạn kèm quyền
+Người chưa đăng nhập bị từ chối
+Màn hình chờ
+Xem trước camera, chọn mic và loa, nhập tên
+Chọn đúng thiết bị
+Phòng họp
+/meet/[code] dùng LiveKitRoom, lưới video, thanh điều khiển
+5 người vào cùng lúc ổn định
+Chia sẻ màn hình
+Một người chia sẻ, mọi người thấy ở khung lớn
+Có âm thanh hệ thống nếu trình duyệt cho phép
+Chat
+Gửi qua data channel của LiveKit, lưu lại khi họp xong
+Tin nhắn đến dưới 1 giây
+Quyền host
+Tắt mic, mời ra, kết thúc họp cho tất cả (gọi API server của LiveKit)
+Khách không gọi được các API này
+Phòng chờ
+Khách chờ, host bấm duyệt mới cấp token
+Khách bị từ chối thì không vào được
+Nghiệm thu giai đoạn 1: 10 người họp liên tục 30 phút, không rớt kết nối, mic và camera bật tắt đúng, host kết thúc họp thì mọi người bị đưa ra.
+Giai đoạn 2: Ghi hình
+Ghi hình dùng LiveKit Egress để gộp cả phòng thành một file MP4 lưu lên kho đám mây, mất khoảng 1 tuần.
+Luồng xử lý
+Host bấm "Ghi"; giao diện gọi /api/meetings/[id]/recording/start.
+Server kiểm tra người gọi là host hoặc cohost, rồi gọi EgressClient.startEgress với đích là bucket S3 hoặc Cloudflare R2 đặt ở Singapore.
+Tạo bản ghi Recording trạng thái STARTING, và gửi thông báo tới mọi người trong phòng (biểu tượng ghi màu đỏ cùng dòng chữ "Cuộc họp đang được ghi").
+Khi bấm dừng hoặc khi họp kết thúc, server gọi stopEgress.
+LiveKit gửi webhook egress_ended; endpoint /api/livekit/webhook kiểm tra chữ ký, cập nhật fileUrl, durationSec, sizeBytes và đổi trạng thái thành COMPLETE hoặc FAILED.
+Trang /meetings/[id] hiện trình phát video với link tải có thời hạn (signed URL), chỉ người có quyền mới xem được.
+Theo tài liệu LiveKit hiện hành, ghi cả phòng dùng StartEgress với nguồn TemplateSource (Chrome dựng bố cục rồi xuất MP4 hoặc HLS), còn các API riêng như StartRoomCompositeEgress đã bị đánh dấu lỗi thời. Bản chỉ âm thanh dùng TemplateSource với audio_only=true và được tính phí thấp hơn video. Khi ghi, Egress vào phòng như một người tham gia loại EGRESS; nếu server có đoạn mã tự quản lý đăng ký track thì phải bỏ qua loại này (nguồn).
+Quyết định cần chốt
+Vấn đề
+Đề xuất
+Định dạng
+MP4 độ phân giải 720p; thêm bản chỉ có âm thanh cho cuộc họp dài
+Ai được bấm ghi
+Host và cohost
+Ai được xem lại
+Người tham dự và người host chia sẻ thêm
+Thời gian lưu
+90 ngày rồi tự xóa hoặc chuyển sang lưu trữ rẻ hơn
+Thông báo khi ghi
+Bắt buộc, kèm đồng ý của khách bên ngoài
+Nghiệm thu giai đoạn 2: ghi một cuộc họp 20 phút có chia sẻ màn hình, file xuất hiện trong trang xem lại sau dưới 10 phút, hình và tiếng khớp nhau, người ngoài danh sách không mở được link.
+Giai đoạn 3: Phụ đề dịch Việt–Anh
+Một bot chạy bằng LiveKit Agents vào mỗi phòng, nghe từng người nói, chuyển thành chữ, dịch rồi gửi phụ đề về cho từng người xem; giai đoạn này mất 1–2 tuần.
+Luồng xử lý
+Khi host bật "Phụ đề dịch", server dispatch agent vào đúng phòng đó. Mặc định LiveKit gửi agent vào mọi phòng mới, nên cần chuyển sang dispatch tường minh để chỉ phòng nào bật dịch mới có bot (xem mục Nguồn ở cuối tài liệu).
+Agent đăng ký (subscribe) track âm thanh của từng người và chạy nhận dạng giọng nói dạng streaming, mỗi người một luồng riêng để biết ai đang nói.
+Kết quả tạm (partial) hiện ngay dưới dạng chữ mờ; khi câu chốt (final) thì mới đưa sang bước dịch.
+Bước dịch nhận câu chốt cùng vài câu trước làm ngữ cảnh và danh sách thuật ngữ từ GlossaryTerm, trả về bản dịch sang các ngôn ngữ đang có người xem.
+Agent gửi kết quả qua data channel: câu gốc, bản dịch, người nói, mốc thời gian. Mỗi người chỉ hiển thị ngôn ngữ mình đã chọn.
+Mỗi câu chốt được ghi vào TranscriptSegment.
+Lựa chọn công nghệ cần thử
+Thành phần
+Lựa chọn ứng viên
+Cách chọn
+Nhận dạng giọng nói
+Deepgram, Google Speech-to-Text, Whisper
+Thu 30 phút họp thật của công ty, so tỉ lệ sai từ và độ trễ của từng loại
+Dịch
+Mô hình ngôn ngữ lớn (như Claude) hoặc API dịch chuyên dụng
+Dịch 100 câu mẫu, nhờ người song ngữ chấm điểm
+Giao diện
+Nút bật phụ đề; chọn ngôn ngữ nói của mình và ngôn ngữ muốn đọc.
+Dải phụ đề phía dưới màn hình, hiện tên người nói, tự ẩn sau vài giây không có lời.
+Bảng "Bản ghi trực tiếp" ở thanh bên để xem lại các câu vừa nói.
+Mỗi người tự khai báo ngôn ngữ nói. Không tự nhận diện ngôn ngữ ở bản đầu vì dễ sai khi người nói trộn tiếng Anh vào câu tiếng Việt.
+Nghiệm thu giai đoạn 3: hai người nói xen kẽ tiếng Việt và tiếng Anh, phụ đề hiện trong dưới 3 giây sau mỗi câu, tên riêng và thuật ngữ trong danh sách được dịch đúng, người đọc khác ngôn ngữ vẫn thấy đúng bản của mình.
+Giai đoạn 4: Biên bản, tìm kiếm và tóm tắt
+Transcript đã được lưu từ giai đoạn 3, nên giai đoạn này chỉ cần thêm trang xem, tìm kiếm và bước tóm tắt sau họp; mất khoảng 1 tuần.
+Việc
+Chi tiết
+Trang biên bản
+/meetings/[id] hiện transcript theo thời gian, chuyển đổi giữa bản gốc và bản dịch, bấm vào câu thì video nhảy tới đúng chỗ
+Phụ đề khi xem lại
+Dựng file phụ đề (WebVTT) từ TranscriptSegment để gắn vào trình phát
+Tìm kiếm
+Tìm theo từ khóa trong mọi cuộc họp người dùng có quyền xem; bắt đầu bằng tìm kiếm toàn văn của Postgres
+Tóm tắt
+Sau khi họp kết thúc, gửi transcript cho mô hình ngôn ngữ để tạo: tóm tắt ngắn, quyết định đã chốt, việc cần làm kèm người phụ trách nếu được nêu tên
+Ngôn ngữ tóm tắt
+Mỗi người đọc xem bản tiếng Việt hoặc tiếng Anh tùy chọn
+Gửi biên bản
+Email cho người tham dự, kèm link tới trang họp
+Phần tóm tắt luôn ghi rõ "do AI tạo" và cho host chỉnh sửa trước khi gửi, vì có thể sai tên người hoặc bỏ sót việc.
+Nghiệm thu giai đoạn 4: sau một cuộc họp 30 phút, biên bản và tóm tắt xuất hiện trong dưới 5 phút, bấm một câu thì video nhảy đúng, tìm một từ khóa ra đúng cuộc họp.
+Giai đoạn 5: Phiên dịch bằng giọng nói
+Giai đoạn này đọc bản dịch thành tiếng cho người nghe, nên chỉ làm khi phụ đề ở giai đoạn 3 đã đạt chất lượng; ước tính 2 tuần.
+Cách hoạt động
+Từ bản dịch của giai đoạn 3, agent gọi dịch vụ đọc văn bản thành giọng nói (TTS) với giọng tiếng Việt hoặc tiếng Anh tương ứng.
+Agent phát âm thanh đó lên một track audio riêng cho mỗi ngôn ngữ đích, đặt tên như interp-en và interp-vi.
+Người nghe đăng ký đúng track theo ngôn ngữ mình chọn, và không đăng ký track còn lại để tiết kiệm băng thông.
+Giao diện có thanh trượt cân bằng giữa giọng gốc và giọng dịch; khi bật giọng dịch, giọng gốc tự giảm âm lượng.
+Khi nhiều người nói chồng nhau, xếp hàng các câu dịch và bỏ qua câu quá cũ thay vì đọc trễ.
+Điểm cần lưu ý
+Giọng dịch luôn trễ hơn phụ đề khoảng 1–2 giây; không thể đạt tức thì như phiên dịch viên người.
+Cần thử giọng TTS với người dùng thật, vì giọng tiếng Việt tự nhiên khác nhau nhiều giữa các nhà cung cấp.
+Không cho bản dịch giọng nói chạy khi không có ai chọn nghe ngôn ngữ đó, để khỏi tốn chi phí.
+Mở rộng ngôn ngữ: thêm một ngôn ngữ nghĩa là thêm một mã ngôn ngữ vào danh sách hỗ trợ, một giọng TTS và các từ trong GlossaryTerm. Nên thêm từng ngôn ngữ một (Nhật, Hàn, Trung) và kiểm tra chất lượng riêng cho từng cặp trước khi mở cho toàn công ty.
+Nghiệm thu giai đoạn 5: một người nói tiếng Việt, một người nghe bản dịch tiếng Anh; câu dịch được đọc trong dưới 5 giây sau khi người nói dứt câu, giọng gốc tự giảm khi bật giọng dịch.
+Bảo mật, quyền riêng tư và pháp lý
+Âm thanh và hình ảnh cuộc họp là dữ liệu nhạy cảm, nên mọi quyền phải được kiểm tra ở server và người tham dự phải được báo trước khi bị ghi hay gửi dữ liệu ra dịch vụ ngoài.
+Vấn đề
+Biện pháp
+Khóa bí mật
+Chỉ để trong biến môi trường trên server, không đưa lên git; tạo lại khóa đã lộ và định kỳ thay mới
+Token phòng
+Cấp từ server, hết hạn ngắn, gắn đúng phòng và đúng quyền (host, thành viên, khách)
+Kiểm tra quyền
+Mọi API ghi hình, kết thúc họp, mời ra đều kiểm tra vai trò ở server, không tin giao diện
+Khách bên ngoài
+Phải qua phòng chờ; không xem được bản ghi và biên bản trừ khi host chia sẻ
+Bản ghi và file
+Bucket ở chế độ riêng tư, truy cập qua signed URL có thời hạn
+Webhook
+Kiểm tra chữ ký của LiveKit trước khi xử lý
+Chống lạm dụng
+Giới hạn số lần gọi API tạo họp và cấp token theo người dùng
+Dịch vụ bên ngoài
+Liệt kê nhà cung cấp nhận dữ liệu giọng nói và văn bản (nhận dạng, dịch, TTS), đọc điều khoản về lưu trữ và huấn luyện, chọn gói không dùng dữ liệu để huấn luyện nếu có
+Thông báo ghi hình
+Hiện biểu tượng ghi và thông báo trong phòng; khách bên ngoài phải đồng ý trước khi vào
+Thời gian lưu
+Tự xóa bản ghi và transcript theo chính sách (đề xuất 90 ngày), host có thể xóa sớm
+Về pháp lý: ghi âm, ghi hình và xử lý giọng nói của người khác là xử lý dữ liệu cá nhân. Trước khi triển khai cho cả công ty, nên nhờ bộ phận pháp chế hoặc luật sư xem quy định bảo vệ dữ liệu cá nhân tại Việt Nam, và soạn thông báo đồng ý cho nhân viên cùng khách. Tài liệu này không phải tư vấn pháp lý.
+Hiệu năng, độ trễ và chi phí
+Độ trễ phụ thuộc chủ yếu vào vị trí máy chủ, còn chi phí phụ thuộc vào số giờ họp và số người bật dịch; con số cụ thể chỉ tính được sau khi có bảng giá hiện hành của từng nhà cung cấp.
+Giảm độ trễ
+Đặt web, database và LiveKit cùng ở khu vực Singapore.
+Chạy next build rồi next start cho môi trường thật, không dùng next dev.
+Gom các truy vấn nối tiếp thành một (ví dụ lấy profile và quyền cùng lúc), và dùng Prisma singleton qua globalThis.
+Nhận dạng giọng nói dạng streaming, gửi chữ tạm ngay khi có.
+Dịch mỗi câu một lần cho mỗi ngôn ngữ đích rồi dùng chung, không dịch lại cho từng người xem.
+Bật TURN của LiveKit để người trong mạng công ty chặn UDP vẫn vào được.
+Các khoản chi phí chính
+Khoản
+Tính theo
+Ghi chú
+LiveKit
+Phút người tham gia, băng thông
+Có thể tự dựng LiveKit trên máy chủ riêng nếu dùng nhiều
+Egress (ghi hình)
+Phút ghi
+Thường là khoản lớn nếu họp nhiều
+Kho lưu trữ
+GB lưu, GB tải ra
+Đặt chính sách tự xóa để kiểm soát
+Nhận dạng giọng nói
+Phút âm thanh
+Mỗi người nói tính một luồng riêng
+Dịch
+Số ký tự hoặc token
+Giảm bằng cách dịch một lần cho mỗi ngôn ngữ
+TTS
+Số ký tự
+Chỉ chạy khi có người chọn nghe
+Database, web
+Gói hosting
+Neon, Vercel hoặc VPS
+Cách ước tính: nhân số giờ họp mỗi tháng với số người trung bình, rồi nhân với đơn giá phút của từng khoản ở bảng giá hiện hành. Làm một bảng tính nhỏ trước khi chọn nhà cung cấp, và đặt cảnh báo chi phí hằng ngày ngay từ lần chạy thử đầu tiên.
+Kiểm thử, triển khai và vận hành
+Mỗi giai đoạn chỉ coi là xong khi qua kiểm thử với người dùng thật, và hệ thống chạy thật phải có theo dõi lỗi cùng cảnh báo chi phí.
+Kiểm thử
+Loại
+Nội dung
+Tự động
+Kiểm thử API cấp token, quyền host, webhook ghi hình; kiểm thử hợp đồng cho các hàm gọi dịch vụ ngoài
+Thủ công theo kịch bản
+Họp 2, 5, 10, 20 người; mất mạng rồi nối lại; đổi mic giữa chừng; chia sẻ màn hình
+Chất lượng dịch
+100 câu mẫu từ cuộc họp thật, người song ngữ chấm đúng nghĩa, đúng thuật ngữ, tự nhiên
+Thiết bị
+Chrome, Edge, Safari; Windows, macOS, điện thoại
+Mạng
+Wi-Fi yếu, mạng công ty có tường lửa, 4G
+Tải
+Mô phỏng nhiều phòng cùng lúc bằng công cụ của LiveKit hoặc script nhiều client
+Triển khai
+Hai môi trường riêng: thử nghiệm và chính thức, mỗi nơi có khóa và database riêng.
+Chạy bot dịch (LiveKit Agents) như một dịch vụ riêng, tự khởi động lại khi lỗi.
+Triển khai web trên Vercel hoặc VPS ở Singapore; migration chạy qua prisma migrate deploy.
+Chạy thử với một phòng ban 2 tuần trước khi mở cho cả công ty.
+Vận hành
+Ghi nhận lỗi bằng công cụ như Sentry, và theo dõi chất lượng cuộc gọi (mất gói, độ trễ) từ số liệu của LiveKit.
+Đặt ngưỡng cảnh báo chi phí theo ngày cho từng nhà cung cấp.
+Có kênh để nhân viên báo lỗi dịch và thêm thuật ngữ vào GlossaryTerm.
+Sao lưu database và kiểm tra khôi phục mỗi quý.
+Rủi ro và cách giảm thiểu
+Ba rủi ro lớn nhất là chất lượng nhận dạng tiếng Việt, chi phí vượt dự kiến và vấn đề đồng ý ghi âm; cả ba cần được kiểm tra sớm, trước khi làm các phần phía sau.
+Rủi ro
+Mức
+Cách giảm thiểu
+Nhận dạng sai nhiều với giọng vùng miền, tiếng ồn, từ chuyên ngành
+Cao
+Thử nghiệm với cuộc họp thật ngay đầu giai đoạn 3; dùng từ điển thuật ngữ; cho người dùng sửa và báo lỗi
+Chi phí vượt dự kiến khi nhiều người bật dịch và ghi hình
+Cao
+Dịch một lần cho mỗi ngôn ngữ; chỉ chạy TTS khi có người nghe; cảnh báo chi phí theo ngày; tự xóa bản ghi cũ
+Vi phạm quy định về dữ liệu cá nhân khi ghi âm, ghi hình
+Cao
+Thông báo và xin đồng ý; phân quyền xem; hỏi ý kiến pháp chế trước khi triển khai
+Độ trễ dịch khiến cuộc họp bị gượng
+Trung bình
+Đặt kỳ vọng rõ rằng giọng dịch trễ vài giây; phụ đề chạy trước, giọng dịch là tùy chọn
+Mạng công ty chặn WebRTC
+Trung bình
+Bật TURN qua cổng 443; kiểm tra mạng thật trước khi triển khai
+Phụ thuộc vào nhà cung cấp bên ngoài
+Trung bình
+Bọc mỗi dịch vụ sau một giao diện chung để thay được; ghi lại phiên bản và giá
+Rò rỉ khóa bí mật
+Cao
+Tạo lại khóa đã lộ; không đưa .env lên git; quét bí mật tự động trong CI
+Phiên bản Next.js cũ và SWC lệch phiên bản
+Trung bình
+Nâng cấp ở giai đoạn 0 trước khi thêm tính năng mới
+Bot dịch bị lỗi giữa cuộc họp
+Trung bình
+Tự khởi động lại, host thấy trạng thái "đang dịch" và có thể bật lại
+Lộ trình, mốc nghiệm thu và việc cần quyết định
+Sáu giai đoạn nối tiếp nhau, cộng dồn khoảng 7 tuần, và mỗi giai đoạn phải qua mốc nghiệm thu trước khi sang giai đoạn sau.
+lộ trình · 6 giai đoạn, mỗi giai đoạn có mốc nghiệm thu
+Giai đoạn 3 được nhấn mạnh vì đây là phần quyết định giá trị của hệ thống; nếu chất lượng nhận dạng tiếng Việt chưa đạt thì nên dừng ở đó và thử nhà cung cấp khác trước khi làm tiếp giai đoạn 4 và 5. Thời gian trên chưa tính khoảng thử nghiệm với người dùng thật.
+Việc cần quyết định trước khi bắt đầu
+☐ Quy mô: số người tối đa mỗi phòng và số giờ họp mỗi tuần
+☐ Cần phụ đề (đọc chữ) hay giọng dịch ngay từ đầu
+☐ Ngôn ngữ cần hỗ trợ ngoài Việt và Anh (Nhật, Hàn, Trung...)
+☐ Nội dung họp có được gửi tới dịch vụ AI bên ngoài hay không
+☐ Làm trong dự án Discord hiện tại hay tách thành dự án mới
+☐ Thời gian lưu bản ghi và ai được xem lại
+Phụ lục: biến môi trường
+Bản chạy thật cần thêm khoảng tám biến mới ngoài các biến đang có; không ghi giá trị vào tài liệu hay vào git, chỉ đặt trong cấu hình bí mật của nơi triển khai.
+Biến
+Dùng cho
+Tình trạng
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY
+Đăng nhập
+Có sẵn; tạo lại khóa vì đã lộ
+DATABASE_URL
+Prisma, Neon
+Có sẵn; đổi sang vùng Singapore
+LIVEKIT_API_KEY, LIVEKIT_API_SECRET, NEXT_PUBLIC_LIVEKIT_URL
+Token, Egress, webhook, bot dịch
+Có sẵn; tạo lại khóa; bot dịch dùng cùng bộ này
+NEXT_PUBLIC_SITE_URL
+Link mời họp
+Có sẵn; đặt riêng cho từng môi trường
+UPLOADTHING_SECRET, UPLOADTHING_APP_ID
+Tải ảnh lên
+Có sẵn nhưng đang trống; chỉ cần nếu giữ chức năng này
+STORAGE_BUCKET, STORAGE_REGION, STORAGE_ACCESS_KEY, STORAGE_SECRET_KEY
+Kho lưu bản ghi
+Mới, tên đề xuất
+STT_API_KEY, TRANSLATE_API_KEY, TTS_API_KEY
+Nhận dạng, dịch, đọc
+Mới, tùy nhà cung cấp được chọn
+AGENT_NAME
+Dispatch bot dịch vào đúng phòng
+Mới, tên đề xuất
+Nguồn
+Các điểm kỹ thuật về ghi hình và bot dịch được đối chiếu với tài liệu LiveKit ngày 10/10/2026; phần còn lại dựa trên kiến thức chung, còn giá và giới hạn gói của từng nhà cung cấp cần xem bảng giá hiện hành.
+Egress overview, LiveKit Documentation: nguồn TemplateSource, ghi chỉ âm thanh, người tham gia loại EGRESS
+Introduction, LiveKit Agents: agent server, dispatch mặc định theo phòng, plugin nhận dạng, mô hình ngôn ngữ và đọc, ví dụ dịch thời gian thực

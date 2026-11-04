@@ -1,0 +1,29 @@
+=== HYPERLINKS IN DOCUMENT ===
+AMI Meeting Corpus -> https://groups.inf.ed.ac.uk/ami/corpus/
+MeetingBank -> https://meetingbank.github.io
+QMSum -> https://github.com/Yale-LILY/QMSum
+groups.inf.ed.ac.uk/ami/download -> https://groups.inf.ed.ac.uk/ami/download
+OpenSLR -> https://openslr.org/16/
+Zenodo -> https://zenodo.org/record/7989108
+Hugging Face -> https://huggingface.co/datasets/huuuyeah/meetingbank
+PhoMT -> https://github.com/VinAIResearch/PhoMT
+VIVOS -> https://zenodo.org/records/7068130
+Hugging Face -> https://huggingface.co/datasets/AILAB-VNUHCM/vivos
+Discord Unveiled -> https://arxiv.org/html/2502.00627v1
+AMI Meeting Corpus: trang chính -> https://groups.inf.ed.ac.uk/ami/corpus/
+AMI corpus: trang tải -> https://groups.inf.ed.ac.uk/ami/download
+AMI Corpus trên OpenSLR -> https://openslr.org/16/
+AMI Meeting Corpus trên VoxKitchen -> https://voxkitchen.readthedocs.io/en/latest/datasets/ami/
+MeetingBank: trang chính -> https://meetingbank.github.io
+MeetingBank trên Zenodo -> https://zenodo.org/record/7989108
+MeetingBank trên Hugging Face -> https://huggingface.co/datasets/huuuyeah/meetingbank
+MeetingBank_Audio trên Hugging Face -> https://huggingface.co/datasets/huuuyeah/MeetingBank_Audio/blob/bbfbc2ffd2a20b69a19f91cd8d99ced5ed01cc48/README.md
+QMSum trên GitHub -> https://github.com/Yale-LILY/QMSum
+QMSum: bài báo arXiv -> https://arxiv.org/pdf/2104.05938
+PhoMT trên GitHub -> https://github.com/VinAIResearch/PhoMT
+PhoMT: bài báo ACL Anthology -> https://aclanthology.org/2021.emnlp-main.369
+VIVOS trên Zenodo -> https://zenodo.org/records/7068130
+VIVOS trên Hugging Face -> https://huggingface.co/datasets/AILAB-VNUHCM/vivos
+Discord Unveiled: bài báo arXiv -> https://arxiv.org/html/2502.00627v1
+Midjourney prompts trên Hugging Face -> https://huggingface.co/datasets/succinctly/midjourney-prompts/commit/e670508f77f244a24a8bcf100f02011df9d8435b
+VTuber 500M trên Hugging Face -> https://huggingface.co/datasets/holodata/sensai/raw/9a22a89138e59a007efe90416a61d887eb69889f/README.md

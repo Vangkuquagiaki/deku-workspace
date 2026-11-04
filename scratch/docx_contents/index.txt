@@ -1,0 +1,18 @@
+=== doc_1.txt | Ke_hoach_Discord_Clone_HRM_AI_DA_RA_SOAT_V2.docx (Length: 35161 chars) ===
+KẾ HOẠCH TÍCH HỢP TÍNH NĂNG NỘI BỘ DOANH NGHIỆP VÀO DISCORD CLONE BẢN RÀ SOÁT – HIỆU CHỈNH – BỔ SUNG V2.0 Hướng mở rộng: Quản trị nhân sự (HRM) + Giao tiếp nội bộ + AI Meeting Intelligence Ngày rà soát: 02/11/2026   •   Mốc đồ án: 05/11/2026 Tài liệu này thay thế phần đề xuất chưa nhất quán trong bả
+
+=== doc_2.txt | Kế hoạch chi tiết Phòng họp công ty có phiên dịch và ghi hình.docx (Length: 24197 chars) ===
+Kế hoạch chi tiết: Phòng họp công ty có phiên dịch và ghi hình Oct 10, 2026 · @nguyenminhthien Tổng quan và mục tiêu Mục tiêu là xây phòng họp video nội bộ giống Google Meet, có phụ đề dịch Việt–Anh theo thời gian thực và ghi hình kèm biên bản, dựa trên nền Next.js, Clerk, Prisma và LiveKit mà dự án
+
+=== doc_3.txt | Kế hoạch tích hợp tính năng nội bộ doanh nghiệp vào Discord clone.docx (Length: 57090 chars) ===
+Kế hoạch tích hợp tính năng nội bộ doanh nghiệp vào Discord clone Oct 20, 2026 · @nguyenminhthien Cập nhật 31/10/2026. Tài liệu này là nguồn chính của kế hoạch. Các mục 8, 9, 10, 11 và 12 là phần đang dùng cho hạn nộp 5/11. Các mục 4 đến 6 là lộ trình dài hạn đầy đủ, dùng làm hướng phát triển sau đồ
+
+=== doc_4.txt | Nguồn dữ liệu thực tế cho Seed Data – Meeting Intelligence Platform.docx (Length: 7009 chars) ===
+Nguồn dữ liệu thực tế cho Seed Data – Meeting Intelligence Platform Oct 13, 2026 · @nguyenminhthien Các bộ dữ liệu công khai dưới đây đủ để thay dữ liệu tự bịa trong kế hoạch seed: họp tiếng Anh (AMI, MeetingBank, QMSum), tiếng Việt và song ngữ (PhoMT, VIVOS), tin nhắn kiểu Discord (Discord Unveiled
+
+=== doc_5.txt | Tham_Khao_Lark_Chon_Loc_Va_Ke_Hoach_Thuc_Hien.docx (Length: 31112 chars) ===
+Tham khảo Lark và Lark Base Chọn lọc tính năng phù hợp môi trường công ty và các bước thực hiện chi tiết cho dự án Dự án: Xây dựng nền tảng giao tiếp và cộng tác doanh nghiệp tích hợp trí tuệ nhân tạo hỗ trợ cuộc họp  |  Ngày lập: 31/10/2026  |  Hạn nộp: 05/11/2026 1. Kết luận ngắn Lark là bộ công c
+
+=== doc_6.txt | Thiet_Ke_He_Thong_Nhan_Su_Giao_Tiep_AI_Doanh_Nghiep.docx (Length: 30707 chars) ===
+TÀI LIỆU ĐẶC TẢ TỔNG THỂ NỀN TẢNG QUẢN TRỊ NHÂN SỰ,GIAO TIẾP DOANH NGHIỆPVÀ TRỢ LÝ AI Enterprise HRM + Workplace Collaboration + AI Meeting Intelligence Thông tin Nội dung Loại tài liệu Đặc tả chức năng + kiến trúc + dữ liệu + phân quyền + lộ trình triển khai Bối cảnh Công ty đa phòng ban: nhân sự, 
+

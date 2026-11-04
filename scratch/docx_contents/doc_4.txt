@@ -1,0 +1,160 @@
+FILENAME: Nguồn dữ liệu thực tế cho Seed Data – Meeting Intelligence Platform.docx
+
+Nguồn dữ liệu thực tế cho Seed Data – Meeting Intelligence Platform
+Oct 13, 2026 · @nguyenminhthien
+Các bộ dữ liệu công khai dưới đây đủ để thay dữ liệu tự bịa trong kế hoạch seed: họp tiếng Anh (AMI, MeetingBank, QMSum), tiếng Việt và song ngữ (PhoMT, VIVOS), tin nhắn kiểu Discord (Discord Unveiled), và dữ liệu đa ngôn ngữ (Common Voice, FLEURS, CoVoST 2, AliMeeting, In-CroMin).
+Thông tin lấy từ kết quả tìm kiếm ngày 13/10/2026; chưa tải dữ liệu về, chưa mở từng trang gốc và chưa thử nạp vào hệ thống, nên cần kiểm tra giấy phép và định dạng khi lấy.
+1. Cuộc họp thật
+AMI là nguồn họp chuẩn nhất để lấy transcript và audio; MeetingBank và QMSum bổ sung bản tóm tắt để đối chiếu với kết quả AI.
+Bộ dữ liệu
+Quy mô
+Nội dung
+Giấy phép và lưu ý
+AMI Meeting Corpus
+Khoảng 100 giờ họp tiếng Anh
+Audio, video, transcript, nhãn người nói; hai phần ba là nhóm bốn người đóng vai đội thiết kế điều khiển từ xa
+Các nguồn ghi không thống nhất: CC BY 4.0, hoặc CC BY-NC-SA 2.0 có chỉnh sửa; xem trang chính thức. Audio headset nặng 24GB, annotation 21MB, nên chỉ tải vài cuộc họp
+MeetingBank
+1.366 cuộc họp, 6.892 cặp đoạn họp và tóm tắt
+Transcript, biên bản, tóm tắt do người viết, audio
+Audio dùng cc-by-nc-sa-4.0, không thương mại. Mỗi cuộc họp trung bình 2,6 giờ, cần cắt ngắn để làm demo
+QMSum
+232 cuộc họp, 1.808 cặp câu hỏi và tóm tắt
+Ba nhóm: sản phẩm, học thuật, ủy ban
+Nhóm sản phẩm gần bối cảnh doanh nghiệp nhất
+Cách lấy dữ liệu:
+AMI: trang tải groups.inf.ed.ac.uk/ami/download (annotation kèm transcript tải riêng, audio chọn từng cuộc họp) hoặc bản mirror OpenSLR.
+MeetingBank: Zenodo hoặc Hugging Face, tải bằng load_dataset("huuuyeah/meetingbank").
+2. Tiếng Việt và song ngữ Việt–Anh
+Chưa tìm thấy bộ dữ liệu họp tiếng Việt công khai; cách thực tế là tự ghi âm vài cuộc họp ngắn với bạn bè, có xin phép từng người, và dùng các bộ dưới đây cho phần dịch và đo WER.
+Bộ dữ liệu
+Quy mô
+Dùng cho
+Giấy phép và lưu ý
+PhoMT
+3,02 triệu cặp câu Việt–Anh
+Đoạn dịch song ngữ cho bảng TranscriptSegment
+Phát hành cho nghiên cứu hoặc giáo dục
+VIVOS (Hugging Face)
+15 giờ; 11.660 câu train, 760 câu test
+Đo WER tiếng Việt
+Zenodo ghi CC BY-NC-SA 4.0, chỉ dùng học thuật. Là giọng đọc từng câu, không phải hội thoại họp
+Common Voice tiếng Việt
+Chưa rõ quy mô
+Giọng nói tiếng Việt đa dạng
+Tên dataset mozilla-foundation/common_voice_17_0, cấu hình vi, thấy trong một repo dùng nó; chưa mở trang gốc để kiểm tra
+3. Tin nhắn kiểu Discord
+Discord Unveiled là bộ lớn nhất tìm thấy: hơn 2,05 tỷ tin nhắn từ 4,74 triệu người dùng trên 3.167 server công khai, trải dài 2015–2024. Chưa thấy link tải trực tiếp trong kết quả; đọc bài báo để biết cách xin dữ liệu.
+Đây là tin nhắn của người dùng thật: chỉ lấy vài chục câu đã ẩn danh làm mẫu, không đăng nguyên văn lên báo cáo.
+Hai bộ Kaggle tìm thấy không phù hợp: Midjourney chỉ chứa câu lệnh tạo ảnh, còn VTuber 500M là live chat của các streamer ảo.
+Không có nguồn chính thống cho "Gaming Lounge" hay "Tech Community": đó chỉ là tên server giả trong kế hoạch seed.
+4. Cách ghép vào dự án
+Mỗi nhu cầu của kế hoạch seed có một nguồn tương ứng, trừ phần thuật ngữ chuyên ngành chưa tìm nguồn.
+Cần seed
+Lấy từ
+Transcript cuộc họp tiếng Anh
+AMI hoặc QMSum (nhóm sản phẩm), cắt 1–2 phút
+Bản tóm tắt đối chiếu
+MeetingBank hoặc QMSum
+Đoạn dịch Việt ↔ Anh
+PhoMT
+Audio đo WER tiếng Việt
+VIVOS, kèm vài file tự ghi âm
+Tin nhắn chat mẫu
+Vài chục câu ẩn danh từ Discord Unveiled
+Kế hoạch seed dùng Prisma và các bảng Server, Channel, GlossaryTerm; dự án hiện dùng Spring Boot với PostgreSQL và chưa có các bảng đó, nên cần thiết kế bảng trước khi viết seed cho phần chat và thuật ngữ.
+5. Dữ liệu đa ngôn ngữ
+Để có nhiều thứ tiếng, ghép giọng nói và dữ liệu dịch đa ngôn ngữ (Common Voice, FLEURS, CoVoST 2) với vài bộ họp thật ngoài tiếng Anh (AliMeeting, In-CroMin); họp thật nhiều thứ tiếng vẫn rất ít, còn phần lớn bộ lớn là giọng đọc hoặc giọng nghị viện.
+Giọng nói, dịch và hội thoại đa ngôn ngữ
+Bộ dữ liệu
+Ngôn ngữ
+Quy mô
+Giấy phép và lưu ý
+Common Voice
+131 ngôn ngữ
+21.594 giờ đã kiểm duyệt (32.585 giờ ghi âm)
+Mỗi mẫu là một file MP3 kèm text; giọng đọc tình nguyện, không phải họp. Kiểm tra giấy phép trên trang
+FLEURS
+102 ngôn ngữ
+Khoảng 12 giờ mỗi ngôn ngữ
+Cùng một bộ câu được đọc ở mọi ngôn ngữ, nên ghép đoạn dịch song song rất tiện; một nguồn ghi CC BY 4.0
+CoVoST 2
+21 ngôn ngữ sang tiếng Anh, tiếng Anh sang 15 ngôn ngữ
+2.880 giờ, 78 nghìn người nói
+CC0; dựa trên Common Voice, gồm cả tiếng Nhật, Trung, Ả Rập, Indonesia
+VoxPopuli
+23 ngôn ngữ châu Âu
+400 nghìn giờ chưa gán nhãn, 1,8 nghìn giờ có transcript
+CC0; giọng nghị viện trang trọng, ít hợp hội thoại tự nhiên
+FLORES-200
+Khoảng 200 ngôn ngữ
+3.001 câu dịch song song
+Chỉ có văn bản, hợp cho đoạn dịch mẫu
+MASSIVE
+51 ngôn ngữ
+1 triệu câu lệnh trợ lý ảo, song song
+Là câu lệnh trợ lý ảo, không phải chat công việc; dùng làm câu ngắn nhiều ngôn ngữ
+Họp và hội thoại thật ngoài tiếng Anh
+Bộ dữ liệu
+Ngôn ngữ
+Quy mô
+Giấy phép và lưu ý
+AliMeeting
+Quan Thoại
+118,75 giờ; 212 cuộc họp train, 8 eval, 20 test; mỗi cuộc 15–30 phút, 2–4 người
+Họp thật, có nhãn người nói; chưa kiểm tra giấy phép
+AliMeeting4MUG
+Quan Thoại
+654 cuộc họp
+Có nhãn cho tóm tắt, từ khóa và phát hiện action item, đúng bài toán của dự án; chưa kiểm tra link tải
+In-CroMin
+12 ngôn ngữ
+296 phút, 24 người tham gia; tiếng Séc chiếm 45%
+Họp song ngữ có biên bản; bài báo nói sẽ phát hành thêm, chưa kiểm tra cách tải
+Indic DiarBench
+22 ngôn ngữ Ấn Độ
+108 giờ hội thoại
+Gồm họp, ghi âm xa và hội thoại YouTube, có nhãn người nói; phát hành mở theo bài báo
+ZAEBUC-Spoken
+Ả Rập (nhiều phương ngữ) và tiếng Anh
+Chưa rõ quy mô
+Thu từ các cuộc họp Zoom, có chuyển mã giữa các ngôn ngữ; bài báo nói đã công bố công khai
+Gợi ý ghép vào seed:
+Đoạn dịch song ngữ hoặc đa ngữ: lấy cùng một câu từ FLEURS hoặc FLORES-200 ở 2–3 ngôn ngữ.
+Cuộc họp nhiều thứ tiếng: In-CroMin gần ý tưởng nhất nhưng nhỏ; AliMeeting4MUG đúng bài toán action item nhưng chỉ có tiếng Quan Thoại.
+Tiếng Việt vẫn dùng PhoMT và VIVOS ở phần 2.
+Nguồn tham khảo
+Các link dưới đây lấy từ kết quả tìm kiếm ngày 13/10/2026, chưa mở từng trang để kiểm tra.
+AMI Meeting Corpus: trang chính
+AMI corpus: trang tải
+AMI Corpus trên OpenSLR
+AMI Meeting Corpus trên VoxKitchen
+MeetingBank: trang chính
+MeetingBank trên Zenodo
+MeetingBank trên Hugging Face
+MeetingBank_Audio trên Hugging Face
+QMSum trên GitHub
+QMSum: bài báo arXiv
+PhoMT trên GitHub
+PhoMT: bài báo ACL Anthology
+VIVOS trên Zenodo
+VIVOS trên Hugging Face
+Discord Unveiled: bài báo arXiv
+Midjourney prompts trên Hugging Face
+VTuber 500M trên Hugging Face
+Nguồn bổ sung cho phần đa ngôn ngữ:
+Common Voice: trang dữ liệu
+Common Voice trên Mozilla Blueprints
+FLEURS: bài báo arXiv
+FLEURS trên Hugging Face
+CoVoST 2: bài báo arXiv
+VoxPopuli: bài báo arXiv
+VoxPopuli trên VoxKitchen
+FLORES-200: trang tài nguyên
+MASSIVE: bài viết của Amazon Science
+AliMeeting trên OpenSLR
+AliMeeting4MUG: bài báo arXiv
+In-CroMin: bài báo arXiv
+Indic DiarBench: bài báo arXiv
+ZAEBUC-Spoken: bài báo arXiv
+Gladia: danh sách dataset (giấy phép CC BY 4.0 của FLEURS)

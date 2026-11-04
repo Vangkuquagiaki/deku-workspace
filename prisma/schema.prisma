@@ -1,0 +1,719 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Profile {
+  id       String @id @default(uuid())
+  userId   String @unique
+  name     String
+  imageUrl String @db.Text
+  email    String @db.Text
+
+  servers  Server[]
+  members  Member[]
+  channels Channel[]
+
+  sentFriendships     Friendship[] @relation("SentFriendships")
+  receivedFriendships Friendship[] @relation("ReceivedFriendships")
+
+  // Lark Base & Org additions
+  orgUnitMembers  OrgUnitMember[]
+  employeeProfile EmployeeProfile?
+  tasksAssigned   Task[]           @relation("TaskAssignee")
+  postsAuthored   Post[]           @relation("PostAuthor")
+  postReads       PostRead[]
+
+  // Commendations
+  receivedCommendations Commendation[] @relation("ReceivedCommendations")
+  awardedCommendations  Commendation[] @relation("AwardedCommendations")
+
+  // Leave & Approvals
+  leaveRequestsApproved LeaveRequest[] @relation("ApprovedLeaveRequests")
+
+  // Enterprise Threads (Kaggle Dataset V3)
+  socialPosts     SocialPost[]
+  socialReplies   SocialReply[]
+  socialReactions SocialReaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Server {
+  id         String @id @default(uuid())
+  name       String
+  imageUrl   String @db.Text
+  inviteCode String @unique
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  members  Member[]
+  channels Channel[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+enum MemberRole {
+  ADMIN
+  MODERATOR
+  GUEST
+}
+
+model Member {
+  id   String     @id @default(uuid())
+  role MemberRole @default(GUEST)
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  serverId String
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  messages       Message[]
+  directMessages DirectMessage[]
+
+  conversationsInitiated Conversation[] @relation("MemberOne")
+  conversationsReceived  Conversation[] @relation("MemberTwo")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@index([serverId])
+}
+
+enum ChannelType {
+  TEXT
+  AUDIO
+  VIDEO
+  ANNOUNCEMENT
+}
+
+model Channel {
+  id   String      @id @default(uuid())
+  name String
+  type ChannelType @default(TEXT)
+
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  serverId String
+  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  // Lark Org linkage
+  orgUnitId String?
+  orgUnit   OrgUnit? @relation(fields: [orgUnitId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@index([serverId])
+  @@index([orgUnitId])
+}
+
+model Message {
+  id      String @id @default(uuid())
+  content String @db.Text
+
+  fileUrl String? @db.Text
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  deleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([channelId])
+  @@index([memberId])
+}
+
+model Conversation {
+  id String @id @default(uuid())
+
+  memberOneId String
+  memberOne   Member @relation("MemberOne", fields: [memberOneId], references: [id], onDelete: Cascade)
+
+  memberTwoId String
+  memberTwo   Member @relation("MemberTwo", fields: [memberTwoId], references: [id], onDelete: Cascade)
+
+  directMessages DirectMessage[]
+
+  @@unique([memberOneId, memberTwoId])
+  @@index([memberTwoId])
+}
+
+model DirectMessage {
+  id      String  @id @default(uuid())
+  content String  @db.Text
+  fileUrl String? @db.Text
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  deleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId])
+  @@index([conversationId])
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+model Friendship {
+  id String @id @default(uuid())
+
+  senderId String
+  sender   Profile @relation("SentFriendships", fields: [senderId], references: [id], onDelete: Cascade)
+
+  receiverId String
+  receiver   Profile @relation("ReceivedFriendships", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  status FriendStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+}
+
+model Meeting {
+  id        String        @id @default(uuid())
+  code      String        @unique // dạng abc-defg-hij
+  title     String
+  hostId    String        // userId của Clerk
+  status    MeetingStatus @default(SCHEDULED)
+  startsAt  DateTime?
+  startedAt DateTime?
+  endedAt   DateTime?
+  lobby     Boolean       @default(true) // bật phòng chờ
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  participants Participant[]
+  recordings   Recording[]
+  segments     TranscriptSegment[]
+
+  // Lark Org integration
+  orgUnitId String?
+  orgUnit   OrgUnit? @relation(fields: [orgUnitId], references: [id], onDelete: SetNull)
+  tasks     Task[]
+
+  // M1: Recording consent notice
+  recordingNoticeBy String?
+  recordingNoticeAt DateTime?
+
+  @@index([hostId])
+  @@index([orgUnitId])
+}
+
+enum ParticipantRole {
+  HOST
+  COHOST
+  MEMBER
+  GUEST
+}
+
+model Participant {
+  id        String          @id @default(uuid())
+  meetingId String
+  userId    String?         // trống nếu là khách
+  name      String
+  role      ParticipantRole @default(GUEST)
+  language  String          @default("vi") // ngôn ngữ nói
+  joinedAt  DateTime        @default(now())
+  leftAt    DateTime?
+
+  // M1: Consent workflow
+  consentStatus String   @default("PENDING") // PENDING, AGREED, DECLINED
+  respondedAt   DateTime?
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId])
+  @@index([userId])
+}
+
+enum RecordingStatus {
+  STARTING
+  ACTIVE
+  COMPLETE
+  FAILED
+}
+
+model Recording {
+  id          String          @id @default(uuid())
+  meetingId   String
+  egressId    String?         @unique // id của LiveKit Egress
+  fileUrl     String?         @db.Text
+  durationSec Int?
+  sizeBytes   BigInt?
+  status      RecordingStatus @default(STARTING)
+  startedBy   String
+  createdAt   DateTime        @default(now())
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId])
+}
+
+model TranscriptSegment {
+  id          String   @id @default(uuid())
+  meetingId   String
+  speakerId   String
+  speakerName String?
+  lang        String   // vi, en
+  text        String   @db.Text
+  translation Json?    // { "en": "...", "vi": "..." }
+  startMs     Int      // mốc thời gian từ lúc họp bắt đầu
+  endMs       Int
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId, startMs])
+}
+
+model GlossaryTerm {
+  id        String   @id @default(uuid())
+  orgId     String
+  source    String   // thuật ngữ gốc
+  target    String   // cách dịch bắt buộc
+  lang      String   // cặp ngôn ngữ
+  createdAt DateTime @default(now())
+
+  @@unique([orgId, source, lang])
+  @@index([orgId])
+}
+
+// ==========================================
+// LARK & LARK BASE ENTERPRISE EXTENSIONS
+// ==========================================
+
+model OrgUnit {
+  id        String   @id @default(uuid())
+  name      String
+  type      String   // DEPARTMENT, TEAM
+  parentId  String?
+  createdAt DateTime @default(now())
+
+  parent   OrgUnit?        @relation("OrgUnitHierarchy", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  children OrgUnit[]       @relation("OrgUnitHierarchy")
+  members  OrgUnitMember[]
+  tasks    Task[]
+  meetings Meeting[]
+  channels Channel[]
+  posts    Post[]
+
+  @@index([parentId])
+}
+
+model OrgUnitMember {
+  id        String   @id @default(uuid())
+  orgUnitId String
+  profileId String
+  role      String   @default("MEMBER") // HEAD (Trưởng phòng), LEAD (Tổ trưởng), MEMBER (Nhân viên)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  orgUnit OrgUnit @relation(fields: [orgUnitId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([orgUnitId, profileId])
+  @@index([orgUnitId])
+  @@index([profileId])
+}
+
+model EmployeeProfile {
+  id               String    @id @default(uuid())
+  profileId        String    @unique
+  employeeCode     String    @unique
+  jobTitle         String?
+  hiredOn          DateTime?
+  employmentStatus String    @default("ACTIVE")
+  isHr             Boolean   @default(false)
+
+  // Personal Info (Bao mat theo Luat Bao ve Du lieu Ca nhan & B3 Matrix)
+  dob              DateTime? // Ngay sinh -> tinh Tuoi
+  address          String?   // Noi o / Dia chi cu tru
+  phoneNumber      String?   // So dien thoai
+  idCardNumber     String?   // CCCD / Ma dinh danh
+  bankAccount      String?   // So tai khoan ngan hang nhan luong
+  bankName         String?   // Ten ngan hang
+
+  // Compensation & Benefits (Luong & Dai ngo - bao mat chi Self va HR/Admin)
+  baseSalary       Float?    @default(0) // Luong co ban
+  allowance        Float?    @default(0) // Phu cap
+  bonus            Float?    @default(0) // Thuong hieu suat / KPI
+  insuranceSalary  Float?    @default(0) // Muc dong BHXH
+
+  profile    Profile            @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  attendance AttendanceRecord[]
+
+  // HR Workflows (P1)
+  leaveBalances    LeaveBalance[]
+  leaveRequests    LeaveRequest[]
+  employmentEvents EmploymentEvent[]
+  onboardingTasks  OnboardingTask[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AttendanceRecord {
+  id                String   @id @default(uuid())
+  employeeProfileId String
+  month             DateTime // Ngày đầu tiên của tháng (YYYY-MM-01)
+  workedDays        Float
+  source            String   @default("CSV") // CSV, MANUAL
+
+  employeeProfile EmployeeProfile @relation(fields: [employeeProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeProfileId, month])
+  @@index([employeeProfileId])
+}
+
+model Task {
+  id               String    @id @default(uuid())
+  title            String
+  description      String?   @db.Text
+  status           String    @default("TODO") // TODO, IN_PROGRESS, DONE, OVERDUE
+  priority         String    @default("MEDIUM") // LOW, MEDIUM, HIGH
+  orgUnitId        String
+  assigneeId       String?   // Profile ID
+  assigneeName     String?   // Raw text extracted by AI
+  dueDate          DateTime?
+  deadlineText     String?   // Raw text e.g. "thứ 6 tuần này"
+  evidenceText     String?   @db.Text // Exact quote from meeting
+  isHumanConfirmed Boolean   @default(true)
+  meetingId        String?
+
+  orgUnit  OrgUnit  @relation(fields: [orgUnitId], references: [id], onDelete: Cascade)
+  assignee Profile? @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  meeting  Meeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orgUnitId])
+  @@index([assigneeId])
+  @@index([meetingId])
+}
+
+model PostCategory {
+  id        String   @id @default(uuid())
+  name      String   // Nhân sự, Pháp luật, Công ty, Tuyên dương
+  posts     Post[]
+  createdAt DateTime @default(now())
+}
+
+model Post {
+  id                String   @id @default(uuid())
+  categoryId        String?
+  authorId          String   // Profile ID
+  title             String
+  body              String   @db.Text
+  isPinned          Boolean  @default(false)
+  audienceOrgUnitId String?  // null = Toàn công ty
+
+  category        PostCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author          Profile       @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  audienceOrgUnit OrgUnit?      @relation(fields: [audienceOrgUnitId], references: [id], onDelete: SetNull)
+  reads           PostRead[]
+
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([audienceOrgUnitId])
+}
+
+model PostRead {
+  id        String   @id @default(uuid())
+  postId    String
+  profileId String
+  readAt    DateTime @default(now())
+
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, profileId])
+  @@index([postId])
+  @@index([profileId])
+}
+
+model Commendation {
+  id          String   @id @default(uuid())
+  profileId   String
+  reason      String   @db.Text
+  awardedById String?
+  postId      String?
+  createdAt   DateTime @default(now())
+
+  profile   Profile  @relation("ReceivedCommendations", fields: [profileId], references: [id], onDelete: Cascade)
+  awardedBy Profile? @relation("AwardedCommendations", fields: [awardedById], references: [id], onDelete: SetNull)
+
+  @@index([profileId])
+  @@index([awardedById])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  action     String   // e.g. CONSENT_AGREED, CONSENT_DECLINED, PROFILE_ATTENDANCE_VIEW, HR_IMPORT, RECORDING_START, LEAVE_APPROVED, EMPLOYEE_TRANSFERRED
+  targetType String?  // MEETING, PROFILE, TASK, POST, LEAVE_REQUEST, EMPLOYEE
+  targetId   String?
+  detail     Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ==========================================
+// ENTERPRISE HR & APPROVALS (LEAVE & APP)
+// ==========================================
+
+model LeavePolicy {
+  id          String   @id @default(uuid())
+  name        String   // Phép năm, Phép ốm, Phép không lương, Nghỉ chế độ
+  code        String   @unique // ANNUAL, SICK, UNPAID, MATERNITY
+  defaultDays Float    @default(12)
+  isPaid      Boolean  @default(true)
+  description String?
+
+  balances    LeaveBalance[]
+  requests    LeaveRequest[]
+  createdAt   DateTime @default(now())
+}
+
+model LeaveBalance {
+  id                String   @id @default(uuid())
+  employeeProfileId String
+  policyId          String
+  year              Int      @default(2026)
+  totalDays         Float    @default(12)
+  usedDays          Float    @default(0)
+  pendingDays       Float    @default(0)
+
+  employeeProfile EmployeeProfile @relation(fields: [employeeProfileId], references: [id], onDelete: Cascade)
+  policy          LeavePolicy     @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeProfileId, policyId, year])
+  @@index([employeeProfileId])
+  @@index([policyId])
+}
+
+model LeaveRequest {
+  id                String   @id @default(uuid())
+  employeeProfileId String
+  policyId          String
+  startDate         DateTime
+  endDate           DateTime
+  daysCount         Float
+  session           String   @default("FULL_DAY") // FULL_DAY, MORNING, AFTERNOON
+  reason            String   @db.Text
+  handoverTo        String?  // Đồng nghiệp bàn giao công việc
+  status            String   @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  approverId        String?  // Profile ID của người duyệt
+  rejectionReason   String?  @db.Text
+  approvedAt        DateTime?
+
+  employeeProfile EmployeeProfile @relation(fields: [employeeProfileId], references: [id], onDelete: Cascade)
+  policy          LeavePolicy     @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  approver        Profile?        @relation("ApprovedLeaveRequests", fields: [approverId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeProfileId])
+  @@index([policyId])
+  @@index([approverId])
+  @@index([status])
+}
+
+// ==========================================
+// EMPLOYEE LIFECYCLE (LIFE - ONBOARDING/TRANSFER)
+// ==========================================
+
+model EmploymentEvent {
+  id                String   @id @default(uuid())
+  employeeProfileId String
+  eventType         String   // ONBOARDING, TRANSFER_TEAM, PROMOTION, OFFBOARDING
+  fromOrgUnitId     String?
+  toOrgUnitId       String?
+  effectiveDate     DateTime @default(now())
+  note              String?  @db.Text
+  actorId           String?  // Profile ID thực hiện
+
+  employeeProfile EmployeeProfile @relation(fields: [employeeProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([employeeProfileId])
+  @@index([eventType])
+}
+
+model OnboardingTask {
+  id                String   @id @default(uuid())
+  employeeProfileId String
+  title             String
+  category          String   @default("GENERAL") // IT, HR, TRAINING, MANAGER
+  isCompleted       Boolean  @default(false)
+  completedAt       DateTime?
+
+  employeeProfile EmployeeProfile @relation(fields: [employeeProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([employeeProfileId])
+}
+
+// ==========================================
+// TRANSACTIONAL OUTBOX (architecture_hr.png)
+// ==========================================
+
+model OutboxEvent {
+  id            String    @id @default(uuid())
+  aggregateType String    // TASK, LEAVE_REQUEST, MEETING, EMPLOYEE
+  aggregateId   String
+  eventType     String    // TASK_CONFIRMED, LEAVE_SUBMITTED, LEAVE_DECIDED, EMPLOYEE_TRANSFERRED
+  payload       Json
+  status        String    @default("PENDING") // PENDING, PROCESSED, FAILED
+  retryCount    Int       @default(0)
+  errorMessage  String?   @db.Text
+  processedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@index([aggregateType, aggregateId])
+}
+
+// ==========================================
+// ENTERPRISE THREADS (KAGGLE DATASET V3)
+// ==========================================
+
+model SocialTopic {
+  id        String   @id @default(uuid())
+  name      String   // e.g. "Công nghệ", "An toàn thông tin", "Java Spring Boot", "PostgreSQL", "Cải tiến"
+  slug      String   @unique
+  posts     SocialPostTopic[]
+  createdAt DateTime @default(now())
+}
+
+model SocialPost {
+  id              String   @id @default(uuid())
+  authorId        String   // Profile ID
+  authorName      String?
+  authorRole      String?
+  authorAvatar    String?  @db.Text
+  audience        String   @default("COMPANY") // COMPANY, DEPARTMENT, TEAM
+  audienceRef     String?  // OrgUnit ID if TEAM/DEPARTMENT
+  postType        String   @default("TEXT") // TEXT, LONG_TEXT, QUOTE, POLL
+  status          String   @default("PUBLISHED") // PUBLISHED, DRAFT, HIDDEN
+  body            String   @db.Text
+  sourceMeetingId String?
+  likesCount      Int      @default(0)
+  repliesCount    Int      @default(0)
+  
+  author          Profile  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replies         SocialReply[]
+  reactions       SocialReaction[]
+  topics          SocialPostTopic[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([audience])
+  @@index([createdAt])
+}
+
+model SocialPostTopic {
+  id        String      @id @default(uuid())
+  postId    String
+  topicId   String
+
+  post      SocialPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  topic     SocialTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, topicId])
+  @@index([postId])
+  @@index([topicId])
+}
+
+model SocialReply {
+  id            String   @id @default(uuid())
+  postId        String
+  parentReplyId String?  // For nested replies (depth 0, 1, 2)
+  authorId      String
+  authorName    String?
+  authorAvatar  String?  @db.Text
+  body          String   @db.Text
+  status        String   @default("PUBLISHED") // PUBLISHED, PENDING, HIDDEN
+  depth         Int      @default(0)
+
+  post          SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author        Profile    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentReplyId])
+}
+
+model SocialReaction {
+  id        String   @id @default(uuid())
+  postId    String
+  profileId String
+  type      String   @default("LIKE") // LIKE, INSIGHTFUL, FIRE, HEART
+
+  post      SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  profile   Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, profileId, type])
+  @@index([postId])
+  @@index([profileId])
+}
