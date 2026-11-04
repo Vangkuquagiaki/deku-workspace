@@ -1,5 +1,4 @@
 import React from "react";
-import { redirectToSignIn } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import { ChannelType } from "@prisma/client";
 import { Lock } from "lucide-react";
@@ -27,7 +26,7 @@ export default async function ChannelIdPage({
 }: ChannelIdPageProps) {
   const profile = await currentProfile();
 
-  if (!profile) return redirectToSignIn();
+  if (!profile) return redirect("/sign-in");
 
   const [channel, member, server] = await Promise.all([
     db.channel.findUnique({

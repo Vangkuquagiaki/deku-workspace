@@ -19,10 +19,17 @@ export default async function SetupPage() {
           profileId: profile.id
         }
       }
+    },
+    include: {
+      channels: {
+        take: 1
+      }
     }
   });
 
-  if (server) return redirect(`/servers/${server.id}`);
+  if (server && server.channels && server.channels.length > 0) {
+    return redirect(`/servers/${server.id}`);
+  }
 
   return <InitialModal />;
 }
