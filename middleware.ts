@@ -16,6 +16,9 @@ try {
     publishableKey: clerkPublishableKey,
     secretKey: clerkSecretKey,
     publicRoutes: [
+      "/",
+      "/servers(.*)",
+      "/channels(.*)",
       "/sign-in(.*)",
       "/sign-up(.*)",
       "/api/uploadthing",
