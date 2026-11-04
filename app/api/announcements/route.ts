@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentProfile } from "@/lib/current-profile";
 import { db } from "@/lib/db";
-import { createAnnouncementDraft } from "@/lib/personal-assistant-service";
+import { createAnnouncementDraft, publishAnnouncement } from "@/lib/personal-assistant-service";
 
 export const dynamic = "force-dynamic";
 
@@ -40,20 +40,51 @@ export async function POST(req: NextRequest) {
   try {
     const profile = await currentProfile().catch(() => null);
     const body = await req.json();
-    const authorId = profile?.id || body.authorId || "demo_executive_01";
-    const authorName = profile?.name || body.authorName || "Ban Giám Đốc";
 
-    const announcement = await createAnnouncementDraft({
-      title: body.title,
-      body: body.content || body.body || body.summary || "",
-      priority: body.priority,
-      authorId,
-      authorName,
-      audienceType: body.targetScope || "COMPANY",
-      audienceScope: body.targetAudience,
-      deadline: body.ackDeadline ? new Date(body.ackDeadline) : undefined,
-      requiresAck: body.requireAck ?? true,
+    // Find a valid Profile for authoring if currentProfile is null in demo mode
+    let authorProfile = profile;
+    if (!authorProfile) {
+      authorProfile = await db.profile.findFirst();
+    }
+
+    const authorId = authorProfile?.id || "demo_executive_01";
+    const authorName = authorProfile?.name || body.authorName || "Ban Giám Đốc";
+    const shouldPublishImmediately = body.status !== "DRAFT";
+
+    // 1. Create announcement record
+    const announcement = await db.announcementCampaign.create({
+      data: {
+        title: body.title.trim(),
+        body: (body.content || body.body || body.summary || "").trim(),
+        priority: body.priority || "MANDATORY",
+        status: shouldPublishImmediately ? "PUBLISHED" : "DRAFT",
+        authorId,
+        authorName,
+        audienceType: body.targetScope || "COMPANY",
+        audienceScope: body.targetAudience || null,
+        deadline: body.ackDeadline ? new Date(body.ackDeadline) : new Date(Date.now() + 3 * 24 * 3600 * 1000),
+        requiresAck: body.requireAck ?? true,
+        version: 1,
+        publishedAt: shouldPublishImmediately ? new Date() : null,
+      },
     });
+
+    // 2. Broadcast to Company Bulletin (db.post) so it appears in Bảng tin
+    if (shouldPublishImmediately && authorProfile) {
+      try {
+        await db.post.create({
+          data: {
+            title: `[${announcement.priority}] ${announcement.title}`,
+            body: announcement.body,
+            authorId: authorProfile.id,
+            isPinned: announcement.priority === "EMERGENCY" || announcement.priority === "MANDATORY",
+            publishedAt: new Date(),
+          },
+        });
+      } catch (postErr) {
+        console.warn("[ANNOUNCEMENT_POST_SYNC_WARN]", postErr);
+      }
+    }
 
     return NextResponse.json(announcement);
   } catch (error: any) {

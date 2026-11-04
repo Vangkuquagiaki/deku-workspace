@@ -31,6 +31,7 @@ import {
   XCircle,
   Eye,
   Megaphone,
+  Share2,
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
@@ -45,17 +46,20 @@ export function PersonalWorkspaceView() {
   // Today Briefing Data
   const [briefing, setBriefing] = useState<any>(null);
 
-  // AI Assistant Chat State
+  // AI Assistant Chat State (ChatGPT Grade)
   const [aiQuery, setAiQuery] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [chatHistory, setChatHistory] = useState<
-    { sender: "user" | "ai"; text: string; sources?: string[]; confidence?: string }[]
+    { sender: "user" | "ai"; text: string; sources?: any[] }[]
   >([
     {
       sender: "ai",
-      text: `Xin chào ${user?.fullName || "bạn"}! Tôi là Trợ lý AI Cá nhân của bạn. Tôi đã đồng bộ toàn bộ lịch trình, nhiệm vụ được giao và chỉ thị doanh nghiệp hôm nay. Bạn có thể hỏi tôi bất cứ điều gì!`,
-      sources: ["Lịch biểu nội bộ", "Bảng việc Kanban", "Trung tâm Thông báo"],
-      confidence: "HIGH",
+      text: `Xin chào **${user?.fullName || "bạn"}**! Tôi là **Trợ lý AI Doanh nghiệp Deku** của bạn.\n\nTôi đã đồng bộ toàn bộ cơ sở dữ liệu về lịch trình, nhiệm vụ được giao và chỉ thị doanh nghiệp của bạn.\n\n**Bạn có thể tương tác với tôi như ChatGPT:**\n- ⚡ **Giao việc:** Gõ *"Giao việc cho [Tên]: [Nhiệm vụ]"* để AI tự động tạo task và đẩy vào AI của đồng nghiệp.\n- 📝 **Ghi chú riêng:** Gõ *"Ghi chú lại: [Nội dung]"* để lưu vào sổ tay mã hóa.\n- ✍️ **Soạn thảo:** Yêu cầu soạn email, báo cáo tuần, dự thảo thông báo hoặc lập kế hoạch dự án.\n- 🔍 **Tra cứu:** Hỏi về lịch họp hôm nay, việc cần làm khẩn cấp hoặc quy chế công ty!`,
+      sources: [
+        { type: "Lõi Trợ lý AI", title: "Deku Enterprise Assistant" },
+        { type: "Bối cảnh nhân sự", title: user?.fullName || "Thành viên" },
+      ],
     },
   ]);
 
@@ -64,8 +68,9 @@ export function PersonalWorkspaceView() {
   const [announcementFilter, setAnnouncementFilter] = useState<string>("ALL");
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<any>(null);
   const [ackLoading, setAckLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Create Announcement Modal/Form
+  // Create Announcement Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newSummary, setNewSummary] = useState("");
@@ -87,6 +92,11 @@ export function PersonalWorkspaceView() {
   const [inviteRole, setInviteRole] = useState("EMPLOYEE");
   const [creatingInvite, setCreatingInvite] = useState(false);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   // Fetch initial data
   const fetchData = async () => {
@@ -116,7 +126,7 @@ export function PersonalWorkspaceView() {
         setInvitations(invData);
       }
     } catch (e) {
-      console.error(e);
+      console.error("[WORKSPACE_FETCH_ERROR]", e);
     } finally {
       setLoading(false);
     }
@@ -149,16 +159,18 @@ export function PersonalWorkspaceView() {
             sender: "ai",
             text: data.answer,
             sources: data.sources,
-            confidence: data.confidence,
           },
         ]);
+        // Auto-refresh briefing if an action was executed (e.g. task or note created)
+        if (q.toLowerCase().includes("giao việc") || q.toLowerCase().includes("ghi chú")) {
+          fetchData();
+        }
       } else {
         setChatHistory((prev) => [
           ...prev,
           {
             sender: "ai",
             text: "Xin lỗi, đã xảy ra sự cố khi truy vấn trợ lý cá nhân. Vui lòng thử lại sau.",
-            confidence: "LOW",
           },
         ]);
       }
@@ -168,7 +180,6 @@ export function PersonalWorkspaceView() {
         {
           sender: "ai",
           text: "Không thể kết nối với dịch vụ AI. Vui lòng kiểm tra kết nối mạng.",
-          confidence: "LOW",
         },
       ]);
     } finally {
@@ -185,12 +196,12 @@ export function PersonalWorkspaceView() {
         headers: { "Content-Type": "application/json" },
       });
       if (res.ok) {
-        // Refresh announcements and briefing
+        showToast("✅ Đã ký nhận chỉ thị thành công! Dấu vết thời gian đã được lưu vào hệ thống kiểm toán.");
         fetchData();
         if (selectedAnnouncement && selectedAnnouncement.id === campaignId) {
           setSelectedAnnouncement((prev: any) => ({
             ...prev,
-            acknowledgments: [{ id: "temp", acknowledgedAt: new Date().toISOString() }],
+            acknowledgments: [{ id: "temp", ackAt: new Date().toISOString() }],
           }));
         }
       }
@@ -201,7 +212,7 @@ export function PersonalWorkspaceView() {
     }
   };
 
-  // Handle Create Announcement Campaign
+  // Handle Create Announcement Campaign (Auto-Publish immediately to Bulletin & Acks)
   const handleCreateCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newContent.trim()) return;
@@ -218,6 +229,7 @@ export function PersonalWorkspaceView() {
           priority: newPriority,
           targetScope: newScope,
           requireAck: true,
+          status: "PUBLISHED", // Immediately broadcast
         }),
       });
       if (res.ok) {
@@ -225,6 +237,7 @@ export function PersonalWorkspaceView() {
         setNewTitle("");
         setNewSummary("");
         setNewContent("");
+        showToast("📢 Đã phát hành chỉ thị thành công! Thông báo đã được đẩy đến toàn bộ nhân sự và Bảng tin doanh nghiệp.");
         fetchData();
       }
     } catch (e) {
@@ -251,6 +264,7 @@ export function PersonalWorkspaceView() {
       if (res.ok) {
         setNewNoteTitle("");
         setNewNoteContent("");
+        showToast("📝 Đã lưu ghi chú vào sổ tay riêng tư.");
         const nData = await (await fetch("/api/personal/notes")).json();
         setNotes(nData);
       }
@@ -264,6 +278,7 @@ export function PersonalWorkspaceView() {
     try {
       await fetch(`/api/personal/notes?id=${id}`, { method: "DELETE" });
       setNotes((prev) => prev.filter((n) => n.id !== id));
+      showToast("Đã xóa ghi chú.");
     } catch (e) {
       console.error(e);
     }
@@ -289,6 +304,7 @@ export function PersonalWorkspaceView() {
       if (res.ok) {
         setInviteEmail("");
         setInviteFullName("");
+        showToast("🎉 Đã tạo mã lời mời an toàn! Hãy sao chép liên kết bên dưới gửi cho nhân sự mới.");
         const iData = await (await fetch("/api/invitations")).json();
         setInvitations(iData);
       }
@@ -303,11 +319,36 @@ export function PersonalWorkspaceView() {
     const link = `${window.location.origin}/invite/${token}`;
     navigator.clipboard.writeText(link);
     setCopiedToken(token);
+    showToast("📋 Đã sao chép liên kết mời nhân sự mới vào bộ nhớ tạm!");
     setTimeout(() => setCopiedToken(null), 2500);
   };
 
+  const copyAiAnswer = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(idx);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  // Clean data bindings
+  const displayName = briefing?.userName || briefing?.employee?.name || user?.fullName || "Thành viên";
+  const displaySummary = briefing?.summaryText || briefing?.briefingText || "Chào mừng bạn đến với Deku Workspace. Dữ liệu công việc của bạn đã được sẵn sàng.";
+  const countMeetings = briefing?.todayMeetings ?? briefing?.stats?.todayMeetings ?? (briefing?.meetings?.length || 0);
+  const countTasks = briefing?.pendingTasks ?? briefing?.stats?.pendingTasks ?? (briefing?.urgentTasks?.length || 0);
+  const countPendingAcks = briefing?.pendingAcksCount ?? briefing?.stats?.pendingAcks ?? (briefing?.pendingAcks?.length || 0);
+  const scheduleList = briefing?.scheduleTimeline || briefing?.schedule || [];
+  const urgentTaskList = briefing?.urgentTasks || briefing?.schedule?.filter((s: any) => s.type === "TASK") || [];
+  const pendingAckList = briefing?.pendingAcks || briefing?.announcements?.filter((a: any) => a.requiresAck && !a.hasAcked) || [];
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#111214] text-zinc-100 overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-[#111214] text-zinc-100 overflow-hidden relative">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-[#1e1f22] border border-emerald-500/50 text-white px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2 animate-in slide-in-from-top-4 duration-200">
+          <Sparkles className="h-4 w-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Sub-header navigation bar */}
       <div className="h-14 px-4 md:px-6 bg-[#1e1f22] border-b border-zinc-800/80 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-1 sm:gap-2">
@@ -351,7 +392,7 @@ export function PersonalWorkspaceView() {
           >
             <Megaphone className="h-3.5 w-3.5" />
             <span>Chỉ thị & Thông báo</span>
-            {briefing?.pendingAcksCount > 0 && (
+            {countPendingAcks > 0 && (
               <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping absolute top-1 right-1" />
             )}
           </button>
@@ -376,7 +417,7 @@ export function PersonalWorkspaceView() {
           onClick={fetchData}
           disabled={loading}
           className="p-2 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white transition"
-          title="Làm mới dữ liệu"
+          title="Làm mới toàn bộ dữ liệu"
         >
           <RefreshCw className={cn("h-4 w-4", loading && "animate-spin text-emerald-400")} />
         </button>
@@ -396,31 +437,31 @@ export function PersonalWorkspaceView() {
                     <span>AI Morning Briefing (AI-NOTI-01)</span>
                   </div>
                   <h2 className="text-xl md:text-2xl font-bold text-white">
-                    Chào buổi sáng, {briefing?.userName || user?.fullName || "bạn"}!
+                    Chào buổi sáng, {displayName}!
                   </h2>
                   <p className="text-sm text-zinc-300 max-w-2xl leading-relaxed">
-                    {briefing?.briefingText || "Hệ thống đang đồng bộ và tóm tắt công việc trong ngày của bạn..."}
+                    {displaySummary}
                   </p>
                 </div>
 
                 {/* Quick Status Pill */}
                 <div className="flex items-center gap-3">
-                  <div className="bg-[#2b2d31]/80 backdrop-blur border border-white/5 px-4 py-3 rounded-2xl text-center">
+                  <div className="bg-[#2b2d31]/80 backdrop-blur border border-white/5 px-4 py-3 rounded-2xl text-center min-w-[85px]">
                     <span className="text-xs text-zinc-400 block font-medium">Cuộc họp</span>
                     <span className="text-lg font-bold text-emerald-400">
-                      {briefing?.meetings?.length || 0}
+                      {countMeetings}
                     </span>
                   </div>
-                  <div className="bg-[#2b2d31]/80 backdrop-blur border border-white/5 px-4 py-3 rounded-2xl text-center">
+                  <div className="bg-[#2b2d31]/80 backdrop-blur border border-white/5 px-4 py-3 rounded-2xl text-center min-w-[85px]">
                     <span className="text-xs text-zinc-400 block font-medium">Việc đến hạn</span>
                     <span className="text-lg font-bold text-amber-400">
-                      {briefing?.urgentTasks?.length || 0}
+                      {countTasks}
                     </span>
                   </div>
-                  <div className="bg-[#2b2d31]/80 backdrop-blur border border-white/5 px-4 py-3 rounded-2xl text-center">
+                  <div className="bg-[#2b2d31]/80 backdrop-blur border border-white/5 px-4 py-3 rounded-2xl text-center min-w-[85px]">
                     <span className="text-xs text-zinc-400 block font-medium">Chỉ thị cần ký</span>
                     <span className="text-lg font-bold text-rose-400">
-                      {briefing?.pendingAcksCount || 0}
+                      {countPendingAcks}
                     </span>
                   </div>
                 </div>
@@ -428,7 +469,7 @@ export function PersonalWorkspaceView() {
             </div>
 
             {/* Mandatory Action Required Banner (if any pending Acks) */}
-            {briefing?.pendingAcks && briefing.pendingAcks.length > 0 && (
+            {pendingAckList.length > 0 && (
               <div className="bg-rose-950/40 border border-rose-500/40 rounded-2xl p-4 md:p-5 flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
                   <div className="p-2.5 rounded-xl bg-rose-500/20 text-rose-400 shrink-0 mt-0.5">
@@ -436,17 +477,17 @@ export function PersonalWorkspaceView() {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-rose-200">
-                      Bạn có {briefing.pendingAcks.length} Chỉ thị Bắt buộc cần ký nhận xác nhận
+                      Bạn có {pendingAckList.length} Chỉ thị Bắt buộc cần ký nhận xác nhận
                     </h3>
                     <p className="text-xs text-rose-300/80 mt-1">
-                      {briefing.pendingAcks[0]?.title} - Yêu cầu toàn thể nhân sự xác nhận theo quy chế quản trị nội bộ.
+                      {pendingAckList[0]?.title} - Yêu cầu toàn thể nhân sự xác nhận theo quy chế quản trị nội bộ.
                     </p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedAnnouncement(briefing.pendingAcks[0]);
+                    setSelectedAnnouncement(pendingAckList[0]);
                     setSubTab("announcements");
                   }}
                   className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition whitespace-nowrap shadow-md shadow-rose-600/20"
@@ -466,27 +507,29 @@ export function PersonalWorkspaceView() {
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-emerald-400" />
                       <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                        Lịch trình hôm nay ({briefing?.scheduleTimeline?.length || 0})
+                        Lịch trình hôm nay ({scheduleList.length})
                       </h3>
                     </div>
                   </div>
 
-                  {briefing?.scheduleTimeline && briefing.scheduleTimeline.length > 0 ? (
+                  {scheduleList.length > 0 ? (
                     <div className="space-y-3">
-                      {briefing.scheduleTimeline.map((item: any) => (
+                      {scheduleList.map((item: any) => (
                         <div
                           key={item.id}
                           className="flex items-start gap-3.5 p-3 rounded-2xl bg-[#2b2d31]/60 hover:bg-[#2b2d31] transition border border-white/5"
                         >
                           <div className="h-8 w-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 text-xs font-bold">
-                            {item.time || "09:00"}
+                            {item.timeText || "Hôm nay"}
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="text-xs font-bold text-zinc-100 truncate">{item.title}</h4>
-                            <p className="text-[11px] text-zinc-400 mt-0.5">{item.location || "Trực tuyến WebRTC"}</p>
+                            <p className="text-[11px] text-zinc-400 mt-0.5">
+                              {item.type === "MEETING" ? "Cuộc họp trực tuyến WebRTC" : "Nhiệm vụ trong Bảng việc"}
+                            </p>
                           </div>
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300">
-                            {item.type === "MEETING" ? "Cuộc họp" : "Sự kiện"}
+                            {item.type === "MEETING" ? "Cuộc họp" : "Nhiệm vụ"}
                           </span>
                         </div>
                       ))}
@@ -504,14 +547,14 @@ export function PersonalWorkspaceView() {
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-amber-400" />
                       <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                        Nhiệm vụ cần ưu tiên ({briefing?.urgentTasks?.length || 0})
+                        Nhiệm vụ cần ưu tiên ({urgentTaskList.length})
                       </h3>
                     </div>
                   </div>
 
-                  {briefing?.urgentTasks && briefing.urgentTasks.length > 0 ? (
+                  {urgentTaskList.length > 0 ? (
                     <div className="space-y-2.5">
-                      {briefing.urgentTasks.map((t: any) => (
+                      {urgentTaskList.map((t: any) => (
                         <div
                           key={t.id}
                           className="flex items-center justify-between p-3 rounded-2xl bg-[#2b2d31]/60 border border-white/5"
@@ -520,11 +563,11 @@ export function PersonalWorkspaceView() {
                             <span className="h-2 w-2 rounded-full bg-amber-400" />
                             <div>
                               <h4 className="text-xs font-semibold text-zinc-100">{t.title}</h4>
-                              <span className="text-[10px] text-zinc-400">Trạng thái: {t.status}</span>
+                              <span className="text-[10px] text-zinc-400">Trạng thái: {t.status || "Đang mở"}</span>
                             </div>
                           </div>
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">
-                            {t.priority}
+                            {t.priority || "MEDIUM"}
                           </span>
                         </div>
                       ))}
@@ -614,70 +657,56 @@ export function PersonalWorkspaceView() {
           </div>
         )}
 
-        {/* ================= TAB 2: TRỢ LÝ AI CÁ NHÂN ================= */}
+        {/* ================= TAB 2: TRỢ LÝ AI CÁ NHÂN (CHATGPT GRADE) ================= */}
         {subTab === "ai_assistant" && (
           <div className="max-w-4xl mx-auto flex flex-col h-full space-y-4">
             {/* Header info card */}
-            <div className="bg-[#1e1f22] border border-zinc-800 rounded-3xl p-5 flex items-center justify-between shrink-0">
+            <div className="bg-[#1e1f22] border border-zinc-800 rounded-3xl p-5 flex items-center justify-between shrink-0 flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
                   <Sparkles className="h-5 w-5 text-white" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    Trợ lý AI Cá nhân Deku
+                    Trợ lý AI Doanh nghiệp Deku (ChatGPT-Grade)
                     <span className="text-[10px] font-mono bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30">
-                      Zero-Trust Isolated
+                      Zero-Trust
                     </span>
                   </h3>
                   <p className="text-xs text-zinc-400">
-                    Chỉ truy cập và tổng hợp từ dữ liệu cá nhân của bạn. Không rò rỉ dữ liệu chéo nhân sự.
+                    Trợ lý đàm thoại thông minh: Giao việc tự động, soạn thảo văn bản, phân tích lịch trình và trả lời mọi câu hỏi.
                   </p>
                 </div>
               </div>
 
-              {/* Sample Prompts */}
-              <div className="hidden xl:flex items-center gap-1.5 flex-wrap">
+              {/* Action shortcut chips */}
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   type="button"
-                  onClick={() => handleSendAi("Hôm nay tôi có cuộc họp nào không?")}
-                  className="px-2 py-1 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white text-[11px] transition whitespace-nowrap"
+                  onClick={() => handleSendAi("Giao việc cho Ngô Anh Thảo: Hoàn thiện báo cáo tài chính quý 4 hạn chót ngày mai")}
+                  className="px-2.5 py-1 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white text-[11px] font-semibold transition"
                 >
-                  📅 Lịch họp?
+                  ⚡ Giao việc qua AI
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleSendAi("Hôm nay tôi có việc gì cần làm gấp không?")}
-                  className="px-2 py-1 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white text-[11px] transition whitespace-nowrap"
+                  onClick={() => handleSendAi("Soạn giúp tôi một email thông báo nghỉ lễ 30/4 cho toàn thể nhân sự")}
+                  className="px-2.5 py-1 rounded-xl bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600 hover:text-white text-[11px] font-semibold transition"
                 >
-                  ⚡ Việc gấp?
+                  ✍️ Soạn email mẫu
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleSendAi("Giao việc cho Nguyễn Văn A: Hoàn thiện báo cáo quý 4 hạn chót ngày mai")}
-                  className="px-2 py-1 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white text-[11px] font-semibold transition whitespace-nowrap"
+                  onClick={() => handleSendAi("Hôm nay tôi có cuộc họp hoặc nhiệm vụ nào cần làm gấp không?")}
+                  className="px-2.5 py-1 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white text-[11px] transition"
                 >
-                  ➕ Giao việc bằng AI
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSendAi("Thêm nhân sự mới vào hệ thống như thế nào?")}
-                  className="px-2 py-1 rounded-xl bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600 hover:text-white text-[11px] font-semibold transition whitespace-nowrap"
-                >
-                  👥 Thêm nhân sự mới
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSendAi("Có nhân sự nghỉ việc thì xử lý thế nào?")}
-                  className="px-2 py-1 rounded-xl bg-rose-600/20 text-rose-300 border border-rose-500/30 hover:bg-rose-600 hover:text-white text-[11px] font-semibold transition whitespace-nowrap"
-                >
-                  🚪 Nhân viên nghỉ việc
+                  📅 Việc hôm nay?
                 </button>
               </div>
             </div>
 
             {/* Chat Messages Stage */}
-            <div className="flex-1 bg-[#1e1f22] border border-zinc-800 rounded-3xl p-5 overflow-y-auto space-y-4 min-h-[420px]">
+            <div className="flex-1 bg-[#1e1f22] border border-zinc-800 rounded-3xl p-5 overflow-y-auto space-y-4 min-h-[440px]">
               {chatHistory.map((msg, idx) => (
                 <div
                   key={idx}
@@ -699,27 +728,45 @@ export function PersonalWorkspaceView() {
 
                   <div
                     className={cn(
-                      "p-4 rounded-2xl text-xs leading-relaxed space-y-2",
+                      "p-4 rounded-2xl text-xs leading-relaxed space-y-2 group relative",
                       msg.sender === "user"
                         ? "bg-emerald-600/20 text-white border border-emerald-500/30"
                         : "bg-[#2b2d31] text-zinc-100 border border-white/5"
                     )}
                   >
-                    <div className="whitespace-pre-line">{msg.text}</div>
+                    <div className="whitespace-pre-line prose prose-invert prose-xs max-w-none">
+                      {msg.text}
+                    </div>
 
                     {/* Sources citations */}
                     {msg.sources && msg.sources.length > 0 && (
                       <div className="pt-2 border-t border-white/10 flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] text-zinc-400 font-semibold">Nguồn trích xuất:</span>
-                        {msg.sources.map((src, sIdx) => (
+                        <span className="text-[10px] text-zinc-400 font-semibold">Căn cứ trích xuất:</span>
+                        {msg.sources.map((src: any, sIdx: number) => (
                           <span
                             key={sIdx}
                             className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-indigo-300 border border-indigo-500/20"
                           >
-                            {src}
+                            {src.type || "Nguồn"}: {src.title || src}
                           </span>
                         ))}
                       </div>
+                    )}
+
+                    {/* Copy Button for Assistant answers */}
+                    {msg.sender === "ai" && (
+                      <button
+                        type="button"
+                        onClick={() => copyAiAnswer(msg.text, idx)}
+                        className="opacity-0 group-hover:opacity-100 absolute top-2 right-2 p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition"
+                        title="Sao chép câu trả lời"
+                      >
+                        {copiedIndex === idx ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-400" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -732,7 +779,7 @@ export function PersonalWorkspaceView() {
                   </div>
                   <div className="p-4 rounded-2xl bg-[#2b2d31] text-zinc-400 text-xs border border-white/5 flex items-center gap-2">
                     <RefreshCw className="h-3.5 w-3.5 animate-spin text-indigo-400" />
-                    <span>AI đang phân tích bối cảnh và trích xuất nguồn tin cậy...</span>
+                    <span>Trợ lý AI đang suy nghĩ và đồng bộ với cơ sở dữ liệu...</span>
                   </div>
                 </div>
               )}
@@ -748,7 +795,7 @@ export function PersonalWorkspaceView() {
             >
               <input
                 type="text"
-                placeholder="Đặt câu hỏi về lịch họp, công việc, chỉ thị của bạn..."
+                placeholder="Hỏi AI bất kỳ điều gì, hoặc gõ: 'Giao việc cho [Tên]: [Nhiệm vụ]', 'Soạn email...'"
                 value={aiQuery}
                 onChange={(e) => setAiQuery(e.target.value)}
                 className="flex-1 bg-transparent px-3 text-xs text-white placeholder-zinc-500 focus:outline-none"
@@ -758,7 +805,7 @@ export function PersonalWorkspaceView() {
                 disabled={!aiQuery.trim() || aiLoading}
                 className="h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/30 shrink-0"
               >
-                <span>Hỏi AI</span>
+                <span>Gửi</span>
                 <Send className="h-3.5 w-3.5" />
               </button>
             </form>
@@ -776,7 +823,7 @@ export function PersonalWorkspaceView() {
                   <span>Trung tâm Chỉ thị & Thông báo Doanh nghiệp</span>
                 </h3>
                 <p className="text-xs text-zinc-400">
-                  Phân cấp: Lãnh đạo → HR duyệt → Trưởng phòng → Toàn thể nhân viên.
+                  Phát hành tự động đến Bảng tin công ty và xuất hiện trên màn hình Hôm nay của toàn thể nhân sự.
                 </p>
               </div>
 
@@ -787,7 +834,7 @@ export function PersonalWorkspaceView() {
                   className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-amber-600/20"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  <span>Tạo chỉ thị mới</span>
+                  <span>Phát hành chỉ thị mới</span>
                 </button>
               </div>
             </div>
@@ -822,7 +869,7 @@ export function PersonalWorkspaceView() {
               {announcements
                 .filter((a) => announcementFilter === "ALL" || a.priority === announcementFilter)
                 .map((a) => {
-                  const hasAcked = a.acknowledgments && a.acknowledgments.length > 0;
+                  const hasAcked = a.acks && a.acks.length > 0;
                   return (
                     <div
                       key={a.id}
@@ -849,7 +896,7 @@ export function PersonalWorkspaceView() {
 
                         <h4 className="text-sm font-bold text-white line-clamp-2">{a.title}</h4>
                         <p className="text-xs text-zinc-400 line-clamp-3 leading-relaxed">
-                          {a.summary || a.content}
+                          {a.body || a.summary || a.content}
                         </p>
                       </div>
 
@@ -858,7 +905,7 @@ export function PersonalWorkspaceView() {
                           Người phát: <span className="font-semibold text-zinc-200">{a.authorName}</span>
                         </div>
 
-                        {a.requireAck && (
+                        {a.requiresAck && (
                           <div>
                             {hasAcked ? (
                               <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
@@ -870,7 +917,7 @@ export function PersonalWorkspaceView() {
                                 type="button"
                                 disabled={ackLoading}
                                 onClick={() => handleAcknowledge(a.id)}
-                                className="px-3 py-1 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm"
+                                className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow"
                               >
                                 <span>Ký nhận chỉ thị</span>
                               </button>
@@ -881,6 +928,11 @@ export function PersonalWorkspaceView() {
                     </div>
                   );
                 })}
+              {announcements.length === 0 && (
+                <div className="col-span-2 text-center py-12 text-zinc-500 text-xs">
+                  Chưa có thông báo nào. Bấm nút "Phát hành chỉ thị mới" để tạo thông báo đầu tiên.
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -895,10 +947,10 @@ export function PersonalWorkspaceView() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    Cổng Quản Trị Cấp Quyền & Lời Mời (Invite-Only Gatekeeper)
+                    Cổng Cấp Quyền & Lời Mời Nhân Sự Mới (Invite-Only Gatekeeper)
                   </h3>
                   <p className="text-xs text-zinc-400">
-                    Nguyên tắc Zero-Trust: Chỉ tài khoản sở hữu token lời mời hợp lệ do HR/Admin tạo mới được tham gia hệ thống.
+                    Nguyên tắc Zero-Trust: Chỉ tài khoản sở hữu token lời mời do HR/Admin tạo mới được kích hoạt vào cơ sở dữ liệu công ty.
                   </p>
                 </div>
               </div>
@@ -908,7 +960,7 @@ export function PersonalWorkspaceView() {
                 <div className="sm:col-span-4">
                   <input
                     type="email"
-                    placeholder="Email doanh nghiệp (*@congty.com)"
+                    placeholder="Email công ty (*@congty.com)"
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                     required
@@ -952,7 +1004,7 @@ export function PersonalWorkspaceView() {
             {/* Active Invitations Table */}
             <div className="bg-[#1e1f22] border border-zinc-800 rounded-3xl p-5 md:p-6 space-y-4">
               <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                Danh sách lời mời đã cấp ({invitations.length})
+                Danh sách liên kết lời mời đã cấp ({invitations.length})
               </h4>
 
               <div className="overflow-x-auto">
@@ -962,18 +1014,18 @@ export function PersonalWorkspaceView() {
                       <th className="px-4 py-3 rounded-l-xl">Email & Họ tên</th>
                       <th className="px-4 py-3">Phòng ban</th>
                       <th className="px-4 py-3">Trạng thái</th>
-                      <th className="px-4 py-3">Hết hạn</th>
-                      <th className="px-4 py-3 rounded-r-xl text-right">Mã Token</th>
+                      <th className="px-4 py-3">Hạn kích hoạt</th>
+                      <th className="px-4 py-3 rounded-r-xl text-right">Liên kết kích hoạt</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800/60">
                     {invitations.map((inv) => (
                       <tr key={inv.id} className="hover:bg-[#2b2d31]/40 transition">
                         <td className="px-4 py-3 font-medium text-white">
-                          <div>{inv.fullName}</div>
+                          <div>{inv.fullName || inv.email.split("@")[0]}</div>
                           <div className="text-[11px] text-zinc-400 font-mono">{inv.email}</div>
                         </td>
-                        <td className="px-4 py-3">{inv.department}</td>
+                        <td className="px-4 py-3">{inv.orgUnitName || inv.department || "Toàn công ty"}</td>
                         <td className="px-4 py-3">
                           <span
                             className={cn(
@@ -983,24 +1035,29 @@ export function PersonalWorkspaceView() {
                               inv.status === "EXPIRED" && "bg-zinc-800 text-zinc-400 border-zinc-700"
                             )}
                           >
-                            {inv.status}
+                            {inv.status === "PENDING" ? "Chờ kích hoạt" : inv.status === "ACCEPTED" ? "Đã kích hoạt" : "Hết hạn"}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-zinc-400">
-                          {new Date(inv.expiresAt).toLocaleDateString("vi-VN")}
+                          {inv.expiresAt ? new Date(inv.expiresAt).toLocaleDateString("vi-VN") : "7 ngày"}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <button
                             type="button"
-                            onClick={() => copyToClipboard(inv.token)}
-                            className="px-2.5 py-1 rounded-lg bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white transition inline-flex items-center gap-1.5 font-mono text-[11px]"
+                            onClick={() => copyToClipboard(inv.token || inv.tokenHash)}
+                            className="px-2.5 py-1.5 rounded-xl bg-purple-600/20 text-purple-300 hover:bg-purple-600 hover:text-white border border-purple-500/30 transition inline-flex items-center gap-1.5 font-semibold text-xs shadow-sm"
                           >
-                            {copiedToken === inv.token ? (
-                              <Check className="h-3 w-3 text-emerald-400" />
+                            {copiedToken === (inv.token || inv.tokenHash) ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-emerald-400" />
+                                <span>Đã sao chép!</span>
+                              </>
                             ) : (
-                              <Copy className="h-3 w-3" />
+                              <>
+                                <Share2 className="h-3.5 w-3.5" />
+                                <span>Sao chép link mời</span>
+                              </>
                             )}
-                            <span>{inv.token.slice(0, 10)}...</span>
                           </button>
                         </td>
                       </tr>
@@ -1008,7 +1065,7 @@ export function PersonalWorkspaceView() {
                     {invitations.length === 0 && (
                       <tr>
                         <td colSpan={5} className="text-center py-6 text-zinc-500">
-                          Chưa có mã lời mời nào được khởi tạo.
+                          Chưa có mã lời mời nào được khởi tạo. Hãy điền form bên trên để tạo liên kết mời đầu tiên.
                         </td>
                       </tr>
                     )}
@@ -1096,7 +1153,8 @@ export function PersonalWorkspaceView() {
                   disabled={creatingCampaign}
                   className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow"
                 >
-                  <span>Phát hành chỉ thị</span>
+                  <Megaphone className="h-3.5 w-3.5" />
+                  <span>Phát hành & Đẩy thông báo ngay</span>
                 </button>
               </div>
             </form>
@@ -1106,4 +1164,3 @@ export function PersonalWorkspaceView() {
     </div>
   );
 }
-
