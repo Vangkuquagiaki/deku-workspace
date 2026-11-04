@@ -186,44 +186,48 @@ export function MeetingDetailView({ meetingId: propMeetingId, serverId }: Meetin
   return (
     <div className="flex-1 flex flex-col h-full bg-[#111214] text-zinc-100 overflow-y-auto">
       {/* Header */}
-      <header className="h-16 px-4 md:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/70 backdrop-blur-md sticky top-0 z-20">
-        <div className="flex items-center gap-2 md:gap-3">
-          <button
-            onClick={() => {
-              if (serverId) {
-                router.push(`/servers/${serverId}/meetings`);
-              } else {
-                router.push("/meetings");
-              }
-            }}
-            className="h-9 px-3 rounded-xl bg-[#2b2d31] hover:bg-zinc-800 text-zinc-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-white/5 shrink-0"
-            title="Quay lại danh sách cuộc họp"
-          >
-            <ArrowLeft className="h-4 w-4 text-emerald-400" />
-            <span>Quay lại</span>
-          </button>
+      <header className="h-14 sm:h-16 px-4 md:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/90 backdrop-blur-md sticky top-0 z-20 gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 min-w-0">
+          {/* Segmented Back & Exit Buttons */}
+          <div className="flex items-center bg-[#2b2d31] p-0.5 sm:p-1 rounded-xl border border-white/5 shrink-0 shadow-sm">
+            <button
+              type="button"
+              onClick={() => {
+                if (serverId) {
+                  router.push(`/servers/${serverId}/meetings`);
+                } else {
+                  router.push("/meetings");
+                }
+              }}
+              className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg hover:bg-zinc-700/80 text-zinc-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
+              title="Quay lại danh sách cuộc họp"
+            >
+              <ArrowLeft className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">Quay lại</span>
+            </button>
 
-          <button
-            onClick={() => router.push(serverId ? `/servers/${serverId}` : "/")}
-            className="h-9 px-3 rounded-xl bg-rose-600/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition flex items-center gap-1.5 text-xs font-semibold shrink-0"
-            title="Thoát khỏi trang họp, về Trang chủ Workspace"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Thoát ra ngoài</span>
-          </button>
+            <div className="h-3.5 w-[1px] bg-zinc-700 mx-0.5" />
 
-          <div className="h-6 w-[1px] bg-zinc-800 mx-1 hidden sm:block" />
+            <button
+              type="button"
+              onClick={() => router.push(serverId ? `/servers/${serverId}` : "/")}
+              className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg hover:bg-rose-600/20 text-zinc-400 hover:text-rose-300 transition flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
+              title="Thoát về Workspace chính (Discord)"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Thoát</span>
+            </button>
+          </div>
 
-          <div>
-            <h1 className="text-sm font-bold text-white flex items-center gap-2">
+          <div className="h-5 w-[1px] bg-zinc-800 hidden sm:block shrink-0" />
+
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-sm sm:text-base font-bold text-white whitespace-nowrap truncate">
               {meeting?.title || "Biên bản cuộc họp"}
-              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                {meeting?.code}
-              </span>
             </h1>
-            <p className="text-xs text-zinc-400 hidden sm:block">
-              Được lưu trữ & tạo biên bản tự động bởi hệ thống AI
-            </p>
+            <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded whitespace-nowrap shrink-0">
+              {meeting?.code}
+            </span>
           </div>
         </div>
 
