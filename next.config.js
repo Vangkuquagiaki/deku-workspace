@@ -1,3 +1,7 @@
+if (typeof Buffer !== "undefined" && !Buffer.SlowBuffer) {
+  Buffer.SlowBuffer = Buffer;
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {

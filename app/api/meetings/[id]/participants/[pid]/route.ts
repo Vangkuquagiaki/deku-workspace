@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { currentProfile } from "@/lib/current-profile";
 import { db } from "@/lib/db";
-import { RoomServiceClient } from "livekit-server-sdk";
 
 export async function PATCH(
   req: Request,
@@ -55,6 +54,7 @@ export async function PATCH(
     // If muteMic requested, mute participant via LiveKit RoomServiceClient if available
     if (muteMic && process.env.LIVEKIT_API_KEY && process.env.LIVEKIT_API_SECRET && process.env.NEXT_PUBLIC_LIVEKIT_URL) {
       try {
+        const { RoomServiceClient } = await import("livekit-server-sdk");
         const livekitHost = process.env.NEXT_PUBLIC_LIVEKIT_URL.replace(/^ws/, "http");
         const roomService = new RoomServiceClient(
           livekitHost,
@@ -134,6 +134,7 @@ export async function DELETE(
     // Remove from LiveKit room if configured
     if (process.env.LIVEKIT_API_KEY && process.env.LIVEKIT_API_SECRET && process.env.NEXT_PUBLIC_LIVEKIT_URL) {
       try {
+        const { RoomServiceClient } = await import("livekit-server-sdk");
         const livekitHost = process.env.NEXT_PUBLIC_LIVEKIT_URL.replace(/^ws/, "http");
         const roomService = new RoomServiceClient(
           livekitHost,
