@@ -7,6 +7,7 @@ import {
   Copy,
   Edit,
   FileIcon,
+  Languages,
   Pin,
   Reply,
   ShieldAlert,
@@ -86,10 +87,41 @@ export const ChatItem = memo(function ChatItem({
   const [isEditing, setIsEditing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [showOriginal, setShowOriginal] = useState(false);
   const { onOpen } = useModal();
   const { socket } = useSocket();
   const { chatDensity } = useUserPreferences();
   const { pinMessage, unpinMessage, isPinned } = usePinnedMessages();
+
+  const onTranslateMessage = async () => {
+    if (translatedContent) {
+      setShowOriginal((prev) => !prev);
+      return;
+    }
+    try {
+      setIsTranslating(true);
+      const res = await fetch("/api/text/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: content,
+          targetLang: "en",
+          context: "chat",
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTranslatedContent(data.translatedText);
+        setShowOriginal(false);
+      }
+    } catch (err) {
+      console.error("[TRANSLATE_MESSAGE_ERROR]", err);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   const chatId = socketQuery.channelId || socketQuery.conversationId || "";
   const isItemPinned = isPinned(chatId, id);
@@ -272,11 +304,45 @@ export const ChatItem = memo(function ChatItem({
             </div>
           )}
           {!fileUrl && !isEditing && (
-            <MessageContent
-              content={content}
-              deleted={deleted}
-              isUpdated={isUpdated}
-            />
+            <>
+              {(!translatedContent || showOriginal) && (
+                <MessageContent
+                  content={content}
+                  deleted={deleted}
+                  isUpdated={isUpdated}
+                />
+              )}
+              {translatedContent && !showOriginal && (
+                <div className="mt-1 p-2 rounded-lg bg-indigo-50/60 dark:bg-indigo-950/25 border border-indigo-200/60 dark:border-indigo-800/40 text-xs text-indigo-900 dark:text-indigo-200">
+                  <div className="flex items-center justify-between text-[10px] text-indigo-500 font-semibold mb-1">
+                    <span className="flex items-center gap-1">
+                      <Languages className="w-3 h-3" />
+                      <span>Bản dịch AI (Deku Translate)</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowOriginal(true)}
+                      className="hover:underline text-[10px] cursor-pointer text-indigo-400"
+                    >
+                      Xem bản gốc
+                    </button>
+                  </div>
+                  <p className="leading-relaxed font-medium">{translatedContent}</p>
+                </div>
+              )}
+              {translatedContent && showOriginal && (
+                <div className="mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowOriginal(false)}
+                    className="text-[10px] text-indigo-500 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Languages className="w-3 h-3" />
+                    <span>Xem lại bản dịch AI</span>
+                  </button>
+                </div>
+              )}
+            </>
           )}
           {!fileUrl && isEditing && (
             <Form {...form}>
@@ -407,6 +473,25 @@ export const ChatItem = memo(function ChatItem({
                 )}
               >
                 <Pin className="w-3.5 h-3.5" />
+              </button>
+            </ActionTooltip>
+          )}
+
+          {/* Translate Button (TR-06) */}
+          {!fileUrl && !deleted && content && (
+            <ActionTooltip label={translatedContent ? (showOriginal ? "Xem bản dịch AI" : "Xem bản gốc") : "Dịch tin nhắn (AI)"}>
+              <button
+                type="button"
+                onClick={onTranslateMessage}
+                disabled={isTranslating}
+                className={cn(
+                  "p-1 transition rounded",
+                  translatedContent && !showOriginal
+                    ? "text-indigo-400 bg-indigo-500/15"
+                    : "text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300"
+                )}
+              >
+                <Languages className={cn("w-3.5 h-3.5", isTranslating && "animate-spin")} />
               </button>
             </ActionTooltip>
           )}

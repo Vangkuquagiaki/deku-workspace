@@ -27,6 +27,8 @@ import {
   LogOut,
   Sliders,
   CheckCircle,
+  Volume2,
+  AlertTriangle,
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { MediaRoom } from "@/components/media-room";
@@ -54,10 +56,15 @@ export default function MeetingRoomPage() {
   const [captionsOpen, setCaptionsOpen] = useState(true);
   const [captionsBotActive, setCaptionsBotActive] = useState(true);
   const [captionLang, setCaptionLang] = useState<"vi" | "en">("vi");
+  const [bilingualMode, setBilingualMode] = useState(true);
+  const [ttsAudioActive, setTtsAudioActive] = useState(false);
   const [currentCaption, setCurrentCaption] = useState<{
     speaker: string;
     text: string;
     translation: string;
+    warnings?: any[];
+    sourceLang?: string;
+    targetLang?: string;
   } | null>(null);
 
   // Sidebar state & Tabs: "transcripts" | "participants" | "settings"
@@ -201,24 +208,58 @@ export default function MeetingRoomPage() {
         recog.interimResults = true;
         recog.lang = userLang === "vi" ? "vi-VN" : "en-US";
 
-        recog.onresult = (event: any) => {
+        recog.onresult = async (event: any) => {
           const results = event.results;
           const latest = results[results.length - 1];
           const transcriptText = latest[0].transcript.trim();
 
           if (transcriptText) {
-            const translated =
-              userLang === "vi"
-                ? `[EN]: ${transcriptText}`
-                : `[VI]: ${transcriptText}`;
+            const targetLang = userLang === "vi" ? "en" : "vi";
+            let translated = transcriptText;
+            let warnings: any[] = [];
+
+            try {
+              const res = await fetch("/api/text/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  text: transcriptText,
+                  sourceLang: userLang,
+                  targetLang: targetLang,
+                  context: "meeting",
+                }),
+              });
+              if (res.ok) {
+                const data = await res.json();
+                translated = data.translatedText || transcriptText;
+                warnings = data.warnings || [];
+              }
+            } catch (err) {
+              // Graceful fallback
+              translated = `[${targetLang.toUpperCase()}]: ${transcriptText}`;
+            }
 
             setCurrentCaption({
               speaker: userName || "Bạn",
               text: transcriptText,
               translation: translated,
+              warnings,
+              sourceLang: userLang,
+              targetLang,
             });
 
             if (latest.isFinal) {
+              // TTS read aloud if enabled
+              if (ttsAudioActive && typeof window !== "undefined" && "speechSynthesis" in window) {
+                try {
+                  window.speechSynthesis.cancel();
+                  const utter = new SpeechSynthesisUtterance(translated);
+                  utter.lang = targetLang === "vi" ? "vi-VN" : "en-US";
+                  utter.rate = 1.0;
+                  window.speechSynthesis.speak(utter);
+                } catch (e) {}
+              }
+
               fetch(`/api/meetings/${code}/transcript`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -244,6 +285,7 @@ export default function MeetingRoomPage() {
                     vi: userLang === "vi" ? transcriptText : translated,
                     en: userLang === "en" ? transcriptText : translated,
                   },
+                  warnings,
                   time: new Date().toLocaleTimeString("vi-VN", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -269,7 +311,7 @@ export default function MeetingRoomPage() {
         } catch (e) {}
       }
     };
-  }, [inLobby, audioEnabled, userLang, code, userName, user?.id]);
+  }, [inLobby, audioEnabled, userLang, code, userName, user?.id, ttsAudioActive]);
 
   const handleIssueConsentNotice = async () => {
     try {
@@ -786,46 +828,104 @@ export default function MeetingRoomPage() {
 
           {/* Floating Realtime Subtitle Bar (Google Meet Style) */}
           {captionsOpen && (
-
-            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 max-w-2xl w-[92%] z-40 bg-black/85 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-3 shadow-2xl transition-all select-none">
-              <div className="flex items-center justify-between mb-1">
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 max-w-2xl w-[92%] z-40 bg-black/90 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-3.5 shadow-2xl transition-all select-none">
+              <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-3.5 w-3.5 text-indigo-400 animate-pulse" />
                   <span className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider">
-                    {currentCaption ? currentCaption.speaker : "AI Phụ Đề Dịch Thuật"}
+                    {currentCaption ? currentCaption.speaker : "AI Phụ Đề Dịch Thuật (Deku)"}
                   </span>
+                  {currentCaption?.warnings && currentCaption.warnings.length > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse flex items-center gap-1">
+                      <AlertTriangle className="h-2.5 w-2.5" />
+                      <span>{currentCaption.warnings[0].type}</span>
+                    </span>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-1.5 text-[11px]">
-                  <span className="text-zinc-400">Xem bản:</span>
+                <div className="flex items-center gap-2 text-[11px]">
                   <button
-                    onClick={() => setCaptionLang("vi")}
+                    type="button"
+                    onClick={() => setBilingualMode((b) => !b)}
                     className={cn(
-                      "px-1.5 py-0.5 rounded font-bold transition",
-                      captionLang === "vi" ? "bg-emerald-500 text-white" : "text-zinc-400 hover:text-white"
+                      "px-2 py-0.5 rounded-lg font-bold border transition text-[10px]",
+                      bilingualMode
+                        ? "bg-indigo-600/30 border-indigo-500 text-indigo-300"
+                        : "border-zinc-700 text-zinc-400 hover:text-white"
                     )}
+                    title="Bật/Tắt hiển thị song ngữ đồng thời (TR-05)"
                   >
-                    VI
+                    Song ngữ {bilingualMode ? "BẬT" : "TẮT"}
                   </button>
+
                   <button
-                    onClick={() => setCaptionLang("en")}
-                    className={cn(
-                      "px-1.5 py-0.5 rounded font-bold transition",
-                      captionLang === "en" ? "bg-indigo-500 text-white" : "text-zinc-400 hover:text-white"
-                    )}
+                    type="button"
+                    onClick={() => {
+                      if (currentCaption?.translation && typeof window !== "undefined" && "speechSynthesis" in window) {
+                        window.speechSynthesis.cancel();
+                        const utter = new SpeechSynthesisUtterance(currentCaption.translation);
+                        utter.lang = userLang === "vi" ? "en-US" : "vi-VN";
+                        window.speechSynthesis.speak(utter);
+                      }
+                    }}
+                    className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                    title="Đọc to bản dịch (TTS Voice-to-Voice)"
                   >
-                    EN
+                    <Volume2 className="h-3.5 w-3.5" />
                   </button>
+
+                  <div className="flex items-center gap-1 bg-zinc-800/80 p-0.5 rounded-lg border border-zinc-700">
+                    <button
+                      type="button"
+                      onClick={() => setCaptionLang("vi")}
+                      className={cn(
+                        "px-1.5 py-0.5 rounded font-bold transition text-[10px]",
+                        captionLang === "vi" ? "bg-emerald-500 text-white" : "text-zinc-400 hover:text-white"
+                      )}
+                    >
+                      VI
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCaptionLang("en")}
+                      className={cn(
+                        "px-1.5 py-0.5 rounded font-bold transition text-[10px]",
+                        captionLang === "en" ? "bg-indigo-500 text-white" : "text-zinc-400 hover:text-white"
+                      )}
+                    >
+                      EN
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <p className="text-sm md:text-base font-semibold text-white leading-snug">
-                {currentCaption
-                  ? captionLang === "vi"
-                    ? currentCaption.text
-                    : currentCaption.translation
-                  : "Đang lắng nghe âm thanh trong phòng họp để tự động dịch thuật và hiển thị phụ đề..."}
-              </p>
+              {currentCaption ? (
+                <div className="space-y-1">
+                  {bilingualMode ? (
+                    <>
+                      <p className="text-xs text-zinc-400 font-medium leading-snug">
+                        {currentCaption.text}
+                      </p>
+                      <p className="text-sm md:text-base font-semibold text-emerald-300 leading-snug flex items-center gap-2">
+                        <span>{currentCaption.translation}</span>
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm md:text-base font-semibold text-white leading-snug">
+                      {captionLang === "vi" ? currentCaption.text : currentCaption.translation}
+                    </p>
+                  )}
+                  {currentCaption.warnings && currentCaption.warnings.length > 0 && (
+                    <p className="text-[10px] text-amber-400/90 italic pt-0.5">
+                      ⚠️ {currentCaption.warnings[0].message}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs md:text-sm font-medium text-zinc-400 leading-snug">
+                  Đang lắng nghe âm thanh trong phòng họp để tự động dịch thuật và hiển thị phụ đề...
+                </p>
+              )}
             </div>
           )}
         </div>

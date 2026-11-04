@@ -18,7 +18,8 @@ import {
   Flame,
   Search,
   Filter,
-  Plus
+  Plus,
+  Languages,
 } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
 import { useModal } from "@/hooks/use-modal-store";
@@ -75,6 +76,43 @@ export function EnterpriseThreadsView() {
   const [openReplies, setOpenReplies] = useState<Record<string, boolean>>({});
   const [replyInput, setReplyInput] = useState<Record<string, string>>({});
   const [submittingReply, setSubmittingReply] = useState<Record<string, boolean>>({});
+
+  // Deku AI Translation state (TR-19)
+  const [translatedPosts, setTranslatedPosts] = useState<Record<string, string>>({});
+  const [translatingIds, setTranslatingIds] = useState<Record<string, boolean>>({});
+  const [showOriginalPosts, setShowOriginalPosts] = useState<Record<string, boolean>>({});
+
+  const handleTranslatePost = async (postId: string, text: string) => {
+    if (translatedPosts[postId]) {
+      setShowOriginalPosts((prev) => ({
+        ...prev,
+        [postId]: !prev[postId],
+      }));
+      return;
+    }
+
+    try {
+      setTranslatingIds((prev) => ({ ...prev, [postId]: true }));
+      const res = await fetch("/api/text/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          targetLang: "en",
+          context: "threads",
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTranslatedPosts((prev) => ({ ...prev, [postId]: data.translatedText }));
+        setShowOriginalPosts((prev) => ({ ...prev, [postId]: false }));
+      }
+    } catch (err) {
+      console.error("[TRANSLATE_POST_ERROR]", err);
+    } finally {
+      setTranslatingIds((prev) => ({ ...prev, [postId]: false }));
+    }
+  };
 
   const { onOpen } = useModal();
 
@@ -502,8 +540,54 @@ export function EnterpriseThreadsView() {
                 </div>
 
                 {/* Post Body */}
-                <div className="text-xs text-zinc-200 leading-relaxed whitespace-pre-wrap pl-12">
-                  {post.body}
+                <div className="text-xs text-zinc-200 leading-relaxed whitespace-pre-wrap pl-12 space-y-2">
+                  {(!translatedPosts[post.id] || showOriginalPosts[post.id]) && (
+                    <div>{post.body}</div>
+                  )}
+
+                  {translatedPosts[post.id] && !showOriginalPosts[post.id] && (
+                    <div className="p-2.5 rounded-xl bg-violet-950/20 border border-violet-500/30 text-zinc-200 space-y-1">
+                      <div className="flex items-center justify-between text-[10px] text-violet-400 font-semibold">
+                        <span className="flex items-center gap-1">
+                          <Languages className="h-3 w-3" />
+                          <span>Bản dịch AI (Deku Translate)</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowOriginalPosts((prev) => ({
+                              ...prev,
+                              [post.id]: true,
+                            }))
+                          }
+                          className="hover:underline cursor-pointer text-violet-300"
+                        >
+                          Xem bản gốc
+                        </button>
+                      </div>
+                      <p className="leading-relaxed font-medium">
+                        {translatedPosts[post.id]}
+                      </p>
+                    </div>
+                  )}
+
+                  {translatedPosts[post.id] && showOriginalPosts[post.id] && (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowOriginalPosts((prev) => ({
+                            ...prev,
+                            [post.id]: false,
+                          }))
+                        }
+                        className="text-[10px] text-violet-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Languages className="h-3 w-3" />
+                        <span>Xem lại bản dịch AI</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Topics Tag List */}
@@ -520,7 +604,7 @@ export function EnterpriseThreadsView() {
                   </div>
                 )}
 
-                {/* Action Buttons: Like, Comment, Share */}
+                {/* Action Buttons: Like, Comment, Translate, Share */}
                 <div className="flex items-center gap-4 pl-12 pt-2 border-t border-zinc-800/80">
                   <button
                     type="button"
@@ -543,6 +627,33 @@ export function EnterpriseThreadsView() {
                   >
                     <MessageSquare className="h-4 w-4" />
                     <span>{post.repliesCount} phản hồi</span>
+                  </button>
+
+                  {/* Translate Button (TR-19) */}
+                  <button
+                    type="button"
+                    onClick={() => handleTranslatePost(post.id, post.body)}
+                    disabled={translatingIds[post.id]}
+                    className={cn(
+                      "flex items-center gap-1.5 text-xs font-semibold transition cursor-pointer",
+                      translatedPosts[post.id] && !showOriginalPosts[post.id]
+                        ? "text-violet-400"
+                        : "text-zinc-400 hover:text-white"
+                    )}
+                  >
+                    <Languages
+                      className={cn(
+                        "h-4 w-4",
+                        translatingIds[post.id] && "animate-spin"
+                      )}
+                    />
+                    <span>
+                      {translatedPosts[post.id]
+                        ? showOriginalPosts[post.id]
+                          ? "Bản dịch"
+                          : "Bản gốc"
+                        : "Dịch AI"}
+                    </span>
                   </button>
 
                   <button

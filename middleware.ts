@@ -37,11 +37,15 @@ try {
       "/api/approvals(.*)",
       "/api/employees(.*)",
       "/api/audit-logs(.*)",
+      "/api/text/translate(.*)",
+      "/api/translation(.*)",
     ],
     ignoredRoutes: [
       "/api/uploadthing",
       "/api/socket/io",
       "/api/livekit(.*)",
+      "/api/text/translate(.*)",
+      "/api/translation(.*)",
     ],
   });
 } catch (err) {
