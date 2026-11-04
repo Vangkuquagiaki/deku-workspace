@@ -17,6 +17,7 @@ import {
   Play,
   Download,
   Calendar,
+  LogOut,
 } from "lucide-react";
 
 export default function AdminMeetingsPage() {
@@ -113,14 +114,28 @@ export default function AdminMeetingsPage() {
   return (
     <div className="flex-1 flex flex-col h-full bg-[#111214] text-zinc-100 overflow-y-auto">
       {/* Header */}
-      <header className="h-16 px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/70 backdrop-blur-md sticky top-0 z-20">
+      <header className="h-16 px-4 md:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/70 backdrop-blur-md sticky top-0 z-20">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/meetings")}
-            className="p-2 rounded-xl bg-[#2b2d31] hover:bg-zinc-800 text-zinc-300 hover:text-white transition"
+            className="h-9 px-3 rounded-xl bg-[#2b2d31] hover:bg-zinc-800 text-zinc-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-white/5"
+            title="Quay lại danh sách phòng họp"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 text-emerald-400" />
+            <span>Quay lại</span>
           </button>
+
+          <button
+            onClick={() => router.push("/")}
+            className="h-9 px-3 rounded-xl bg-rose-600/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition flex items-center gap-1.5 text-xs font-semibold"
+            title="Thoát về Workspace chính (Discord)"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Thoát ra ngoài</span>
+          </button>
+
+          <div className="h-6 w-[1px] bg-zinc-800 mx-1 hidden sm:block" />
+
           <div>
             <h1 className="text-sm font-bold text-white flex items-center gap-2">
               Quản Trị Phòng Họp & Từ Điển Thuật Ngữ
@@ -128,7 +143,7 @@ export default function AdminMeetingsPage() {
                 Admin Settings
               </span>
             </h1>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-zinc-400 hidden sm:block">
               Cấu hình từ điển phiên dịch và chính sách lưu trữ bản ghi cuộc họp
             </p>
           </div>

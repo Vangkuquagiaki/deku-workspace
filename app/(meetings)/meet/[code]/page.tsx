@@ -29,6 +29,8 @@ import {
   CheckCircle,
   Volume2,
   AlertTriangle,
+  ArrowLeft,
+  Home,
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { MediaRoom } from "@/components/media-room";
@@ -452,14 +454,37 @@ export default function MeetingRoomPage() {
       <div className="min-h-full w-full bg-[#111214] flex flex-col items-center justify-center p-4 md:p-8 select-none">
         <div className="max-w-xl w-full bg-[#1e1f22] border border-zinc-800 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6">
           <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-            <div>
-              <span className="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                {code}
-              </span>
-              <h2 className="text-lg font-bold text-white mt-1">
-                {meeting?.title || "Phòng họp hội nghị"}
-              </h2>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => router.push("/meetings")}
+                className="h-8 px-2.5 rounded-lg bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white transition flex items-center gap-1 text-xs border border-white/5"
+                title="Quay lại danh sách phòng họp"
+              >
+                <ArrowLeft className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Quay lại</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => router.push("/")}
+                className="h-8 px-2.5 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white transition flex items-center gap-1 text-xs border border-rose-500/30"
+                title="Thoát về Workspace chính (Discord)"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Thoát</span>
+              </button>
+
+              <div className="ml-1">
+                <span className="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  {code}
+                </span>
+                <h2 className="text-base font-bold text-white mt-0.5">
+                  {meeting?.title || "Phòng họp hội nghị"}
+                </h2>
+              </div>
             </div>
+
             <button
               onClick={handleCopyLink}
               className="text-xs text-zinc-400 hover:text-white flex items-center gap-1.5 bg-[#2b2d31] px-3 py-1.5 rounded-lg border border-white/5 transition"
@@ -572,6 +597,26 @@ export default function MeetingRoomPage() {
             <span>Tham gia ngay</span>
             <ChevronRight className="h-4 w-4" />
           </button>
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <button
+              type="button"
+              onClick={() => router.push("/meetings")}
+              className="h-11 rounded-xl text-xs font-semibold bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/5 transition flex items-center justify-center gap-1.5"
+            >
+              <ArrowLeft className="h-4 w-4 text-emerald-400" />
+              <span>Quay lại cuộc họp</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/")}
+              className="h-11 rounded-xl text-xs font-semibold bg-rose-600/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition flex items-center justify-center gap-1.5"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Thoát ra ngoài</span>
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -706,6 +751,17 @@ export default function MeetingRoomPage() {
             title="Sao chép liên kết mời họp"
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+
+          {/* Leave / Exit Meeting Button */}
+          <button
+            type="button"
+            onClick={handleLeaveCall}
+            className="h-8 px-3 rounded-full text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/30 transition flex items-center gap-1.5 ml-1"
+            title="Rời khỏi cuộc họp (Out / Thoát)"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Rời phòng</span>
           </button>
         </div>
       </header>

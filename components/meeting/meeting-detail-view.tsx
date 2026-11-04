@@ -20,6 +20,11 @@ import {
   RotateCw,
   ExternalLink,
   Search,
+  Pause,
+  RotateCcw,
+  LogOut,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +59,60 @@ export function MeetingDetailView({ meetingId: propMeetingId, serverId }: Meetin
 
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [currentVideoTime, setCurrentVideoTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
   const [confirmedItems, setConfirmedItems] = useState<Record<number, boolean>>({});
+
+  const handleRewind = (seconds = 10) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - seconds);
+      setCurrentVideoTime(videoRef.current.currentTime);
+    }
+  };
+
+  const handleFastForward = (seconds = 10) => {
+    if (videoRef.current) {
+      const maxDuration = videoRef.current.duration || 9999;
+      videoRef.current.currentTime = Math.min(maxDuration, videoRef.current.currentTime + seconds);
+      setCurrentVideoTime(videoRef.current.currentTime);
+    }
+  };
+
+  const handleTogglePlay = () => {
+    if (videoRef.current) {
+      if (videoRef.current.paused) {
+        videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+      } else {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+  };
+
+  const handleSeek = (timeSec: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = timeSec;
+      setCurrentVideoTime(timeSec);
+      if (videoRef.current.paused) {
+        videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+      }
+    }
+  };
+
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   useEffect(() => {
     if (meetingId) {
@@ -128,8 +186,8 @@ export function MeetingDetailView({ meetingId: propMeetingId, serverId }: Meetin
   return (
     <div className="flex-1 flex flex-col h-full bg-[#111214] text-zinc-100 overflow-y-auto">
       {/* Header */}
-      <header className="h-16 px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/70 backdrop-blur-md sticky top-0 z-20">
-        <div className="flex items-center gap-3">
+      <header className="h-16 px-4 md:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/70 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex items-center gap-2 md:gap-3">
           <button
             onClick={() => {
               if (serverId) {
@@ -138,10 +196,24 @@ export function MeetingDetailView({ meetingId: propMeetingId, serverId }: Meetin
                 router.push("/meetings");
               }
             }}
-            className="p-2 rounded-xl bg-[#2b2d31] hover:bg-zinc-800 text-zinc-300 hover:text-white transition"
+            className="h-9 px-3 rounded-xl bg-[#2b2d31] hover:bg-zinc-800 text-zinc-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-white/5 shrink-0"
+            title="Quay lại danh sách cuộc họp"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 text-emerald-400" />
+            <span>Quay lại</span>
           </button>
+
+          <button
+            onClick={() => router.push(serverId ? `/servers/${serverId}` : "/")}
+            className="h-9 px-3 rounded-xl bg-rose-600/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition flex items-center gap-1.5 text-xs font-semibold shrink-0"
+            title="Thoát khỏi trang họp, về Trang chủ Workspace"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Thoát ra ngoài</span>
+          </button>
+
+          <div className="h-6 w-[1px] bg-zinc-800 mx-1 hidden sm:block" />
+
           <div>
             <h1 className="text-sm font-bold text-white flex items-center gap-2">
               {meeting?.title || "Biên bản cuộc họp"}
@@ -149,7 +221,7 @@ export function MeetingDetailView({ meetingId: propMeetingId, serverId }: Meetin
                 {meeting?.code}
               </span>
             </h1>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-zinc-400 hidden sm:block">
               Được lưu trữ & tạo biên bản tự động bởi hệ thống AI
             </p>
           </div>
@@ -171,7 +243,7 @@ export function MeetingDetailView({ meetingId: propMeetingId, serverId }: Meetin
             className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#2b2d31] hover:bg-[#35373c] text-zinc-200 hover:text-white border border-white/5 transition flex items-center gap-1.5"
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5" />}
-            <span>{copied ? "Đã copy biên bản" : "Sao chép biên bản"}</span>
+            <span className="hidden md:inline">{copied ? "Đã copy biên bản" : "Sao chép"}</span>
           </button>
 
           <button
@@ -219,8 +291,151 @@ export function MeetingDetailView({ meetingId: propMeetingId, serverId }: Meetin
             <span className="text-[11px] text-zinc-400 font-medium">Bản ghi hình</span>
             <p className="text-sm font-bold text-white flex items-center gap-1.5">
               <Video className="h-4 w-4 text-emerald-400" />
-              {recording ? "Đã lưu trữ" : "Không ghi hình"}
+              {recording ? "Đã lưu trữ" : "Bản ghi mô phỏng"}
             </p>
+          </div>
+        </div>
+
+        {/* Video Player & Tua Lại (Playback Controls) */}
+        <div className="p-6 md:p-8 rounded-3xl bg-[#1e1f22] border border-zinc-800 space-y-4 shadow-xl">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+            <div className="flex items-center gap-2">
+              <Video className="h-5 w-5 text-emerald-400" />
+              <h3 className="text-base font-bold text-white">Xem Lại & Tua Bản Ghi Cuộc Họp</h3>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">
+                MP4 Video Player
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-zinc-400 font-mono">
+                {formatTime(currentVideoTime)} / {formatTime(videoDuration || 180)}
+              </span>
+            </div>
+          </div>
+
+          {/* Video element */}
+          <div className="aspect-video w-full rounded-2xl bg-black border border-zinc-800 relative overflow-hidden shadow-inner flex items-center justify-center group">
+            <video
+              ref={videoRef}
+              src={videoSrc}
+              onTimeUpdate={() => {
+                if (videoRef.current) {
+                  setCurrentVideoTime(videoRef.current.currentTime);
+                }
+              }}
+              onLoadedMetadata={() => {
+                if (videoRef.current) {
+                  setVideoDuration(videoRef.current.duration || 180);
+                }
+              }}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              className="w-full h-full object-contain"
+              playsInline
+            />
+
+            {/* Big center play button if paused */}
+            {!isPlaying && (
+              <button
+                type="button"
+                onClick={handleTogglePlay}
+                className="absolute inset-0 m-auto h-16 w-16 rounded-full bg-emerald-600/90 hover:bg-emerald-500 text-white flex items-center justify-center shadow-2xl transition hover:scale-105"
+                title="Phát video"
+              >
+                <Play className="h-8 w-8 ml-1" />
+              </button>
+            )}
+          </div>
+
+          {/* Player controls toolbar: Tua lại 10s, Tua tới 10s, Play/Pause, Seekbar */}
+          <div className="bg-[#2b2d31] p-4 rounded-2xl border border-white/5 space-y-3">
+            {/* Seek bar */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-mono text-zinc-400 w-12 text-right">
+                {formatTime(currentVideoTime)}
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={videoDuration || 180}
+                value={currentVideoTime}
+                onChange={(e) => handleSeek(Number(e.target.value))}
+                className="flex-1 h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+              />
+              <span className="text-xs font-mono text-zinc-400 w-12">
+                {formatTime(videoDuration || 180)}
+              </span>
+            </div>
+
+            {/* Control buttons */}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                {/* Play / Pause button */}
+                <button
+                  type="button"
+                  onClick={handleTogglePlay}
+                  className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-md transition"
+                >
+                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  <span>{isPlaying ? "Tạm dừng" : "Phát video"}</span>
+                </button>
+
+                {/* Tua lại 10 giây (Rewind 10s) */}
+                <button
+                  type="button"
+                  onClick={() => handleRewind(10)}
+                  className="h-10 px-3.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white font-semibold text-xs flex items-center gap-1.5 border border-white/5 transition"
+                  title="Tua lại 10 giây (Rewind 10s)"
+                >
+                  <RotateCcw className="h-4 w-4 text-emerald-400" />
+                  <span>Tua lại 10s</span>
+                </button>
+
+                {/* Tua tới 10 giây (Fast forward 10s) */}
+                <button
+                  type="button"
+                  onClick={() => handleFastForward(10)}
+                  className="h-10 px-3.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white font-semibold text-xs flex items-center gap-1.5 border border-white/5 transition"
+                  title="Tua tới 10 giây (Forward 10s)"
+                >
+                  <RotateCw className="h-4 w-4 text-emerald-400" />
+                  <span>Tua tới 10s</span>
+                </button>
+              </div>
+
+              {/* Speed & Volume */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-zinc-700 text-xs">
+                  <span className="text-[11px] text-zinc-400 pl-1.5">Tốc độ:</span>
+                  {[0.75, 1, 1.25, 1.5, 2].map((spd) => (
+                    <button
+                      key={spd}
+                      type="button"
+                      onClick={() => handleSpeedChange(spd)}
+                      className={cn(
+                        "px-2 py-0.5 rounded-lg text-xs font-bold transition",
+                        playbackSpeed === spd
+                          ? "bg-emerald-600 text-white shadow-sm"
+                          : "text-zinc-400 hover:text-white"
+                      )}
+                    >
+                      {spd}x
+                    </button>
+                  ))}
+                </div>
+
+                {/* Download recording */}
+                <a
+                  href={videoSrc}
+                  download={`cuoc-hop-${meeting?.code || "recording"}.mp4`}
+                  className="h-10 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white flex items-center gap-1.5 text-xs font-semibold border border-white/5 transition"
+                  title="Tải video ghi hình về máy"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Tải MP4</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 

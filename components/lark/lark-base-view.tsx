@@ -35,6 +35,9 @@ import {
   Lock,
   Image as ImageIcon,
   Bot,
+  ArrowLeft,
+  LogOut,
+  Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserProfileCard } from "@/components/user-profile-card";
@@ -342,13 +345,36 @@ export function LarkBaseView({
       {/* Top Header */}
       {!hideHeader && (
         <header className="h-12 px-5 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/90 backdrop-blur-md sticky top-0 z-30 select-none">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 md:gap-3">
+            {/* Quick exit back to Discord chat */}
+            <button
+              type="button"
+              onClick={() => router.push(serverId ? `/servers/${serverId}` : "/")}
+              className="h-7 px-2.5 rounded-lg bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-white/5"
+              title="Quay lại Workspace chính (Discord Chat)"
+            >
+              <ArrowLeft className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">Về Chat</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/meetings")}
+              className="h-7 px-2.5 rounded-lg bg-emerald-600/15 hover:bg-emerald-600 text-emerald-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-emerald-500/20"
+              title="Đi tới Phòng Họp & Hội Nghị Video"
+            >
+              <Video className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">Phòng họp</span>
+            </button>
+
+            <div className="h-5 w-[1px] bg-zinc-800 hidden sm:block" />
+
             <div className="h-7 w-7 rounded-lg bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
               <LayoutGrid className="h-4 w-4" />
             </div>
             <div className="flex items-center gap-2">
               <h1 className="text-sm font-bold text-white">Lark Base Doanh Nghiệp</h1>
-              <span className="text-[10px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-1.5 py-0.2 rounded font-mono">
+              <span className="text-[10px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-1.5 py-0.2 rounded font-mono hidden md:inline">
                 Bảo mật 3 tầng
               </span>
             </div>

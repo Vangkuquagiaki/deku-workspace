@@ -17,6 +17,11 @@ import {
   Loader2,
   Lock,
   Eye,
+  ArrowLeft,
+  LogOut,
+  LayoutGrid,
+  Home,
+  RotateCcw,
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 
@@ -83,54 +88,88 @@ export function MeetingsPageView({ serverId }: MeetingsPageViewProps) {
   return (
     <div className="flex-1 flex flex-col h-full bg-[#111214] text-zinc-100 overflow-y-auto">
       {/* Header */}
-      <header className="h-16 px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/70 backdrop-blur-md sticky top-0 z-20">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+      <header className="h-16 px-4 md:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/70 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex items-center gap-2 md:gap-3">
+          {/* Nút Quay lại / Tua lại trang trước */}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined" && window.history.length > 1) {
+                router.back();
+              } else {
+                router.push(serverId ? `/servers/${serverId}` : "/");
+              }
+            }}
+            className="h-9 px-3 rounded-xl bg-[#2b2d31] hover:bg-[#35373c] text-zinc-300 hover:text-white border border-white/5 transition flex items-center gap-1.5 shadow-sm text-xs font-semibold shrink-0"
+            title="Quay lại trang trước (Back)"
+          >
+            <ArrowLeft className="h-4 w-4 text-emerald-400" />
+            <span>Quay lại</span>
+          </button>
+
+          {/* Nút Thoát / Out về Workspace */}
+          <button
+            type="button"
+            onClick={() => router.push(serverId ? `/servers/${serverId}` : "/")}
+            className="h-9 px-3 rounded-xl bg-rose-600/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition flex items-center gap-1.5 shadow-sm text-xs font-semibold shrink-0"
+            title="Thoát khỏi trang họp, trở về Trang chủ Workspace"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Thoát ra ngoài</span>
+          </button>
+
+          <div className="h-6 w-[1px] bg-zinc-800 mx-1 hidden sm:block" />
+
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
             <Video className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-white flex items-center gap-2">
+            <h1 className="text-sm md:text-base font-bold text-white flex items-center gap-2">
               Phòng Họp & Hội Nghị Doanh Nghiệp
               <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">
                 AI Phiên Dịch
               </span>
             </h1>
-            <p className="text-xs text-zinc-400">
+            <p className="text-[11px] md:text-xs text-zinc-400 hidden sm:block">
               Công nghệ WebRTC độ trễ thấp & Dịch thuật trực tiếp Việt – Anh
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
+          {/* Nút tới Base Doanh Nghiệp */}
+          <button
+            type="button"
+            onClick={() => router.push(serverId ? `/servers/${serverId}/base` : "/base")}
+            className="text-xs text-indigo-300 hover:text-white px-3 py-1.5 rounded-xl bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/40 transition flex items-center gap-1.5 font-semibold"
+            title="Mở Bảng việc Base & Nhân sự"
+          >
+            <LayoutGrid className="h-3.5 w-3.5 text-indigo-400" />
+            <span className="hidden md:inline">Bảng việc Base</span>
+          </button>
+
           {/* Role switcher for Meeting RBAC Demo */}
           <div className="flex items-center gap-1.5 bg-[#2b2d31] border border-white/5 px-2.5 py-1 rounded-xl text-xs">
             <Eye className="h-3.5 w-3.5 text-amber-400" />
-            <span className="text-zinc-400 text-[11px] font-medium">Vai trò:</span>
+            <span className="text-zinc-400 text-[11px] font-medium hidden lg:inline">Vai trò:</span>
             <select
               value={meetingRole}
               onChange={(e) => setMeetingRole(e.target.value as "LEAD" | "MEMBER")}
-              className="bg-black/40 border border-zinc-700 rounded-lg px-2 py-0.5 text-[11px] font-bold text-amber-300 focus:outline-none cursor-pointer"
+              className="bg-black/40 border border-zinc-700 rounded-lg px-2 py-0.5 text-[11px] font-bold text-amber-300 focus:outline-none cursor-pointer max-w-[140px] sm:max-w-none truncate"
             >
               <option value="LEAD">👑 Cấp cao / Trưởng nhóm (Tạo phòng)</option>
-              <option value="MEMBER">👤 Cán bộ nhân viên (Chỉ vào phòng gọi)</option>
+              <option value="MEMBER">👤 Cán bộ nhân viên (Chỉ vào phòng)</option>
             </select>
           </div>
 
-          {serverId ? (
-            <button
-              onClick={() => router.push(`/servers/${serverId}/base`)}
-              className="text-xs text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition flex items-center gap-1.5"
-            >
-              <span>📋 Bảng việc Base</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => router.push("/admin/meetings")}
-              className="text-xs text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition flex items-center gap-1.5"
-            >
-              <span>Quản trị bản ghi</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => router.push("/admin/meetings")}
+            className="text-xs text-zinc-300 hover:text-white px-3 py-1.5 rounded-xl bg-[#2b2d31] border border-white/5 hover:bg-zinc-700 transition flex items-center gap-1.5 font-semibold"
+            title="Quản trị bản ghi âm & Từ điển thuật ngữ"
+          >
+            <span>Quản trị bản ghi</span>
+          </button>
         </div>
       </header>
 
