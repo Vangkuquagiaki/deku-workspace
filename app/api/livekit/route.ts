@@ -38,23 +38,25 @@ export async function GET(req: NextRequest) {
     }
 
     let imageUrl = req.nextUrl.searchParams.get("imageUrl") || "";
-    let displayName = username;
+    let displayName = req.nextUrl.searchParams.get("name") || username;
 
-    try {
-      // Fast profile lookup with 1.2s timeout to avoid database cold start blocking token issuance
-      const profilePromise = currentProfile();
-      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200));
-      const profile = await Promise.race([profilePromise, timeoutPromise]);
-      if (profile) {
-        if (!imageUrl && profile.imageUrl) {
-          imageUrl = profile.imageUrl;
+    // Fast-path: if displayName & imageUrl are provided from client, issue token immediately in < 2ms
+    if (!imageUrl || displayName === "Thành viên") {
+      try {
+        const profilePromise = currentProfile();
+        const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 600));
+        const profile = await Promise.race([profilePromise, timeoutPromise]);
+        if (profile) {
+          if (!imageUrl && profile.imageUrl) {
+            imageUrl = profile.imageUrl;
+          }
+          if (profile.name) {
+            displayName = profile.name;
+          }
         }
-        if (profile.name) {
-          displayName = profile.name;
-        }
+      } catch (error) {
+        // Fallback gracefully
       }
-    } catch (error) {
-      // Continue with query param fallback
     }
 
     const token = generateLiveKitToken({

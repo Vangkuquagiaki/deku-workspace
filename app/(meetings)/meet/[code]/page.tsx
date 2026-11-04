@@ -90,6 +90,17 @@ export default function MeetingRoomPage() {
     fetchMeeting();
   }, [code, user]);
 
+  // Prefetch LiveKit token while in Lobby so joining the meeting is instantaneous
+  useEffect(() => {
+    if (inLobby && code) {
+      const effectiveName = userName || user?.fullName || user?.username || "Thành viên";
+      const effectiveImg = user?.imageUrl || "";
+      fetch(
+        `/api/livekit?room=meet_${encodeURIComponent(code)}&username=${encodeURIComponent(effectiveName)}&name=${encodeURIComponent(effectiveName)}&imageUrl=${encodeURIComponent(effectiveImg)}`
+      ).catch(() => {});
+    }
+  }, [inLobby, code, userName, user]);
+
   // Handle local camera preview in Lobby
   useEffect(() => {
     if (inLobby && videoEnabled) {

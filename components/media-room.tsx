@@ -26,6 +26,9 @@ interface MediaRoomProps {
   };
 }
 
+// In-memory token cache to guarantee instant connection and eliminate connection spinners
+const livekitTokenCache = new Map<string, { token: string; serverUrl: string; ts: number }>();
+
 export function MediaRoom({
   chatId,
   video,
@@ -35,7 +38,15 @@ export function MediaRoom({
   userOverride,
 }: MediaRoomProps) {
   const { user } = useUser();
-  const [token, setToken] = useState("");
+  const [token, setToken] = useState<string>(() => {
+    // Check initial cache
+    const cacheKey = `${chatId}_${userOverride?.name || user?.username || "default"}`;
+    const cached = livekitTokenCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < 3 * 3600 * 1000) {
+      return cached.token;
+    }
+    return "";
+  });
   const [error, setError] = useState<string | null>(null);
   const [livekitUrl, setLivekitUrl] = useState(
     process.env.NEXT_PUBLIC_LIVEKIT_URL || "wss://deku-p77u1a3n.livekit.cloud"
@@ -88,6 +99,14 @@ export function MediaRoom({
     setToken("");
     setSlowLoading(false);
 
+    const cacheKey = `${chatId}_${effectiveUserName}`;
+    const cached = livekitTokenCache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < 3 * 3600 * 1000 && retryCount === 0) {
+      setLivekitUrl(cached.serverUrl);
+      setToken(cached.token);
+      return;
+    }
+
     const slowTimer = setTimeout(() => {
       if (isMounted) setSlowLoading(true);
     }, 4000);
@@ -98,7 +117,7 @@ export function MediaRoom({
     (async () => {
       try {
         const response = await fetch(
-          `/api/livekit?room=${encodeURIComponent(chatId)}&username=${encodeURIComponent(effectiveUserName)}&imageUrl=${encodeURIComponent(effectiveUserImageUrl)}`,
+          `/api/livekit?room=${encodeURIComponent(chatId)}&username=${encodeURIComponent(effectiveUserName)}&name=${encodeURIComponent(effectiveUserName)}&imageUrl=${encodeURIComponent(effectiveUserImageUrl)}`,
           { signal: controller.signal }
         );
         clearTimeout(timeoutId);
@@ -118,6 +137,11 @@ export function MediaRoom({
         }
 
         if (data.token) {
+          livekitTokenCache.set(cacheKey, {
+            token: data.token,
+            serverUrl: data.serverUrl || livekitUrl,
+            ts: Date.now(),
+          });
           setToken(data.token);
         } else {
           setError("No token received from media service");

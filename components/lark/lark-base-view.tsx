@@ -47,9 +47,10 @@ import { AuditLogsView } from "@/components/hr/audit-logs-view";
 import { MyPersonalBase } from "@/components/lark/my-personal-base";
 import { EnterpriseThreadsView } from "@/components/threads/enterprise-threads-view";
 import { AiHrAdminView } from "@/components/hr/ai-hr-admin-view";
+import { PersonalWorkspaceView } from "@/components/personal/personal-workspace-view";
 
 export type ViewMode = "grid" | "kanban";
-export type MainTab = "tasks" | "org" | "me" | "bulletin" | "leave" | "directory" | "audit" | "threads" | "ai-admin";
+export type MainTab = "today" | "tasks" | "org" | "me" | "bulletin" | "leave" | "directory" | "audit" | "threads" | "ai-admin";
 export type DemoRole = "MEMBER" | "LEAD" | "HEAD" | "HR";
 
 interface LarkBaseViewProps {
@@ -403,6 +404,19 @@ export function LarkBaseView({
       {/* Main Tabs Navigation Bar */}
       <div className="px-5 border-b border-zinc-800/80 bg-[#1e1f22]/40 flex items-center justify-between select-none shrink-0">
         <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+          <button
+            onClick={() => handleTabChange("today")}
+            className={cn(
+              "h-10 px-3.5 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition shrink-0 rounded-t-md",
+              activeTab === "today"
+                ? "border-emerald-500 text-white bg-white/5 font-bold"
+                : "border-transparent text-zinc-400 hover:text-zinc-200"
+            )}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Hôm nay & AI Trợ lý</span>
+          </button>
+
           <button
             onClick={() => handleTabChange("tasks")}
             className={cn(
@@ -1149,6 +1163,9 @@ export function LarkBaseView({
             </div>
           </div>
         )}
+
+        {/* TAB 0: PERSONAL WORKSPACE & AI ASSISTANT (DEKU AI CA NHAN V1) */}
+        {activeTab === "today" && <PersonalWorkspaceView />}
 
         {/* TAB 3: MY PERSONAL BASE */}
         {activeTab === "me" && (

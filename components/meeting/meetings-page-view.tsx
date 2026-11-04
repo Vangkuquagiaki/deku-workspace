@@ -91,9 +91,9 @@ export function MeetingsPageView({ serverId }: MeetingsPageViewProps) {
       {/* Header */}
       <header className="h-14 sm:h-16 px-4 md:px-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/90 backdrop-blur-md sticky top-0 z-30 gap-3">
         {/* Left: Navigation and Branding */}
-        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 min-w-0">
-          {/* Segmented Back & Exit Buttons */}
-          <div className="flex items-center bg-[#2b2d31] p-0.5 sm:p-1 rounded-xl border border-white/5 shrink-0 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
+          {/* Compact Back & Exit icon buttons */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={() => {
@@ -103,41 +103,42 @@ export function MeetingsPageView({ serverId }: MeetingsPageViewProps) {
                   router.push(serverId ? `/servers/${serverId}` : "/");
                 }
               }}
-              className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg hover:bg-zinc-700/80 text-zinc-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/5 transition flex items-center justify-center shrink-0 shadow-sm"
               title="Quay lại trang trước"
             >
-              <ArrowLeft className="h-3.5 w-3.5 text-emerald-400" />
-              <span className="hidden sm:inline">Quay lại</span>
+              <ArrowLeft className="h-4 w-4 text-emerald-400" />
             </button>
-
-            <div className="h-3.5 w-[1px] bg-zinc-700 mx-0.5" />
 
             <button
               type="button"
               onClick={() => router.push(serverId ? `/servers/${serverId}` : "/")}
-              className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg hover:bg-rose-600/20 text-zinc-400 hover:text-rose-300 transition flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#2b2d31] hover:bg-rose-950/40 hover:border-rose-500/30 text-zinc-400 hover:text-rose-300 border border-white/5 transition flex items-center justify-center shrink-0 shadow-sm"
               title="Thoát khỏi phòng họp, về Workspace chính (Discord)"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">Thoát</span>
             </button>
           </div>
 
           <div className="h-5 w-[1px] bg-zinc-800 hidden sm:block shrink-0" />
 
           {/* Logo & Title */}
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
               <Video className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
 
-            <div className="flex items-center gap-2 min-w-0">
-              <h1 className="text-sm sm:text-base font-bold text-white whitespace-nowrap truncate">
-                Phòng Họp Doanh Nghiệp
-              </h1>
-              <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap shrink-0 hidden sm:inline">
-                AI Phiên Dịch
-              </span>
+            <div className="min-w-0 flex flex-col justify-center">
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm sm:text-base font-bold text-white whitespace-nowrap truncate">
+                  Phòng Họp & Hội Nghị Doanh Nghiệp
+                </h1>
+                <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap shrink-0 hidden md:inline">
+                  AI Phiên Dịch
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400 hidden xl:block truncate">
+                Công nghệ WebRTC độ trễ thấp & Dịch thuật trực tiếp Việt - Anh
+              </p>
             </div>
           </div>
         </div>
@@ -148,28 +149,28 @@ export function MeetingsPageView({ serverId }: MeetingsPageViewProps) {
           <button
             type="button"
             onClick={() => router.push(serverId ? `/servers/${serverId}/base` : "/base")}
-            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/5 transition flex items-center gap-1.5 text-xs font-medium whitespace-nowrap shadow-sm"
+            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/5 transition flex items-center gap-1.5 text-xs font-medium whitespace-nowrap shrink-0 shadow-sm"
             title="Mở Bảng việc Base"
           >
             <LayoutGrid className="h-3.5 w-3.5 text-indigo-400" />
-            <span className="hidden lg:inline">Bảng việc Base</span>
+            <span className="hidden xl:inline">Bảng việc Base</span>
           </button>
 
           {/* Admin Recordings link */}
           <button
             type="button"
             onClick={() => router.push("/admin/meetings")}
-            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/5 transition flex items-center gap-1.5 text-xs font-medium whitespace-nowrap shadow-sm"
+            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/5 transition flex items-center gap-1.5 text-xs font-medium whitespace-nowrap shrink-0 shadow-sm"
             title="Quản trị bản ghi cuộc họp"
           >
             <Settings className="h-3.5 w-3.5 text-zinc-400" />
-            <span className="hidden lg:inline">Quản trị bản ghi</span>
+            <span className="hidden md:inline">Quản trị bản ghi</span>
           </button>
 
           {/* Role switcher dropdown */}
-          <div className="flex items-center gap-1.5 bg-[#2b2d31] border border-white/5 px-2.5 py-1 rounded-xl text-xs shadow-sm">
+          <div className="flex items-center gap-1.5 bg-[#2b2d31] border border-white/5 px-2.5 py-1 rounded-xl text-xs shadow-sm shrink-0 whitespace-nowrap">
             <Eye className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-            <span className="text-zinc-400 text-[11px] font-medium hidden xl:inline">Vai trò:</span>
+            <span className="text-zinc-400 text-[11px] font-medium hidden 2xl:inline">Vai trò:</span>
             <select
               value={meetingRole}
               onChange={(e) => setMeetingRole(e.target.value as "LEAD" | "MEMBER")}

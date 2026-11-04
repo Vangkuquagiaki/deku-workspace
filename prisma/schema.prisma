@@ -744,3 +744,122 @@ model AiAdminRequest {
   @@index([createdAt])
 }
 
+// ==========================================
+// DEKU PERSONAL AI & NOTIFICATION CENTER (V1)
+// ==========================================
+
+model EmployeeInvitation {
+  id           String    @id @default(uuid())
+  workspaceId  String    @default("default")
+  employeeCode String?
+  email        String
+  tokenHash    String    @unique
+  role         String    @default("MEMBER") // MEMBER, LEAD, HEAD, HR, BOARD
+  orgUnitId    String?
+  orgUnitName  String?
+  expiresAt    DateTime
+  usedAt       DateTime?
+  revokedAt    DateTime?
+  createdBy    String    // profileId of HR/IT who invited
+  creatorName  String?
+  status       String    @default("PENDING") // PENDING, ACCEPTED, EXPIRED, REVOKED
+  createdAt    DateTime  @default(now())
+
+  @@index([email])
+  @@index([status])
+  @@index([tokenHash])
+}
+
+model AnnouncementCampaign {
+  id            String    @id @default(uuid())
+  title         String
+  body          String    @db.Text
+  priority      String    @default("INFORMATION") // INFORMATION, IMPORTANT, MANDATORY, EMERGENCY
+  status        String    @default("DRAFT") // DRAFT, IN_REVIEW, APPROVED, PUBLISHED, COMPLETED, CANCELLED
+  authorId      String
+  authorName    String
+  approverId    String?
+  approverName  String?
+  approvedAt    DateTime?
+  publishedAt   DateTime?
+  deadline      DateTime? // Hạn chót bắt buộc xác nhận
+  audienceType  String    @default("COMPANY") // COMPANY, ORG_UNIT, ROLES, SPECIFIC
+  audienceScope String?   // JSON string of targets
+  version       Int       @default(1)
+  requiresAck   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  acks          AnnouncementAck[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model AnnouncementAck {
+  id           String               @id @default(uuid())
+  campaignId   String
+  campaign     AnnouncementCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  version      Int                  @default(1)
+  employeeId   String               // profileId or employeeCode
+  employeeName String
+  ackAt        DateTime             @default(now())
+  notes        String?
+
+  @@unique([campaignId, employeeId, version])
+  @@index([campaignId])
+  @@index([employeeId])
+}
+
+model PersonalNote {
+  id        String    @id @default(uuid())
+  ownerId   String    // Profile ID / Clerk userId
+  title     String
+  content   String    @db.Text
+  isPinned  Boolean   @default(false)
+  isDone    Boolean   @default(false)
+  remindAt  DateTime?
+  category  String    @default("GENERAL") // GENERAL, WORK, MEETING, URGENT
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([ownerId])
+  @@index([isPinned])
+}
+
+model CompanyEvent {
+  id          String      @id @default(uuid())
+  title       String
+  description String?     @db.Text
+  location    String?
+  startAt     DateTime
+  endAt       DateTime
+  scope       String      @default("COMPANY") // COMPANY, DEPARTMENT, TEAM
+  orgUnitId   String?
+  orgUnitName String?
+  creatorId   String
+  creatorName String?
+  isMandatory Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+
+  rsvps       EventRsvp[]
+
+  @@index([startAt])
+  @@index([scope])
+}
+
+model EventRsvp {
+  id           String       @id @default(uuid())
+  eventId      String
+  event        CompanyEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  employeeId   String
+  employeeName String
+  status       String       @default("GOING") // GOING, MAYBE, DECLINED
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([eventId, employeeId])
+  @@index([eventId])
+  @@index([employeeId])
+}
+

@@ -40,6 +40,9 @@ try {
       "/api/text/translate(.*)",
       "/api/translation(.*)",
       "/api/ai-admin(.*)",
+      "/api/personal(.*)",
+      "/api/announcements(.*)",
+      "/api/invitations(.*)",
     ],
     ignoredRoutes: [
       "/api/uploadthing",
@@ -48,6 +51,9 @@ try {
       "/api/text/translate(.*)",
       "/api/translation(.*)",
       "/api/ai-admin(.*)",
+      "/api/personal(.*)",
+      "/api/announcements(.*)",
+      "/api/invitations(.*)",
     ],
   });
 } catch (err) {
