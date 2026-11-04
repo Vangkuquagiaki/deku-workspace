@@ -1,11 +1,18 @@
-import { currentUser, redirectToSignIn } from "@clerk/nextjs";
-
+import { currentUser } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 
 export const initialProfile = async () => {
-  const user = await currentUser();
+  let user = null;
+  try {
+    user = await currentUser();
+  } catch (error) {
+    console.error("[CURRENT_USER_ERROR]", error);
+  }
 
-  if (!user) return redirectToSignIn();
+  if (!user) {
+    return redirect("/sign-in");
+  }
 
   const profile = await db.profile.findUnique({
     where: {
@@ -32,7 +39,7 @@ export const initialProfile = async () => {
       userId: user.id,
       name,
       imageUrl: user.imageUrl,
-      email: user.emailAddresses[0].emailAddress
+      email: user.emailAddresses?.[0]?.emailAddress || "user@deku.internal"
     }
   });
 
