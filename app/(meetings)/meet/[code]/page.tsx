@@ -736,6 +736,11 @@ export default function MeetingRoomPage() {
             video={videoEnabled}
             audio={audioEnabled}
             onDisconnected={handleLeaveCall}
+            userOverride={{
+              id: user?.id,
+              name: userName || user?.fullName || user?.username || "Thành viên",
+              imageUrl: user?.imageUrl,
+            }}
           />
 
           {/* Floating Nghị định 13/2023/NĐ-CP Consent Request Banner */}
