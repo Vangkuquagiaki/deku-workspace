@@ -23,7 +23,7 @@ try {
       "/sign-up(.*)",
       "/api/uploadthing",
       "/api/socket/io",
-      "/api/livekit/webhook",
+      "/api/livekit(.*)",
       "/meet(.*)",
       "/meetings(.*)",
       "/base(.*)",
@@ -41,7 +41,7 @@ try {
     ignoredRoutes: [
       "/api/uploadthing",
       "/api/socket/io",
-      "/api/livekit/webhook",
+      "/api/livekit(.*)",
     ],
   });
 } catch (err) {
