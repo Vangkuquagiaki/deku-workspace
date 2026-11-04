@@ -637,20 +637,41 @@ export function PersonalWorkspaceView() {
               </div>
 
               {/* Sample Prompts */}
-              <div className="hidden md:flex items-center gap-2">
+              <div className="hidden xl:flex items-center gap-1.5 flex-wrap">
                 <button
                   type="button"
                   onClick={() => handleSendAi("Hôm nay tôi có cuộc họp nào không?")}
-                  className="px-2.5 py-1 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white text-[11px] transition"
+                  className="px-2 py-1 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white text-[11px] transition whitespace-nowrap"
                 >
-                  📅 Lịch họp hôm nay?
+                  📅 Lịch họp?
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleSendAi("Tôi có thông báo hoặc chỉ thị nào cần ký nhận không?")}
-                  className="px-2.5 py-1 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white text-[11px] transition"
+                  onClick={() => handleSendAi("Hôm nay tôi có việc gì cần làm gấp không?")}
+                  className="px-2 py-1 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white text-[11px] transition whitespace-nowrap"
                 >
-                  📢 Chỉ thị cần ký?
+                  ⚡ Việc gấp?
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendAi("Giao việc cho Nguyễn Văn A: Hoàn thiện báo cáo quý 4 hạn chót ngày mai")}
+                  className="px-2 py-1 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white text-[11px] font-semibold transition whitespace-nowrap"
+                >
+                  ➕ Giao việc bằng AI
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendAi("Thêm nhân sự mới vào hệ thống như thế nào?")}
+                  className="px-2 py-1 rounded-xl bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600 hover:text-white text-[11px] font-semibold transition whitespace-nowrap"
+                >
+                  👥 Thêm nhân sự mới
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendAi("Có nhân sự nghỉ việc thì xử lý thế nào?")}
+                  className="px-2 py-1 rounded-xl bg-rose-600/20 text-rose-300 border border-rose-500/30 hover:bg-rose-600 hover:text-white text-[11px] font-semibold transition whitespace-nowrap"
+                >
+                  🚪 Nhân viên nghỉ việc
                 </button>
               </div>
             </div>

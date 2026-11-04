@@ -295,6 +295,92 @@ export async function askPersonalAi({
 
   const sources: Array<{ type: string; title: string }> = [];
 
+  // 0. Natural Language Task Assignment: "Giao việc cho [Tên]: [Nhiệm vụ]"
+  const assignMatch = prompt.match(/(?:giao việc|giao nhiệm vụ|tạo task|phân công)\s+(?:cho\s+)?([^:\n]+)[:,\-]?\s*(.*)/i);
+  if (assignMatch) {
+    const rawTarget = assignMatch[1].trim();
+    const rawTaskDesc = assignMatch[2].trim() || "Thực hiện nhiệm vụ theo chỉ đạo cấp trên";
+
+    // Look up target employee in db
+    const targetEmployee = await db.profile.findFirst({
+      where: {
+        OR: [
+          { name: { contains: rawTarget, mode: "insensitive" } },
+          { email: { contains: rawTarget, mode: "insensitive" } },
+        ],
+      },
+      include: {
+        orgUnitMembers: { include: { orgUnit: true } },
+      },
+    });
+
+    const defaultOrg = await db.orgUnit.findFirst();
+    const fallbackOrgId = defaultOrg?.id || "default_org";
+
+    if (targetEmployee) {
+      const orgUnitId = targetEmployee.orgUnitMembers?.[0]?.orgUnitId || fallbackOrgId;
+      const newTask = await db.task.create({
+        data: {
+          title: rawTaskDesc,
+          assigneeId: targetEmployee.id,
+          assigneeName: targetEmployee.name,
+          orgUnitId,
+          priority: rawTaskDesc.toLowerCase().includes("khẩn") || rawTaskDesc.toLowerCase().includes("gấp") ? "HIGH" : "MEDIUM",
+          status: "TODO",
+          isHumanConfirmed: true,
+          deadlineText: "Theo phân công của Quản lý",
+        },
+      });
+
+      return {
+        answer: `✅ **Đã giao việc thành công bằng AI!**\n\n- **Nhân sự nhận việc:** ${targetEmployee.name} (${targetEmployee.email})\n- **Nội dung công việc:** ${rawTaskDesc}\n- **Mã nhiệm vụ:** #${newTask.id.slice(0, 8)}\n\n🚀 Thông tin đã được AI cập nhật vào cơ sở dữ liệu chung. Khi **${targetEmployee.name}** mở màn hình **"Hôm nay của tôi"** hoặc hỏi Trợ lý AI Cá nhân, hệ thống sẽ tự động thông báo và nhắc việc ngay lập tức!`,
+        sources: [
+          { type: "Bảng việc Kanban", title: newTask.title },
+          { type: "Nhân sự", title: targetEmployee.name },
+        ],
+      };
+    } else {
+      const newTask = await db.task.create({
+        data: {
+          title: rawTaskDesc,
+          assigneeName: rawTarget,
+          orgUnitId: fallbackOrgId,
+          priority: "MEDIUM",
+          status: "TODO",
+          isHumanConfirmed: true,
+          deadlineText: "Theo phân công của Quản lý",
+        },
+      });
+
+      return {
+        answer: `✅ **Đã ghi nhận nhiệm vụ mới vào cơ sở dữ liệu!**\n\n- **Tên nhân sự:** ${rawTarget}\n- **Nội dung công việc:** ${rawTaskDesc}\n- **Mã nhiệm vụ:** #${newTask.id.slice(0, 8)}\n\nNhiệm vụ đã được lưu vào Bảng việc Base và sẽ tự động xuất hiện trong AI của nhân sự ${rawTarget} khi họ vào hệ thống.`,
+        sources: [
+          { type: "Bảng việc Kanban", title: newTask.title },
+        ],
+      };
+    }
+  }
+
+  // 0.1. Offboarding guidance / query
+  if (lowerPrompt.includes("nghỉ việc") || lowerPrompt.includes("thôi việc") || lowerPrompt.includes("offboard")) {
+    return {
+      answer: `📋 **Quy trình xử lý nhân sự nghỉ việc bằng AI (AIHR-06 / Luật 91/2025/QH15):**\n\n1. **Tại sao không xóa cứng (Hard Delete)?**\nTheo quy định pháp luật và chuẩn kiểm toán, doanh nghiệp **không xóa trắng** hồ sơ để bảo toàn lịch sử giao dịch, bảng lương, thuế và nhật ký kiểm toán (Audit Log).\n\n2. **AI sẽ tự động thực thi:**\n- **Cập nhật trạng thái:** Chuyển sang \`TERMINATED\` (Đã thôi việc).\n- **Thu hồi quyền truy cập (Revoke Access):** Ngắt toàn bộ phiên đăng nhập, khóa token và loại khỏi các kênh bí mật.\n- **Bàn giao việc (Handover):** AI tự động quét tất cả các task dở dang để bàn giao cho quản lý hoặc đồng nghiệp.\n- **Ngắt phiên gọi:** Chặn quyền tham gia phòng họp trực tuyến.\n\n👉 **Thao tác ngay:** Bạn có thể qua tab **"AI Quản trị"** (\`/base?tab=ai-admin\`) và gõ lệnh: \`Nhân viên [Mã hoặc Tên] nghỉ việc\` để AI tự động lên kế hoạch và kích hoạt quy trình!`,
+      sources: [
+        { type: "Quy chuẩn Nhân sự", title: "AI HR Lifecycle Matrix (AIHR-06)" },
+      ],
+    };
+  }
+
+  // 0.2. Onboarding guidance / query
+  if (lowerPrompt.includes("nhân sự mới") || lowerPrompt.includes("thêm nhân viên") || lowerPrompt.includes("onboard")) {
+    return {
+      answer: `👥 **Cách thêm nhân sự mới vào cơ sở dữ liệu:**\n\n1. **Cách 1 - Ra lệnh bằng AI (Tab AI Quản trị):**\nVào tab **"AI Quản trị"** (\`/base?tab=ai-admin\`) và gõ lệnh bằng ngôn ngữ tự nhiên:\n> \`Thêm nhân sự mới: [Họ và tên], email: [email@congty.com], phòng [Phòng ban]\`\nAI sẽ tự động cấp mã nhân viên, tạo hồ sơ \`EmployeeProfile\` và phân quyền vào phòng ban.\n\n2. **Cách 2 - Cấp mã lời mời an toàn (Tab Hôm nay & AI Trợ lý):**\nVào tab con **"Cấp quyền & Lời mời"** (\`/base?tab=today\`), nhập Email công ty và Họ tên rồi nhấn **"Cấp mã mời"**.\nHệ thống sẽ tạo mã Token duy nhất gửi đến nhân sự mới để kích hoạt tài khoản an toàn theo chuẩn Zero-Trust!`,
+      sources: [
+        { type: "Cổng Cấp quyền", title: "Invite-Only Gatekeeper (AI-NOTI-08)" },
+      ],
+    };
+  }
+
   // 1. Task queries
   if (lowerPrompt.includes("việc") || lowerPrompt.includes("task") || lowerPrompt.includes("ưu tiên") || lowerPrompt.includes("hạn chót")) {
     const activeTasks = briefing.schedule.filter((s) => s.type === "TASK");
