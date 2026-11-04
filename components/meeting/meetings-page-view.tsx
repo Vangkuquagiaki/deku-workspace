@@ -44,15 +44,19 @@ export function MeetingsPageView({ serverId }: MeetingsPageViewProps) {
   }, []);
 
   const fetchRecentMeetings = async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3500);
     try {
-      const res = await fetch("/api/meetings");
+      const res = await fetch("/api/meetings", { signal: controller.signal });
+      clearTimeout(timeout);
       if (res.ok) {
         const data = await res.json();
-        setRecentMeetings(data);
+        setRecentMeetings(Array.isArray(data) ? data : []);
       }
     } catch (e) {
       console.error(e);
     } finally {
+      clearTimeout(timeout);
       setLoading(false);
     }
   };

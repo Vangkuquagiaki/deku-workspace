@@ -335,9 +335,21 @@ export function PersonalWorkspaceView() {
   const countMeetings = briefing?.todayMeetings ?? briefing?.stats?.todayMeetings ?? (briefing?.meetings?.length || 0);
   const countTasks = briefing?.pendingTasks ?? briefing?.stats?.pendingTasks ?? (briefing?.urgentTasks?.length || 0);
   const countPendingAcks = briefing?.pendingAcksCount ?? briefing?.stats?.pendingAcks ?? (briefing?.pendingAcks?.length || 0);
-  const scheduleList = briefing?.scheduleTimeline || briefing?.schedule || [];
-  const urgentTaskList = briefing?.urgentTasks || briefing?.schedule?.filter((s: any) => s.type === "TASK") || [];
-  const pendingAckList = briefing?.pendingAcks || briefing?.announcements?.filter((a: any) => a.requiresAck && !a.hasAcked) || [];
+  const scheduleList = Array.isArray(briefing?.scheduleTimeline)
+    ? briefing.scheduleTimeline
+    : Array.isArray(briefing?.schedule)
+    ? briefing.schedule
+    : [];
+  const urgentTaskList = Array.isArray(briefing?.urgentTasks)
+    ? briefing.urgentTasks
+    : Array.isArray(briefing?.schedule)
+    ? briefing.schedule.filter((s: any) => s.type === "TASK")
+    : [];
+  const pendingAckList = Array.isArray(briefing?.pendingAcks)
+    ? briefing.pendingAcks
+    : Array.isArray(briefing?.announcements)
+    ? briefing.announcements.filter((a: any) => a.requiresAck && !a.hasAcked)
+    : [];
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#111214] text-zinc-100 overflow-hidden relative">
@@ -930,7 +942,7 @@ export function PersonalWorkspaceView() {
                 })}
               {announcements.length === 0 && (
                 <div className="col-span-2 text-center py-12 text-zinc-500 text-xs">
-                  Chưa có thông báo nào. Bấm nút "Phát hành chỉ thị mới" để tạo thông báo đầu tiên.
+                  Chưa có thông báo nào. Bấm nút &quot;Phát hành chỉ thị mới&quot; để tạo thông báo đầu tiên.
                 </div>
               )}
             </div>
