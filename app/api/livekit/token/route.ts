@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import { AccessToken } from "livekit-server-sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { currentProfile } from "@/lib/current-profile";
 import { db } from "@/lib/db";
@@ -59,6 +58,8 @@ export async function POST(req: NextRequest) {
         // Participant will wait in lobby
       }
     }
+
+    const { AccessToken } = await import("livekit-server-sdk");
 
     const at = new AccessToken(apiKey, apiSecret, {
       identity,

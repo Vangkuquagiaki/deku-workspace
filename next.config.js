@@ -1,10 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
+  experimental: {
+    serverComponentsExternalPackages: ["livekit-server-sdk"]
+  },
+  webpack: (config, { isServer }) => {
     config.externals.push({
       "utf-8-validate": "commonjs utf-8-validate",
       bufferutil: "commonjs bufferutil"
     });
+
+    if (isServer) {
+      config.externals.push("livekit-server-sdk");
+    }
 
     return config;
   },

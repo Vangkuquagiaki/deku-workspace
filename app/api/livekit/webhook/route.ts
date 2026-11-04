@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { WebhookReceiver } from "livekit-server-sdk";
 import { db } from "@/lib/db";
 
 const apiKey = process.env.LIVEKIT_API_KEY;
@@ -14,6 +13,7 @@ export async function POST(req: Request) {
       return new NextResponse("Server misconfigured", { status: 500 });
     }
 
+    const { WebhookReceiver } = await import("livekit-server-sdk");
     const receiver = new WebhookReceiver(apiKey, apiSecret);
     const body = await req.text();
     const headerPayload = headers();
