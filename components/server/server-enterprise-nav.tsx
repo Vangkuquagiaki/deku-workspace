@@ -33,11 +33,23 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
 
   const navItems = [
     {
+      id: "today",
+      label: "Hôm Nay & AI Trợ Lý",
+      icon: Sparkles,
+      badge: "AI",
+      href: `/servers/${serverId}/base?tab=today`,
+      isActive: isBaseRoute && currentTab === "today",
+      iconColor: "text-emerald-400 group-hover:text-emerald-300",
+      badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+      activeBg: "bg-emerald-950/40 border-emerald-500/50 text-white shadow-sm shadow-emerald-950/50",
+      activeIndicator: "bg-emerald-400",
+    },
+    {
       id: "base",
       label: "Bảng Việc Lark Base & Tổ",
       icon: LayoutGrid,
       badge: "Base",
-      href: `/servers/${serverId}/base`,
+      href: `/servers/${serverId}/base?tab=tasks`,
       isActive: isBaseRoute && (!currentTab || currentTab === "tasks"),
       iconColor: "text-indigo-400 group-hover:text-indigo-300",
       badgeColor: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
@@ -60,7 +72,7 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       id: "meetings",
       label: "Họp AI & Biên Bản",
       icon: Sparkles,
-      badge: "AI",
+      badge: "Meet",
       href: `/servers/${serverId}/meetings`,
       isActive: isMeetingsRoute,
       iconColor: "text-emerald-400 group-hover:text-emerald-300",
@@ -127,6 +139,18 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       badgeColor: "bg-violet-500/20 text-violet-300 border-violet-500/30",
       activeBg: "bg-violet-950/40 border-violet-500/50 text-white shadow-sm shadow-violet-950/50",
       activeIndicator: "bg-violet-400",
+    },
+    {
+      id: "ai-admin",
+      label: "AI Quản Trị Nhân Sự",
+      icon: Briefcase,
+      badge: "AI-HR",
+      href: `/servers/${serverId}/base?tab=ai-admin`,
+      isActive: isBaseRoute && currentTab === "ai-admin",
+      iconColor: "text-rose-400 group-hover:text-rose-300",
+      badgeColor: "bg-rose-500/20 text-rose-300 border-rose-500/30",
+      activeBg: "bg-rose-950/40 border-rose-500/50 text-white shadow-sm shadow-rose-950/50",
+      activeIndicator: "bg-rose-400",
     },
   ];
 

@@ -14,20 +14,39 @@ export default async function ServerIdLayout({
   children: React.ReactNode;
   params: { serverId: string };
 }) {
-  const profile = await currentProfile();
+  let profile = null;
+  try {
+    profile = await currentProfile();
+  } catch (err) {
+    console.error("[SERVER_LAYOUT_PROFILE_ERR]", err);
+  }
 
   if (!profile) return redirect("/sign-in");
 
-  const server = await db.server.findUnique({
-    where: {
-      id: params.serverId,
-      members: {
-        some: {
-          profileId: profile.id
+  let server = null;
+  try {
+    server = await db.server.findUnique({
+      where: {
+        id: params.serverId,
+        members: {
+          some: {
+            profileId: profile.id
+          }
         }
       }
-    }
-  });
+    });
+  } catch (dbErr) {
+    console.error("[SERVER_LAYOUT_DB_ERR]", dbErr);
+    // Retry once in case of cold start
+    try {
+      await new Promise((r) => setTimeout(r, 400));
+      server = await db.server.findUnique({
+        where: {
+          id: params.serverId,
+        }
+      });
+    } catch (_) {}
+  }
 
   if (!server) return redirect("/base");
 

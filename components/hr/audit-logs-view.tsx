@@ -19,7 +19,8 @@ import {
   Cpu,
   CheckCircle2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Megaphone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -101,6 +102,21 @@ export function AuditLogsView() {
     },
     TASK_CREATED_FROM_AI: {
       label: "AI tạo việc từ cuộc họp",
+      color: "bg-teal-500/10 text-teal-300 border-teal-500/30",
+      icon: Cpu,
+    },
+    ANNOUNCEMENT_PUBLISHED: {
+      label: "Phát hành chỉ thị",
+      color: "bg-amber-500/10 text-amber-300 border-amber-500/30",
+      icon: Megaphone,
+    },
+    ANNOUNCEMENT_ACKNOWLEDGED: {
+      label: "Ký nhận chỉ thị",
+      color: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
+      icon: CheckCircle2,
+    },
+    MEETING_CREATED_VIA_AI: {
+      label: "AI tạo phòng họp",
       color: "bg-teal-500/10 text-teal-300 border-teal-500/30",
       icon: Cpu,
     },
@@ -232,6 +248,8 @@ export function AuditLogsView() {
           </span>
           {[
             { id: "all", label: "Tất cả" },
+            { id: "ANNOUNCEMENT_PUBLISHED", label: "📢 Chỉ thị phát hành" },
+            { id: "ANNOUNCEMENT_ACKNOWLEDGED", label: "✅ Ký nhận chỉ thị" },
             { id: "PROFILE_SENSITIVE_VIEW", label: "🔒 Lương & CCCD" },
             { id: "LEAVE_APPROVED", label: "Phê duyệt nghỉ" },
             { id: "CONSENT_AGREED", label: "Đồng thuận NĐ 13" },

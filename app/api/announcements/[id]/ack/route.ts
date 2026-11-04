@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentProfile } from "@/lib/current-profile";
+import { db } from "@/lib/db";
 import { acknowledgeAnnouncement } from "@/lib/personal-assistant-service";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,25 @@ export async function POST(
       employeeName,
       notes: body.notes,
     });
+
+    // Record audit log for compliance
+    try {
+      await db.auditLog.create({
+        data: {
+          actorId: employeeId,
+          action: "ANNOUNCEMENT_ACKNOWLEDGED",
+          targetType: "ANNOUNCEMENT",
+          targetId: campaignId,
+          detail: {
+            employeeName,
+            notes: body.notes,
+            ackAt: new Date(),
+          },
+        },
+      });
+    } catch (auditErr) {
+      console.warn("[ANNOUNCEMENT_ACK_AUDIT_WARN]", auditErr);
+    }
 
     return NextResponse.json(ack);
   } catch (error: any) {

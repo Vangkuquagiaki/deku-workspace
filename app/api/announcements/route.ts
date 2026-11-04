@@ -86,6 +86,26 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 3. Record Audit Log for Enterprise Compliance
+    try {
+      await db.auditLog.create({
+        data: {
+          actorId: authorId,
+          action: "ANNOUNCEMENT_PUBLISHED",
+          targetType: "ANNOUNCEMENT",
+          targetId: announcement.id,
+          detail: {
+            title: announcement.title,
+            priority: announcement.priority,
+            authorName,
+            audienceType: announcement.audienceType,
+          },
+        },
+      });
+    } catch (auditErr) {
+      console.warn("[ANNOUNCEMENT_AUDIT_LOG_WARN]", auditErr);
+    }
+
     return NextResponse.json(announcement);
   } catch (error: any) {
     console.error("[ANNOUNCEMENTS_POST_ERROR]", error);

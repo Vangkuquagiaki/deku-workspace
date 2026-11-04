@@ -463,6 +463,186 @@ export async function askPersonalAi({
     };
   }
 
+  // 2B. ACTION: Publish Directive / Announcement ("Phát hành chỉ thị: ...", "Tạo thông báo: ...")
+  const directiveMatch = prompt.match(/(?:phát hành chỉ thị|tạo thông báo|đăng thông báo|phát thông báo)\s*[:,\-]?\s*(.*)/i);
+  if (directiveMatch && directiveMatch[1].trim()) {
+    const rawContent = directiveMatch[1].trim();
+    const parts = rawContent.split(/[-–—:]/);
+    const title = parts[0]?.trim() || "Chỉ thị điều hành từ Ban Lãnh Đạo";
+    const body = (parts.length > 1 ? parts.slice(1).join(" - ") : rawContent).trim();
+
+    const authorProfile = await db.profile.findUnique({ where: { id: profileId } });
+    const authorName = authorProfile?.name || "Ban Giám Đốc";
+
+    const announcement = await db.announcementCampaign.create({
+      data: {
+        title,
+        body,
+        priority: "MANDATORY",
+        status: "PUBLISHED",
+        authorId: profileId,
+        authorName,
+        audienceType: "COMPANY",
+        requiresAck: true,
+        version: 1,
+        publishedAt: new Date(),
+        deadline: new Date(Date.now() + 3 * 24 * 3600 * 1000),
+      },
+    });
+
+    // Auto-broadcast to Company Bulletin (Bảng tin)
+    await db.post.create({
+      data: {
+        title: `[MANDATORY] ${announcement.title}`,
+        body: announcement.body,
+        authorId: profileId,
+        isPinned: true,
+        publishedAt: new Date(),
+      },
+    }).catch(() => {});
+
+    // Record audit log for compliance
+    await db.auditLog.create({
+      data: {
+        actorId: profileId,
+        action: "ANNOUNCEMENT_PUBLISHED",
+        targetType: "ANNOUNCEMENT",
+        targetId: announcement.id,
+        detail: { title, priority: "MANDATORY", authorName },
+      },
+    }).catch(() => {});
+
+    return {
+      answer: `📢 **Đã phát hành Chỉ thị thành công qua AI!**\n\n- **Tiêu đề:** **${title}**\n- **Nội dung:** ${body}\n- **Mức độ:** \`BẮT BUỘC KÝ NHẬN (MANDATORY)\`\n- **Hạn chót xác nhận:** 3 ngày kể từ hôm nay\n\n🚀 **Liên kết đồng bộ toàn hệ thống:**\n1. Chỉ thị đã được đẩy lên **Bảng tin Doanh nghiệp** (\`/base?tab=bulletin\`).\n2. Toàn bộ nhân sự khi vào màn hình **"Hôm nay của tôi"** sẽ thấy thông báo nổi bật màu đỏ yêu cầu ký nhận xác nhận.\n3. Nhật ký kiểm toán đã ghi nhận hành động này vào **Audit Logs**.`,
+      sources: [
+        { type: "Trung tâm Chỉ thị", title: announcement.title },
+        { type: "Bảng tin doanh nghiệp", title: "Bài viết ghim mới" },
+      ],
+    };
+  }
+
+  // 2C. ACTION: Create Meeting Room ("Tạo phòng họp: ...", "Tạo cuộc họp: ...", "Họp gấp: ...")
+  const meetingMatch = prompt.match(/(?:tạo phòng họp|tạo cuộc họp|mở phòng họp|họp gấp|tổ chức họp)\s*[:,\-]?\s*(.*)/i);
+  if (meetingMatch) {
+    const rawTitle = meetingMatch[1]?.trim() || `Họp nội bộ - ${briefing.employee.name}`;
+    const codePart1 = Math.random().toString(36).substring(2, 5);
+    const codePart2 = Math.random().toString(36).substring(2, 6);
+    const codePart3 = Math.random().toString(36).substring(2, 5);
+    const cleanCode = `${codePart1}-${codePart2}-${codePart3}`;
+
+    const newMeeting = await db.meeting.create({
+      data: {
+        title: rawTitle,
+        code: cleanCode,
+        hostId: profileId,
+        status: "LIVE",
+        startedAt: new Date(),
+        participants: {
+          create: {
+            userId: profileId,
+            name: briefing.employee.name,
+            role: "HOST",
+            language: "vi",
+            consentStatus: "AGREED",
+          },
+        },
+      },
+    });
+
+    await db.auditLog.create({
+      data: {
+        actorId: profileId,
+        action: "MEETING_CREATED_VIA_AI",
+        targetType: "MEETING",
+        targetId: newMeeting.id,
+        detail: { title: rawTitle, code: cleanCode },
+      },
+    }).catch(() => {});
+
+    return {
+      answer: `🎥 **Đã tạo phòng họp trực tuyến thành công qua AI!**\n\n- **Tiêu đề:** **${rawTitle}**\n- **Mã phòng họp:** \`#${cleanCode}\`\n- **Trạng thái:** \`ĐANG DIỄN RA (LIVE)\`\n\n👉 **[Nhấn vào đây để vào phòng họp ngay](/meet/${cleanCode})**\n\n💡 *Tính năng có sẵn:* Phiên dịch song ngữ thời gian thực Việt - Anh, phụ đề trực tiếp và trích xuất Action Items tự động vào Bảng việc Base!`,
+      sources: [
+        { type: "Phòng họp Video", title: newMeeting.title },
+        { type: "Hạ tầng WebRTC", title: `#${cleanCode}` },
+      ],
+    };
+  }
+
+  // 2D. QUERY: Leave Requests ("Ai đang nghỉ phép", "Nghỉ phép hôm nay")
+  if (lowerPrompt.includes("nghỉ phép") && (lowerPrompt.includes("ai") || lowerPrompt.includes("danh sách") || lowerPrompt.includes("hôm nay") || lowerPrompt.includes("tra cứu"))) {
+    const today = new Date();
+    const approvedLeaves = await db.leaveRequest.findMany({
+      where: {
+        status: "APPROVED",
+        startDate: { lte: today },
+        endDate: { gte: today },
+      },
+      include: {
+        employeeProfile: {
+          include: { profile: true },
+        },
+        policy: true,
+      },
+      take: 10,
+    });
+
+    if (approvedLeaves.length > 0) {
+      const leaveList = approvedLeaves
+        .map((l, idx) => {
+          const empName = l.employeeProfile?.profile?.name || "Nhân viên";
+          const policyName = l.policy?.name || "Nghỉ phép";
+          return `${idx + 1}. **${empName}** - ${policyName} (Từ ${new Date(l.startDate).toLocaleDateString("vi-VN")} đến ${new Date(l.endDate).toLocaleDateString("vi-VN")})`;
+        })
+        .join("\n");
+
+      return {
+        answer: `🏖️ **Hôm nay có ${approvedLeaves.length} nhân sự đang trong kỳ nghỉ phép đã được phê duyệt:**\n\n${leaveList}\n\n👉 Bạn có thể xem chi tiết hoặc nộp đơn nghỉ phép tại tab **"Nghỉ phép"** (\`/base?tab=leave\`).`,
+        sources: approvedLeaves.map((l) => ({ type: "Đơn nghỉ phép", title: l.employeeProfile?.profile?.name || "Nhân sự" })),
+      };
+    } else {
+      return {
+        answer: `🏖️ **Hôm nay không có nhân sự nào trong diện nghỉ phép.** Toàn bộ thành viên đang làm việc bình thường theo lịch biểu công ty!`,
+        sources: [{ type: "Cổng Nghỉ phép", title: "Dữ liệu thời gian thực" }],
+      };
+    }
+  }
+
+  // 2E. QUERY: Employee Directory ("Tìm nhân sự [Tên]", "Thông tin của [Tên]")
+  const findEmpMatch = prompt.match(/(?:tìm nhân sự|tìm đồng nghiệp|thông tin của|liên hệ của|số điện thoại của|email của)\s+([^:\n?]+)/i);
+  if (findEmpMatch && findEmpMatch[1].trim()) {
+    const targetName = findEmpMatch[1].trim();
+    const foundProfiles = await db.profile.findMany({
+      where: {
+        OR: [
+          { name: { contains: targetName, mode: "insensitive" } },
+          { email: { contains: targetName, mode: "insensitive" } },
+        ],
+      },
+      include: {
+        employeeProfile: true,
+        orgUnitMembers: { include: { orgUnit: true } },
+      },
+      take: 3,
+    });
+
+    if (foundProfiles.length > 0) {
+      const infoList = foundProfiles
+        .map((p) => {
+          const org = p.orgUnitMembers?.[0]?.orgUnit?.name || "Toàn công ty";
+          const role = p.orgUnitMembers?.[0]?.role || "MEMBER";
+          const job = p.employeeProfile?.jobTitle || "Chuyên viên";
+          const code = p.employeeProfile?.employeeCode || "N/A";
+          return `👤 **${p.name}**\n- **Mã NV:** \`${code}\`\n- **Chức danh:** ${job} (${role})\n- **Bộ phận:** ${org}\n- **Email:** \`${p.email}\``;
+        })
+        .join("\n\n---\n\n");
+
+      return {
+        answer: `🔍 **Tìm thấy thông tin nhân sự phù hợp với "${targetName}":**\n\n${infoList}\n\n💡 Bạn có thể gõ *"Giao việc cho ${foundProfiles[0].name}: [Nhiệm vụ]"* để phân công việc trực tiếp cho đồng nghiệp này!`,
+        sources: foundProfiles.map((p) => ({ type: "Danh bạ nhân sự", title: p.name })),
+      };
+    }
+  }
+
   // 3. ACTION: Offboarding Question / Command
   if (lowerPrompt.includes("nghỉ việc") || lowerPrompt.includes("thôi việc") || lowerPrompt.includes("offboard")) {
     return {

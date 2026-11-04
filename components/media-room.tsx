@@ -96,7 +96,6 @@ export function MediaRoom({
   useEffect(() => {
     let isMounted = true;
     setError(null);
-    setToken("");
     setSlowLoading(false);
 
     const cacheKey = `${chatId}_${effectiveUserName}`;
@@ -109,10 +108,10 @@ export function MediaRoom({
 
     const slowTimer = setTimeout(() => {
       if (isMounted) setSlowLoading(true);
-    }, 4000);
+    }, 2500);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
 
     (async () => {
       try {
@@ -296,20 +295,18 @@ export function MediaRoom({
 
   if (token === "") {
     return (
-      <div className="flex flex-col flex-1 justify-center items-center p-6 text-center">
+      <div className="flex flex-col flex-1 justify-center items-center p-6 text-center select-none">
         <Loader2 className="h-7 w-7 text-indigo-500 animate-spin my-4" />
         <p className="text-xs text-zinc-400 font-medium">
           Đang thiết lập kết nối phòng họp bảo mật nội bộ...
         </p>
-        {slowLoading && (
-          <button
-            onClick={() => setRetryCount((c) => c + 1)}
-            className="mt-3 px-3 py-1.5 rounded-lg text-xs bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 flex items-center gap-1.5 transition animate-in fade-in"
-          >
-            <RefreshCw className="h-3 w-3" />
-            <span>Kết nối đang chậm? Nhấn thử lại</span>
-          </button>
-        )}
+        <button
+          onClick={() => setRetryCount((c) => c + 1)}
+          className="mt-3 px-3.5 py-2 rounded-xl text-xs bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 flex items-center gap-1.5 transition animate-in fade-in cursor-pointer"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          <span>Kết nối đang chậm? Nhấn thử lại ngay</span>
+        </button>
       </div>
     );
   }
@@ -323,7 +320,10 @@ export function MediaRoom({
       serverUrl={livekitUrl}
       data-lk-theme="default"
       onDisconnected={handleDisconnected}
-      onError={(err) => console.error("LiveKit room error:", err)}
+      onError={(err: any) => {
+        console.error("LiveKit room error:", err);
+        setError(err?.message || "Không thể kết nối máy chủ LiveKit. Vui lòng nhấn Thử kết nối lại.");
+      }}
       onMediaDeviceFailure={(failure) => {
         console.warn("LiveKit media device failure:", failure);
       }}

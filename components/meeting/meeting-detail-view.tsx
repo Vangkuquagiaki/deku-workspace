@@ -143,6 +143,15 @@ export function MeetingDetailView({ meetingId: propMeetingId, serverId }: Meetin
     }
   };
 
+  const handleConfirmAllTasks = async () => {
+    if (!summary?.actionItems || summary.actionItems.length === 0) return;
+    for (let idx = 0; idx < summary.actionItems.length; idx++) {
+      if (!confirmedItems[idx]) {
+        await handleConfirmTask(idx, summary.actionItems[idx]);
+      }
+    }
+  };
+
   const fetchMeetingData = async () => {
     try {
       const res = await fetch(`/api/meetings/${meetingId}`);
@@ -481,9 +490,19 @@ export function MeetingDetailView({ meetingId: propMeetingId, serverId }: Meetin
               {/* Action items table with Confirm to Org Task button */}
               {summary.actionItems && summary.actionItems.length > 0 && (
                 <div className="pt-2">
-                  <h4 className="font-semibold text-indigo-400 mb-2">
-                    Nhiệm vụ & Việc cần làm (Trích xuất tự động):
-                  </h4>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <h4 className="font-semibold text-indigo-400">
+                      Nhiệm vụ & Việc cần làm (Trích xuất tự động):
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={handleConfirmAllTasks}
+                      className="px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30 transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                      <span>Đẩy toàn bộ vào Base tổ</span>
+                    </button>
+                  </div>
                   <div className="overflow-x-auto rounded-2xl border border-zinc-800">
                     <table className="w-full text-left text-xs">
                       <thead className="bg-[#2b2d31] text-zinc-400">
