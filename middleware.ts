@@ -39,6 +39,7 @@ try {
       "/api/audit-logs(.*)",
       "/api/text/translate(.*)",
       "/api/translation(.*)",
+      "/api/ai-admin(.*)",
     ],
     ignoredRoutes: [
       "/api/uploadthing",
@@ -46,6 +47,7 @@ try {
       "/api/livekit(.*)",
       "/api/text/translate(.*)",
       "/api/translation(.*)",
+      "/api/ai-admin(.*)",
     ],
   });
 } catch (err) {

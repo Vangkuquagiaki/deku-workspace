@@ -34,6 +34,7 @@ import {
   Flame,
   Lock,
   Image as ImageIcon,
+  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserProfileCard } from "@/components/user-profile-card";
@@ -42,9 +43,10 @@ import { EmployeeDirectory } from "@/components/hr/employee-directory";
 import { AuditLogsView } from "@/components/hr/audit-logs-view";
 import { MyPersonalBase } from "@/components/lark/my-personal-base";
 import { EnterpriseThreadsView } from "@/components/threads/enterprise-threads-view";
+import { AiHrAdminView } from "@/components/hr/ai-hr-admin-view";
 
 export type ViewMode = "grid" | "kanban";
-export type MainTab = "tasks" | "org" | "me" | "bulletin" | "leave" | "directory" | "audit" | "threads";
+export type MainTab = "tasks" | "org" | "me" | "bulletin" | "leave" | "directory" | "audit" | "threads" | "ai-admin";
 export type DemoRole = "MEMBER" | "LEAD" | "HEAD" | "HR";
 
 interface LarkBaseViewProps {
@@ -69,11 +71,18 @@ export function LarkBaseView({
   const [demoRole, setDemoRole] = useState<DemoRole>("LEAD");
   const [onlyOverdue, setOnlyOverdue] = useState<boolean>(false);
 
-  // Sync initialTab if prop changes
+  // Sync initialTab if prop changes or URL query param
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
     }
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const tab = sp.get("tab") as MainTab;
+      if (tab) {
+        setActiveTab(tab);
+      }
+    } catch (e) {}
   }, [initialTab]);
 
   const handleTabChange = (newTab: MainTab) => {
@@ -480,6 +489,22 @@ export function LarkBaseView({
             <span>Threads Nội Bộ</span>
             <span className="text-[9px] bg-violet-500/20 text-violet-300 font-bold px-1.5 py-0.2 rounded-full border border-violet-500/30">
               V3
+            </span>
+          </button>
+
+          <button
+            onClick={() => handleTabChange("ai-admin")}
+            className={cn(
+              "h-10 px-3.5 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition shrink-0 rounded-t-md",
+              activeTab === "ai-admin"
+                ? "border-emerald-500 text-white bg-white/5 font-bold"
+                : "border-transparent text-zinc-400 hover:text-zinc-200"
+            )}
+          >
+            <Bot className="h-3.5 w-3.5 text-emerald-400" />
+            <span>AI Quản Trị Nhân Sự</span>
+            <span className="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.2 rounded-full border border-emerald-500/30">
+              AI-HR
             </span>
           </button>
         </div>
@@ -1123,6 +1148,9 @@ export function LarkBaseView({
 
         {/* TAB 7: ENTERPRISE THREADS (KAGGLE V3) */}
         {activeTab === "threads" && <EnterpriseThreadsView />}
+
+        {/* TAB 8: AI HR ADMINISTRATOR (AIHR-01 - AIHR-20) */}
+        {activeTab === "ai-admin" && <AiHrAdminView />}
       </main>
 
       {/* Task Creation Modal */}

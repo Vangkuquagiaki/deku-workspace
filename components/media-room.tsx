@@ -41,6 +41,7 @@ export function MediaRoom({
     process.env.NEXT_PUBLIC_LIVEKIT_URL || "wss://deku-p77u1a3n.livekit.cloud"
   );
   const [retryCount, setRetryCount] = useState(0);
+  const [slowLoading, setSlowLoading] = useState(false);
 
   const params = useParams();
   const pathname = usePathname();
@@ -80,17 +81,29 @@ export function MediaRoom({
   const effectiveUserImageUrl = userOverride?.imageUrl || user?.imageUrl || "";
   const serverId = (params?.serverId as string) || "direct";
 
-  // Dedicated token fetch effect (never blocked by socket or voice state updates)
+  // Dedicated token fetch effect with abort timeout (never blocked by socket or voice state updates)
   useEffect(() => {
     let isMounted = true;
     setError(null);
     setToken("");
+    setSlowLoading(false);
+
+    const slowTimer = setTimeout(() => {
+      if (isMounted) setSlowLoading(true);
+    }, 4000);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     (async () => {
       try {
         const response = await fetch(
-          `/api/livekit?room=${encodeURIComponent(chatId)}&username=${encodeURIComponent(effectiveUserName)}&imageUrl=${encodeURIComponent(effectiveUserImageUrl)}`
+          `/api/livekit?room=${encodeURIComponent(chatId)}&username=${encodeURIComponent(effectiveUserName)}&imageUrl=${encodeURIComponent(effectiveUserImageUrl)}`,
+          { signal: controller.signal }
         );
+        clearTimeout(timeoutId);
+        clearTimeout(slowTimer);
+
         const data = await response.json();
 
         if (!isMounted) return;
@@ -110,14 +123,22 @@ export function MediaRoom({
           setError("No token received from media service");
         }
       } catch (err: any) {
+        clearTimeout(timeoutId);
+        clearTimeout(slowTimer);
         if (!isMounted) return;
-        console.error("[MediaRoom] Token fetch error:", err);
-        setError("Error connecting to LiveKit voice/video service");
+        if (err.name === "AbortError") {
+          setError("Máy chủ phản hồi chậm do khởi động lạnh. Vui lòng nhấn Thử kết nối lại bên dưới.");
+        } else {
+          console.error("[MediaRoom] Token fetch error:", err);
+          setError("Error connecting to LiveKit voice/video service");
+        }
       }
     })();
 
     return () => {
       isMounted = false;
+      clearTimeout(timeoutId);
+      clearTimeout(slowTimer);
     };
   }, [chatId, effectiveUserName, effectiveUserImageUrl, retryCount]);
 
@@ -251,11 +272,20 @@ export function MediaRoom({
 
   if (token === "") {
     return (
-      <div className="flex flex-col flex-1 justify-center items-center">
+      <div className="flex flex-col flex-1 justify-center items-center p-6 text-center">
         <Loader2 className="h-7 w-7 text-indigo-500 animate-spin my-4" />
         <p className="text-xs text-zinc-400 font-medium">
           Đang thiết lập kết nối phòng họp bảo mật nội bộ...
         </p>
+        {slowLoading && (
+          <button
+            onClick={() => setRetryCount((c) => c + 1)}
+            className="mt-3 px-3 py-1.5 rounded-lg text-xs bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 flex items-center gap-1.5 transition animate-in fade-in"
+          >
+            <RefreshCw className="h-3 w-3" />
+            <span>Kết nối đang chậm? Nhấn thử lại</span>
+          </button>
+        )}
       </div>
     );
   }

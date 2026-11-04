@@ -717,3 +717,30 @@ model SocialReaction {
   @@index([postId])
   @@index([profileId])
 }
+
+// ==========================================
+// DEKU AI HR ADMINISTRATOR (V1)
+// ==========================================
+
+model AiAdminRequest {
+  id                 String    @id @default(uuid())
+  actorId            String    // Profile ID / Clerk userId
+  actorName          String?
+  intent             String    // ONBOARD, OFFBOARD, TRANSFER, SUSPEND, HANDOVER, RECONCILE
+  riskLevel          String    @default("L1") // L0, L1, L2, L3, L4
+  state              String    @default("PREVIEWED") // REQUESTED, PREVIEWED, APPROVED, EXECUTING, COMPLETED, PARTIAL_FAILURE, REJECTED, CANCELLED
+  targetEmployeeCode String?
+  targetName         String?
+  diffJson           Json?
+  executionReport    Json?
+  approverId         String?
+  approvalNote       String?
+  approvedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([actorId])
+  @@index([state])
+  @@index([createdAt])
+}
+

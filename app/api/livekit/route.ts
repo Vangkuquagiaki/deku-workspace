@@ -41,7 +41,10 @@ export async function GET(req: NextRequest) {
     let displayName = username;
 
     try {
-      const profile = await currentProfile();
+      // Fast profile lookup with 1.2s timeout to avoid database cold start blocking token issuance
+      const profilePromise = currentProfile();
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1200));
+      const profile = await Promise.race([profilePromise, timeoutPromise]);
       if (profile) {
         if (!imageUrl && profile.imageUrl) {
           imageUrl = profile.imageUrl;
