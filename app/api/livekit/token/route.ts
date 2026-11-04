@@ -4,6 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentProfile } from "@/lib/current-profile";
 import { db } from "@/lib/db";
 
+const defaultApiKey = process.env.LIVEKIT_API_KEY || "APIuPrn5sZxJxbr";
+const defaultApiSecret = process.env.LIVEKIT_API_SECRET || "FZVAX93toFvmStN4iVAgqrJPvc6h5cy1P0VcJpx8HSP";
+const defaultWsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || "wss://deku-p77u1a3n.livekit.cloud";
+
 export async function POST(req: NextRequest) {
   try {
     const profile = await currentProfile();
@@ -14,9 +18,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing "room" parameter' }, { status: 400 });
     }
 
-    const apiKey = process.env.LIVEKIT_API_KEY;
-    const apiSecret = process.env.LIVEKIT_API_SECRET;
-    const wsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL;
+    const apiKey = defaultApiKey;
+    const apiSecret = defaultApiSecret;
+    const wsUrl = defaultWsUrl;
 
     if (!apiKey || !apiSecret || !wsUrl) {
       return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
@@ -48,14 +52,37 @@ export async function POST(req: NextRequest) {
         const participant = meeting.participants.find((p) => p.userId === profile.userId);
         if (participant) {
           role = participant.role;
-        } else {
-          role = "MEMBER";
         }
       }
 
-      // Check lobby: If meeting requires lobby and user is guest/not approved
-      if (meeting.lobby && role === "GUEST") {
-        // Participant will wait in lobby
+      // Record / update participant entry
+      if (profile) {
+        const existingParticipant = await db.participant.findFirst({
+          where: {
+            meetingId: meeting.id,
+            userId: profile.userId,
+          },
+        });
+
+        if (existingParticipant) {
+          await db.participant.update({
+            where: { id: existingParticipant.id },
+            data: {
+              language,
+              role: role as any,
+            },
+          });
+        } else {
+          await db.participant.create({
+            data: {
+              meetingId: meeting.id,
+              userId: profile.userId,
+              name: displayName,
+              language,
+              role: role as any,
+            },
+          });
+        }
       }
     }
 
@@ -67,13 +94,9 @@ export async function POST(req: NextRequest) {
       metadata: JSON.stringify({
         role,
         language,
-        name: displayName,
         avatarUrl: profile?.imageUrl || "",
       }),
-      ttl: 60 * 60 * 2, // 2 hours
     });
-
-    const isHostOrCohost = role === "HOST" || role === "COHOST";
 
     at.addGrant({
       room,
@@ -84,8 +107,10 @@ export async function POST(req: NextRequest) {
       hidden: false,
     });
 
+    const jwtToken = await at.toJwt();
+
     return NextResponse.json({
-      token: at.toJwt(),
+      token: jwtToken,
       identity,
       displayName,
       role,

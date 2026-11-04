@@ -188,7 +188,10 @@ export function MediaRoom({ chatId, video, audio, onDisconnected, isPiP = false 
       audio={audio}
       token={token}
       connect={true}
-      serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+      serverUrl={
+        process.env.NEXT_PUBLIC_LIVEKIT_URL ||
+        "wss://deku-p77u1a3n.livekit.cloud"
+      }
       data-lk-theme="default"
       onDisconnected={handleDisconnected}
       onError={(err) => console.error("LiveKit room error:", err)}

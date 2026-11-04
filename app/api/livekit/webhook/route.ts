@@ -4,8 +4,10 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-const apiKey = process.env.LIVEKIT_API_KEY;
-const apiSecret = process.env.LIVEKIT_API_SECRET;
+const apiKey = process.env.LIVEKIT_API_KEY || "APIuPrn5sZxJxbr";
+const apiSecret =
+  process.env.LIVEKIT_API_SECRET ||
+  "FZVAX93toFvmStN4iVAgqrJPvc6h5cy1P0VcJpx8HSP";
 
 export async function POST(req: Request) {
   try {

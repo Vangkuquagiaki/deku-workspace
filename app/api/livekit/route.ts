@@ -4,6 +4,10 @@ export const revalidate = 0;
 import { NextRequest, NextResponse } from "next/server";
 import { currentProfile } from "@/lib/current-profile";
 
+const defaultApiKey = process.env.LIVEKIT_API_KEY || "APIuPrn5sZxJxbr";
+const defaultApiSecret = process.env.LIVEKIT_API_SECRET || "FZVAX93toFvmStN4iVAgqrJPvc6h5cy1P0VcJpx8HSP";
+const defaultWsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || "wss://deku-p77u1a3n.livekit.cloud";
+
 export async function GET(req: NextRequest) {
   try {
     const room = req.nextUrl.searchParams.get("room");
@@ -20,9 +24,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const apiKey = process.env.LIVEKIT_API_KEY;
-    const apiSecret = process.env.LIVEKIT_API_SECRET;
-    const wsUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL;
+    const apiKey = defaultApiKey;
+    const apiSecret = defaultApiSecret;
+    const wsUrl = defaultWsUrl;
 
     if (!apiKey || !apiSecret || !wsUrl) {
       return NextResponse.json(
@@ -67,7 +71,9 @@ export async function GET(req: NextRequest) {
       canSubscribe: true
     });
 
-    return NextResponse.json({ token: at.toJwt() });
+    const jwtToken = await at.toJwt();
+
+    return NextResponse.json({ token: jwtToken });
   } catch (error: any) {
     console.error("[LIVEKIT_GET_ERROR]", error);
     return NextResponse.json(

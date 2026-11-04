@@ -132,14 +132,22 @@ export async function DELETE(
     }
 
     // Remove from LiveKit room if configured
-    if (process.env.LIVEKIT_API_KEY && process.env.LIVEKIT_API_SECRET && process.env.NEXT_PUBLIC_LIVEKIT_URL) {
+    const livekitApiKey = process.env.LIVEKIT_API_KEY || "APIuPrn5sZxJxbr";
+    const livekitApiSecret =
+      process.env.LIVEKIT_API_SECRET ||
+      "FZVAX93toFvmStN4iVAgqrJPvc6h5cy1P0VcJpx8HSP";
+    const livekitWsUrl =
+      process.env.NEXT_PUBLIC_LIVEKIT_URL ||
+      "wss://deku-p77u1a3n.livekit.cloud";
+
+    if (livekitApiKey && livekitApiSecret && livekitWsUrl) {
       try {
         const { RoomServiceClient } = await import("livekit-server-sdk");
-        const livekitHost = process.env.NEXT_PUBLIC_LIVEKIT_URL.replace(/^ws/, "http");
+        const livekitHost = livekitWsUrl.replace(/^ws/, "http");
         const roomService = new RoomServiceClient(
           livekitHost,
-          process.env.LIVEKIT_API_KEY,
-          process.env.LIVEKIT_API_SECRET
+          livekitApiKey,
+          livekitApiSecret
         );
         const roomName = `meet_${meeting.code}`;
         await roomService.removeParticipant(
