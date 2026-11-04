@@ -509,8 +509,29 @@ export async function askPersonalAi({
     }
   }
 
-  // 7. QUERY: Announcements & Directives
-  if (lowerPrompt.includes("thông báo") || lowerPrompt.includes("chỉ thị") || lowerPrompt.includes("ký nhận") || lowerPrompt.includes("xác nhận")) {
+  // 7. DRAFTING: Email, Announcement, Plan, Report Generator (ChatGPT Style - High Priority)
+  if (
+    lowerPrompt.includes("soạn") ||
+    lowerPrompt.includes("viết") ||
+    lowerPrompt.includes("email") ||
+    lowerPrompt.includes("kế hoạch") ||
+    lowerPrompt.includes("báo cáo") ||
+    lowerPrompt.includes("dự thảo")
+  ) {
+    const rawSubject = prompt.replace(/^(soạn|viết|lập|hãy|giúp tôi|tạo)\s*(giúp\s+tôi\s+)?(một\s+)?(email\s+|bản\s+|kế\s+hoạch\s+|báo\s+cáo\s+)?/i, "").trim() || "Thông báo doanh nghiệp";
+    return {
+      answer: `✍️ **Bản dự thảo chuyên nghiệp do Trợ lý AI tạo theo yêu cầu của bạn:**\n\n---\n**CHỦ ĐỀ:** ${rawSubject.toUpperCase()}\n\n**Kính gửi:** Ban Lãnh Đạo & Toàn thể Cán bộ Nhân viên,\n\nTôi xin trân trọng thông báo về nội dung: **${rawSubject}**.\n\n**1. Mục đích & Bối cảnh:**\nNhằm đảm bảo hoạt động vận hành thông suốt và nâng cao hiệu quả phối hợp giữa các phòng ban, công ty xin gửi thông báo chi tiết đến toàn thể thành viên.\n\n**2. Nội dung chi tiết & Kế hoạch triển khai:**\n- **Thời gian áp dụng:** Bắt đầu có hiệu lực ngay sau khi thông báo được phát hành.\n- **Trách nhiệm các phòng ban:** Các Trưởng bộ phận chủ động rà soát, đôn đốc nhân sự hoàn thành đúng tiến độ.\n- **Kênh tiếp nhận hỗ trợ:** Mọi thắc mắc vui lòng phản hồi qua kênh thảo luận chung hoặc liên hệ trực tiếp Bộ phận Nhân sự.\n\n**3. Yêu cầu phối hợp:**\nĐề nghị các phòng ban phối hợp chặt chẽ, cập nhật tiến độ công việc đầy đủ trên hệ thống Bảng việc Base.\n\nTrân trọng cảm ơn sự hợp tác và đồng hành của toàn thể anh/chị em.\n\n*Người lập: **${briefing.employee.name}** - ${briefing.employee.orgUnitName}*\n---\n\n💡 **Mẹo:** Bạn có thể sao chép văn bản này hoặc bấm nút *"Tạo chỉ thị mới"* ở tab **"Chỉ thị & Thông báo"** để phát hành ngay đến toàn công ty!`,
+      sources: [{ type: "AI Drafting Studio", title: "Soạn thảo văn bản thông minh" }],
+    };
+  }
+
+  // 8. QUERY: Announcements & Directives
+  if (
+    lowerPrompt.includes("chỉ thị") ||
+    lowerPrompt.includes("ký nhận") ||
+    lowerPrompt.includes("xác nhận") ||
+    (lowerPrompt.includes("thông báo") && (lowerPrompt.includes("cần") || lowerPrompt.includes("có") || lowerPrompt.includes("mới") || lowerPrompt.includes("tồn đọng")))
+  ) {
     const pending = briefing.announcements.filter((a) => a.requiresAck && !a.hasAcked);
     if (pending.length > 0) {
       pending.forEach((a) => sources.push({ type: "Chỉ thị bắt buộc", title: a.title }));
@@ -527,19 +548,26 @@ export async function askPersonalAi({
     }
   }
 
-  // 8. DRAFTING: Email, Announcement, Plan, Report Generator (ChatGPT Style)
-  if (lowerPrompt.includes("soạn") || lowerPrompt.includes("viết") || lowerPrompt.includes("email") || lowerPrompt.includes("kế hoạch") || lowerPrompt.includes("báo cáo")) {
+  // 9. GENERAL CHATGPT-GRADE REASONING & CONVERSATIONAL ASSISTANT
+  const userContext = `Bạn là **${briefing.employee.name}**, thuộc bộ phận **${briefing.employee.orgUnitName}**, vai trò **${briefing.employee.role}**. Hôm nay bạn có **${briefing.stats.todayMeetings} cuộc họp** và **${briefing.stats.pendingTasks} đầu việc** trong hệ thống.`;
+
+  // Problem solving, advice, or general conversation
+  if (
+    lowerPrompt.includes("làm thế nào") ||
+    lowerPrompt.includes("tại sao") ||
+    lowerPrompt.includes("tư vấn") ||
+    lowerPrompt.includes("giải thích") ||
+    lowerPrompt.includes("giúp tôi") ||
+    lowerPrompt.includes("cách")
+  ) {
     return {
-      answer: `✍️ **Bản dự thảo do Trợ lý AI tạo theo yêu cầu của bạn:**\n\n---\n**Tiêu đề:** ${prompt.replace(/^(soạn|viết|lập|hãy)\s*/i, "").trim()}\n\n**Kính gửi:** Ban Lãnh Đạo & Toàn thể Cán bộ Nhân viên,\n\nTôi xin gửi thông báo cập nhật về nội dung: *"${prompt}"*.\n\n**Các nội dung trọng tâm:**\n1. **Mục tiêu & Yêu cầu:** Đảm bảo tiến độ công việc và chất lượng theo đúng chỉ tiêu đề ra.\n2. **Kế hoạch triển khai:** Các bộ phận liên quan chủ động phối hợp, rà soát tiến độ và báo cáo kịp thời.\n3. **Thời hạn hoàn thành:** Yêu cầu các đầu việc được cập nhật trên Bảng việc Base trước thời hạn quy định.\n\nTrân trọng cảm ơn sự hợp tác của các anh/chị.\n\n*Người gửi: ${briefing.employee.name} - ${briefing.employee.orgUnitName}*\n---\n\n💡 Bạn có thể chỉnh sửa nội dung trên hoặc dùng lệnh: *"Tạo chỉ thị: [Nội dung]"* để phát hành rộng rãi.`,
-      sources: [{ type: "AI Drafting Studio", title: "Mẫu văn bản doanh nghiệp" }],
+      answer: `🤖 **Phân tích & Hướng dẫn chi tiết từ Trợ lý AI:**\n\nVề câu hỏi của bạn: *"${prompt}"*:\n\n1. **Phân tích trọng tâm:**\nĐể giải quyết vấn đề này một cách hiệu quả, chúng ta cần tiếp cận theo quy trình chuẩn hóa: xác định rõ mục tiêu đầu ra, phân bổ nguồn lực hợp lý và kiểm soát rủi ro phát sinh.\n\n2. **Các bước hành động khuyến nghị:**\n- **Bước 1 - Khảo sát & Đánh giá hiện trạng:** Rà soát lại toàn bộ dữ liệu, đầu mối liên quan và thời hạn chót.\n- **Bước 2 - Lên kế hoạch chi tiết:** Chia nhỏ công việc thành các mốc (milestone), gán rõ người chịu trách nhiệm trực tiếp.\n- **Bước 3 - Theo dõi & Đo lường:** Cập nhật trạng thái liên tục trên hệ thống để phát hiện các điểm nghẽn (bottleneck) kịp thời.\n\n3. **Lời khuyên thực tiễn:**\nBạn có thể tận dụng tính năng tự động giao việc của tôi: gõ *"Giao việc cho [Tên nhân sự]: [Đầu việc]"* để hệ thống tự động đẩy việc cho đồng nghiệp mà không cần gửi email thủ công.\n\nNếu cần tôi làm rõ thêm chi tiết hoặc hỗ trợ soạn thảo bất kỳ văn bản nào, bạn cứ cho tôi biết nhé!`,
+      sources: [{ type: "Trợ lý AI Doanh nghiệp", title: "Mô hình Phân tích & Tư vấn" }],
     };
   }
 
-  // 9. GENERAL CHATGPT-GRADE REASONING & CONVERSATIONAL ASSISTANT
-  const userContext = `Bạn là ${briefing.employee.name}, thuộc ${briefing.employee.orgUnitName}, vai trò ${briefing.employee.role}. Hôm nay bạn có ${briefing.stats.todayMeetings} cuộc họp và ${briefing.stats.pendingTasks} đầu việc.`;
-
   return {
-    answer: `Xin chào **${briefing.employee.name}**! Tôi là Trợ lý AI Doanh nghiệp của bạn.\n\n${userContext}\n\n**Tôi có thể hỗ trợ bạn mọi tác vụ như một trợ lý ChatGPT chuyên sâu:**\n- ⚡ **Giao việc:** Gõ *"Giao việc cho [Tên]: [Nhiệm vụ]"* để tự động đưa việc vào AI của đồng nghiệp.\n- 📝 **Ghi chú nhanh:** Gõ *"Ghi chú lại: [Nội dung]"* để lưu vào sổ tay riêng tư.\n- ✍️ **Soạn thảo:** Soạn email, báo cáo tuần, lập kế hoạch dự án hoặc dự thảo chỉ thị.\n- 🔍 **Tra cứu:** Kiểm tra lịch họp, tiến độ task, chính sách bảo mật hoặc hỏi bất cứ điều gì!\n\nBạn muốn tôi hỗ trợ công việc cụ thể nào ngay bây giờ?`,
+    answer: `Xin chào **${briefing.employee.name}**! Tôi là **Trợ lý AI Doanh nghiệp Deku** của bạn.\n\n${userContext}\n\n**Tôi có thể hỗ trợ bạn mọi tác vụ thông minh như ChatGPT:**\n- ⚡ **Giao việc tức thì:** Gõ *"Giao việc cho [Tên]: [Nhiệm vụ]"* để tự động đưa việc vào AI của đồng nghiệp.\n- 📝 **Ghi chú bảo mật:** Gõ *"Ghi chú lại: [Nội dung]"* để lưu vào sổ tay riêng tư.\n- ✍️ **Soạn thảo chuyên nghiệp:** Soạn email, báo cáo tuần, lập kế hoạch dự án hoặc dự thảo chỉ thị.\n- 🔍 **Tra cứu dữ liệu:** Kiểm tra lịch họp hôm nay, việc cần làm khẩn cấp hoặc quy chế nội bộ!\n\nBạn cần tôi hỗ trợ nội dung cụ thể nào ngay bây giờ?`,
     sources: [
       { type: "Trợ lý AI Doanh nghiệp", title: "Deku Assistant Engine" },
       { type: "Bối cảnh nhân sự", title: briefing.employee.name },
