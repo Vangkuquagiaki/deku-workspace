@@ -60,14 +60,6 @@ export const initialProfile = async () => {
     return newProfile;
   }
 
-  // 4. Fallback to primary demo profile for seamless browsing without redirect loop
-  const fallbackProfile = await db.profile.findFirst({
-    orderBy: { createdAt: "asc" }
-  });
-
-  if (fallbackProfile) {
-    return fallbackProfile;
-  }
-
+  // 4. If unauthenticated, redirect to sign-in page so user can choose or log in with another account
   return redirect("/sign-in");
 };

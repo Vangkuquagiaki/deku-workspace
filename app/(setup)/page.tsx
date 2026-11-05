@@ -12,7 +12,7 @@ export default async function SetupPage() {
     return redirect("/sign-in");
   }
 
-  const server = await db.server.findFirst({
+  let server = await db.server.findFirst({
     where: {
       members: {
         some: {
@@ -26,6 +26,29 @@ export default async function SetupPage() {
       }
     }
   });
+
+  // If newly signed-in user doesn't belong to any server yet, auto-join primary workspace
+  if (!server) {
+    const primaryServer = await db.server.findFirst({
+      orderBy: { createdAt: "asc" },
+      include: {
+        channels: {
+          take: 1
+        }
+      }
+    });
+
+    if (primaryServer) {
+      await db.member.create({
+        data: {
+          profileId: profile.id,
+          serverId: primaryServer.id,
+          role: "GUEST"
+        }
+      });
+      server = primaryServer;
+    }
+  }
 
   if (server && server.channels && server.channels.length > 0) {
     return redirect(`/servers/${server.id}`);

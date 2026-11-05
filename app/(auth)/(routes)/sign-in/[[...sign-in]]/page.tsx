@@ -260,6 +260,9 @@ export default function SignInPage() {
           {mounted && !clerkError ? (
             <div className="relative">
               <SignIn
+                afterSignInUrl="/"
+                afterSignUpUrl="/"
+                redirectUrl="/"
                 appearance={{
                   elements: {
                     rootBox: "mx-auto shadow-2xl rounded-3xl border border-zinc-800",

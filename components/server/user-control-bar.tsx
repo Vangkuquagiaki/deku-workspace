@@ -7,8 +7,10 @@ import {
   Mic,
   MicOff,
   Settings,
-  VolumeX
+  VolumeX,
+  LogOut
 } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { ActionTooltip } from "@/components/action-tooltip";
@@ -84,6 +86,17 @@ export function UserControlBar({ profile }: UserControlBarProps) {
         });
       }
     }
+  };
+
+  const { signOut } = useClerk();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (err) {
+      console.error("[USER_CONTROL_BAR_LOGOUT_ERR]", err);
+    }
+    window.location.href = "/sign-in";
   };
 
   return (
@@ -165,6 +178,16 @@ export function UserControlBar({ profile }: UserControlBarProps) {
             className="p-1.5 rounded-md text-zinc-500 dark:text-zinc-400 hover:bg-zinc-300/50 dark:hover:bg-zinc-700/50 hover:text-zinc-700 dark:hover:text-zinc-200 transition"
           >
             <Settings className="h-4 w-4" />
+          </button>
+        </ActionTooltip>
+
+        {/* Logout / Switch Account Button */}
+        <ActionTooltip label="Đăng xuất / Chuyển tài khoản">
+          <button
+            onClick={handleLogout}
+            className="p-1.5 rounded-md text-zinc-500 dark:text-zinc-400 hover:bg-rose-500/10 hover:text-rose-400 transition"
+          >
+            <LogOut className="h-4 w-4" />
           </button>
         </ActionTooltip>
       </div>

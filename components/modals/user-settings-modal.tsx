@@ -268,8 +268,12 @@ export function UserSettingsModal() {
 
   const handleLogout = async () => {
     onClose();
-    await signOut();
-    router.push("/");
+    try {
+      await signOut();
+    } catch (err) {
+      console.error("[SIGNOUT_ERROR]", err);
+    }
+    window.location.href = "/sign-in";
   };
 
   const handleSaveHrProfile = async (e: React.FormEvent) => {
