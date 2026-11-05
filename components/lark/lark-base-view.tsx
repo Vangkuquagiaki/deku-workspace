@@ -95,8 +95,13 @@ export function LarkBaseView({
   const handleTabChange = (newTab: MainTab) => {
     setActiveTab(newTab);
     try {
-      const url = serverId
-        ? `/servers/${serverId}/base?tab=${newTab}`
+      const targetServerId =
+        serverId ||
+        (typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("serverId")
+          : "");
+      const url = targetServerId
+        ? `/base?tab=${newTab}&serverId=${targetServerId}`
         : `/base?tab=${newTab}`;
       window.history.replaceState(null, "", url);
     } catch (e) {}
@@ -353,7 +358,14 @@ export function LarkBaseView({
             {/* Quick exit back to Discord chat */}
             <button
               type="button"
-              onClick={() => router.push(serverId ? `/servers/${serverId}` : "/")}
+              onClick={() => {
+                const targetServerId =
+                  serverId ||
+                  (typeof window !== "undefined"
+                    ? new URLSearchParams(window.location.search).get("serverId")
+                    : "");
+                router.push(targetServerId ? `/servers/${targetServerId}` : "/");
+              }}
               className="h-7 px-2.5 rounded-lg bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-white/5"
               title="Quay lại Workspace chính (Discord Chat)"
             >

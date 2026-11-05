@@ -314,6 +314,8 @@ export default function TestBotPage() {
         if (json) {
           if (Array.isArray(json)) {
             detailMsg += ` - Đã đồng bộ ${json.length} bản ghi`;
+          } else if (json.posts) {
+            detailMsg += ` - Đã đồng bộ ${json.posts.length} bài đăng threads`;
           } else if (json.answer) {
             detailMsg += ` - AI phản hồi: "${json.answer.slice(0, 45)}..."`;
           } else if (json.code) {

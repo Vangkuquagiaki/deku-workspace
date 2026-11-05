@@ -30,8 +30,8 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
   const currentTab = searchParams?.get("tab");
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const isBaseRoute = pathname.startsWith(`/servers/${serverId}/base`);
-  const isMeetingsRoute = pathname.startsWith(`/servers/${serverId}/meetings`);
+  const isBaseRoute = pathname.startsWith(`/servers/${serverId}/base`) || pathname.startsWith("/base");
+  const isMeetingsRoute = pathname.startsWith(`/servers/${serverId}/meetings`) || pathname.startsWith("/meetings");
 
   const navItems = [
     {
@@ -39,7 +39,7 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       label: "Hôm Nay & AI Trợ Lý",
       icon: Sparkles,
       badge: "AI",
-      href: `/servers/${serverId}/base?tab=today`,
+      href: `/base?tab=today&serverId=${serverId}`,
       isActive: isBaseRoute && currentTab === "today",
       iconColor: "text-emerald-400 group-hover:text-emerald-300",
       badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
@@ -51,7 +51,7 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       label: "Bảng Việc Lark Base & Tổ",
       icon: LayoutGrid,
       badge: "Base",
-      href: `/servers/${serverId}/base?tab=tasks`,
+      href: `/base?tab=tasks&serverId=${serverId}`,
       isActive: isBaseRoute && (!currentTab || currentTab === "tasks"),
       iconColor: "text-indigo-400 group-hover:text-indigo-300",
       badgeColor: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
@@ -63,7 +63,7 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       label: "Hồ Sơ & Đãi Ngộ Của Tôi",
       icon: User,
       badge: "Me",
-      href: `/servers/${serverId}/base?tab=me`,
+      href: `/base?tab=me&serverId=${serverId}`,
       isActive: isBaseRoute && currentTab === "me",
       iconColor: "text-sky-400 group-hover:text-sky-300",
       badgeColor: "bg-sky-500/20 text-sky-300 border-sky-500/30",
@@ -87,7 +87,7 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       label: "Cổng Bảng Tin Công Ty",
       icon: Megaphone,
       badge: "News",
-      href: `/servers/${serverId}/base?tab=bulletin`,
+      href: `/base?tab=bulletin&serverId=${serverId}`,
       isActive: isBaseRoute && currentTab === "bulletin",
       iconColor: "text-amber-400 group-hover:text-amber-300",
       badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
@@ -99,7 +99,7 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       label: "Nghỉ Phép & Phê Duyệt",
       icon: Calendar,
       badge: "HR",
-      href: `/servers/${serverId}/base?tab=leave`,
+      href: `/base?tab=leave&serverId=${serverId}`,
       isActive: isBaseRoute && currentTab === "leave",
       iconColor: "text-purple-400 group-hover:text-purple-300",
       badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30",
@@ -111,7 +111,7 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       label: "Danh Bạ & Vòng Đời",
       icon: Users,
       badge: "Dir",
-      href: `/servers/${serverId}/base?tab=directory`,
+      href: `/base?tab=directory&serverId=${serverId}`,
       isActive: isBaseRoute && (currentTab === "directory" || currentTab === "org"),
       iconColor: "text-blue-400 group-hover:text-blue-300",
       badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/30",
@@ -123,7 +123,7 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       label: "Kiểm Toán & Tuân Thủ",
       icon: ShieldCheck,
       badge: "Audit",
-      href: `/servers/${serverId}/base?tab=audit`,
+      href: `/base?tab=audit&serverId=${serverId}`,
       isActive: isBaseRoute && currentTab === "audit",
       iconColor: "text-teal-400 group-hover:text-teal-300",
       badgeColor: "bg-teal-500/20 text-teal-300 border-teal-500/30",
@@ -135,7 +135,7 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       label: "Threads & Sáng Kiến",
       icon: Flame,
       badge: "V3",
-      href: `/servers/${serverId}/base?tab=threads`,
+      href: `/base?tab=threads&serverId=${serverId}`,
       isActive: isBaseRoute && currentTab === "threads",
       iconColor: "text-violet-400 group-hover:text-violet-300",
       badgeColor: "bg-violet-500/20 text-violet-300 border-violet-500/30",
@@ -147,7 +147,7 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       label: "AI Quản Trị Nhân Sự",
       icon: Briefcase,
       badge: "AI-HR",
-      href: `/servers/${serverId}/base?tab=ai-admin`,
+      href: `/base?tab=ai-admin&serverId=${serverId}`,
       isActive: isBaseRoute && currentTab === "ai-admin",
       iconColor: "text-rose-400 group-hover:text-rose-300",
       badgeColor: "bg-rose-500/20 text-rose-300 border-rose-500/30",

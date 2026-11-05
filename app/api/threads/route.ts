@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 
 export async function GET(req: Request) {
   try {
-    const profile = await currentProfile();
+    const profile = await currentProfile().catch(() => null);
     const { searchParams } = new URL(req.url);
     const topicSlug = searchParams.get("topic");
     const audience = searchParams.get("audience");

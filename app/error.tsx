@@ -13,17 +13,23 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // If it is a Next.js redirect thrown inside server components, rethrow or forward
-    if (error?.message === "NEXT_REDIRECT" || error?.digest?.startsWith("NEXT_REDIRECT")) {
-      window.location.href = "/base";
-      return;
-    }
     console.error("[RUNTIME_ERROR]", error);
-  }, [error]);
 
-  if (error?.message === "NEXT_REDIRECT" || error?.digest?.startsWith("NEXT_REDIRECT")) {
-    return null;
-  }
+    // Auto-recover if error occurs on workspace or server base routes
+    if (typeof window !== "undefined") {
+      const pathname = window.location.pathname || "";
+      const search = window.location.search || "";
+      if (pathname.includes("/servers/") && pathname.includes("/base")) {
+        const dest = `/base${search || "?tab=today"}`;
+        window.location.replace(dest);
+        return;
+      }
+      if (error?.message === "NEXT_REDIRECT" || error?.digest?.startsWith("NEXT_REDIRECT")) {
+        window.location.replace("/base");
+        return;
+      }
+    }
+  }, [error]);
 
   return (
     <div className="min-h-screen bg-[#313338] text-white flex flex-col items-center justify-center p-6 text-center select-none">
