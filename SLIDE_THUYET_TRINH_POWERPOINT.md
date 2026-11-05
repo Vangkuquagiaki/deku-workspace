@@ -138,3 +138,4 @@
 * **Thời gian**: 30 giây
 * **🗣️ Lời thoại người thuyết trình (Speaker Notes)**:
   > *"Tóm lại, Deku Workspace mang lại một bước nhảy vọt về hiệu suất làm việc, tiết kiệm hàng trăm triệu đồng chi phí bản quyền mỗi năm cho doanh nghiệp và đảm bảo dữ liệu được an toàn tuyệt đối. Em xin chân thành cảm ơn quý ban giám đốc, quý thầy cô và các đồng nghiệp đã lắng nghe. Nhóm chúng em rất mong nhận được những câu hỏi và ý kiến đóng góp quý báu!"*
+

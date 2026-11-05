@@ -18,7 +18,6 @@ import {
   Volume2
 } from "lucide-react";
 import { useVoiceState, VoiceParticipant } from "@/hooks/use-voice-state";
-import { useUser } from "@clerk/nextjs";
 import { useSocket } from "@/components/providers/socket-provider";
 import { UserAvatar } from "@/components/user-avatar";
 import { ActionTooltip } from "@/components/action-tooltip";
@@ -65,7 +64,13 @@ export function ActiveMeetingSidebar({
     : null;
   const currentChannelId = (params?.channelId as string) || pathChannelId || null;
 
-  const { user } = useUser();
+  const user = {
+    id: currentUser?.id,
+    fullName: currentUser?.name,
+    name: currentUser?.name,
+    imageUrl: currentUser?.imageUrl,
+    role: currentUser?.role,
+  };
   const { socket } = useSocket();
 
   const {
