@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Download, X, Laptop, Smartphone, Check } from "lucide-react";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
 import Link from "next/link";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
 export function PwaProvider({ children }: { children: React.ReactNode }) {
   const { canInstall, isInstalled, platform, promptInstall } = usePwaInstall();
@@ -57,6 +58,7 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
+      <MobileBottomNav />
 
       {/* Floating Smart Install Banner (Non-intrusive) */}
       {showBanner && !isInstalled && !dismissed && (

@@ -7,3 +7,4 @@ export default function ServerChannelsRedirectPage({
 }) {
   return redirect(`/servers/${params.serverId}`);
 }
+

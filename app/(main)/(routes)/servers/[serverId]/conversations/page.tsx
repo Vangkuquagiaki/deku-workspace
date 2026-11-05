@@ -7,3 +7,4 @@ export default function ServerConversationsRedirectPage({
 }) {
   return redirect(`/servers/${params.serverId}`);
 }
+

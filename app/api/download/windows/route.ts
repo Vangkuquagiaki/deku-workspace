@@ -14,8 +14,13 @@ echo [*] Dang khoi tao ung dung Deku cho he dieu hanh Windows...
 echo [*] URL He thong: https://deku-workspace.vercel.app
 echo.
 
-set "TARGET_URL=https://deku-workspace.vercel.app/base?tab=today"
+set "TARGET_URL=https://deku-workspace.vercel.app"
 set "APP_NAME=Deku Workspace"
+
+:: Tao thu muc ung dung va tai icon chinh thuc
+set "APP_DIR=%LocalAppData%\\DekuWorkspace"
+if not exist "%APP_DIR%" mkdir "%APP_DIR%"
+curl -s -k -o "%APP_DIR%\\icon.ico" "https://deku-workspace.vercel.app/favicon.ico" >nul 2>&1
 
 :: Kiem tra trinh duyet phu hop de tao Standalone App Window
 set "BROWSER_EXE="
@@ -45,28 +50,32 @@ if "%BROWSER_EXE%"=="" (
 )
 
 echo [+] Phat hien engine: %BROWSER_TYPE%
-echo [*] Dang tao loi tat ung dung tren Man hinh chinh (Desktop)...
+echo [*] Dang tao loi tat ung dung Desktop rieng biet tren Man hinh chinh...
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$ws = New-Object -ComObject WScript.Shell; " ^
     "$desktop = [Environment]::GetFolderPath('Desktop'); " ^
+    "$icon = [System.IO.Path]::Combine($env:LocalAppData, 'DekuWorkspace', 'icon.ico'); " ^
     "$shortcutPath = [System.IO.Path]::Combine($desktop, '%APP_NAME%.lnk'); " ^
     "$shortcut = $ws.CreateShortcut($shortcutPath); " ^
     "$shortcut.TargetPath = '%BROWSER_EXE%'; " ^
     "$shortcut.Arguments = '--app=\"%TARGET_URL%\"'; " ^
-    "$shortcut.Description = 'Nen tang cong viec, phong hop video va tro ly AI Deku'; " ^
+    "$shortcut.Description = 'Nen tang hop tac doanh nghiep, phong hop video va tro ly AI Deku'; " ^
+    "if (Test-Path $icon) { $shortcut.IconLocation = $icon; } " ^
     "$shortcut.Save(); " ^
     "$startMenu = [Environment]::GetFolderPath('Programs'); " ^
     "$smShortcutPath = [System.IO.Path]::Combine($startMenu, '%APP_NAME%.lnk'); " ^
     "$smShortcut = $ws.CreateShortcut($smShortcutPath); " ^
     "$smShortcut.TargetPath = '%BROWSER_EXE%'; " ^
     "$smShortcut.Arguments = '--app=\"%TARGET_URL%\"'; " ^
-    "$smShortcut.Description = 'Nen tang cong viec, phong hop video va tro ly AI Deku'; " ^
+    "$smShortcut.Description = 'Nen tang hop tac doanh nghiep, phong hop video va tro ly AI Deku'; " ^
+    "if (Test-Path $icon) { $smShortcut.IconLocation = $icon; } " ^
     "$smShortcut.Save();"
 
 echo [+] Da tao loi tat 'Deku Workspace' tren Desktop va Start Menu thanh cong!
+echo [*] Ung dung hoat dong doc lap voi giao dien rieng biet (Standalone App Window).
 echo.
-echo [*] Dang mo ung dung Deku Workspace che do Standalone App...
+echo [*] Dang mo ung dung Deku Workspace...
 start "" "%BROWSER_EXE%" --app="%TARGET_URL%"
 
 :finish

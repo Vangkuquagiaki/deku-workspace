@@ -38,7 +38,7 @@ export default function SignInPage() {
     setMounted(true);
   }, []);
 
-  const appUrl = "https://deku-workspace.vercel.app";
+  const appUrl = "https://deku-workspace.vercel.app/mobile";
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(
     appUrl
   )}&color=10-185-129&bgcolor=17-18-20`;

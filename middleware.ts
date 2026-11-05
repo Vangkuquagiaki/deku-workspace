@@ -28,6 +28,7 @@ try {
       "/meetings(.*)",
       "/base(.*)",
       "/download(.*)",
+      "/mobile(.*)",
       "/test-bot(.*)",
       "/api/download(.*)",
       "/api/org-units(.*)",
@@ -63,6 +64,7 @@ try {
       "/api/glossary(.*)",
       "/api/download(.*)",
       "/download(.*)",
+      "/mobile(.*)",
       "/test-bot(.*)",
     ],
   });

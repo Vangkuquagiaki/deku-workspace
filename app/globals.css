@@ -186,3 +186,11 @@ body,
   background-color: #b5272c !important;
 }
 
+/* Safe area padding utilities for mobile */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+}
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top), 0px);
+}
+

@@ -33,7 +33,7 @@ export default function DownloadHubPage() {
   const [mobileOs, setMobileOs] = useState<"android" | "ios">("android");
   const [downloadingWindows, setDownloadingWindows] = useState(false);
 
-  const appUrl = "https://deku-workspace.vercel.app";
+  const appUrl = "https://deku-workspace.vercel.app/mobile";
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data=${encodeURIComponent(
     appUrl
   )}&color=10-185-129&bgcolor=17-18-20`;
