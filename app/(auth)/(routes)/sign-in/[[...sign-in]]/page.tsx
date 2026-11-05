@@ -12,17 +12,46 @@ import {
   CheckCircle2,
   LogIn,
   Layers,
-  Video
+  Video,
+  Laptop,
+  Smartphone,
+  Download,
+  QrCode,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  X,
+  Zap,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function SignInPage() {
   const [clerkError, setClerkError] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showQrPanel, setShowQrPanel] = useState(false);
+  const [mobileOs, setMobileOs] = useState<"android" | "ios">("android");
+  const [downloadingWindows, setDownloadingWindows] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const appUrl = "https://deku-workspace.vercel.app";
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(
+    appUrl
+  )}&color=10-185-129&bgcolor=17-18-20`;
+
+  const handleDownloadWindows = () => {
+    setDownloadingWindows(true);
+    const link = document.createElement("a");
+    link.href = "/api/download/windows";
+    link.download = "Deku-Workspace-Setup.cmd";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => setDownloadingWindows(false), 2000);
+  };
 
   const demoAccounts = [
     {
@@ -33,7 +62,7 @@ export default function SignInPage() {
       email: "head.tech@enterprise.local",
       dept: "Phòng Công Nghệ",
       desc: "Xem toàn bộ task của mọi tổ trực thuộc phòng, duyệt nhân sự cấp phòng.",
-      targetUrl: "/servers/9825609f-fc16-49e5-99ca-e2c204fdf8ec/channels/e30c2e39-7648-44c5-a693-da7c151877fe"
+      targetUrl: "/servers/9825609f-fc16-49e5-99ca-e2c204fdf8ec/channels/e30c2e39-7648-44c5-a693-da7c151877fe",
     },
     {
       role: "LEAD",
@@ -43,7 +72,7 @@ export default function SignInPage() {
       email: "lead.cloud@enterprise.local",
       dept: "Tổ Nền Tảng & Cloud",
       desc: "Quản lý và điều phối các nhiệm vụ của tổ mình, xem thâm niên thành viên.",
-      targetUrl: "/servers/9825609f-fc16-49e5-99ca-e2c204fdf8ec/channels/f823aa40-8dd5-4806-b891-c1054d16c407"
+      targetUrl: "/servers/9825609f-fc16-49e5-99ca-e2c204fdf8ec/channels/f823aa40-8dd5-4806-b891-c1054d16c407",
     },
     {
       role: "HR",
@@ -53,7 +82,7 @@ export default function SignInPage() {
       email: "hr.admin@enterprise.local",
       dept: "Phòng Nhân Sự",
       desc: "Nhập CSV công nhật, quản trị bảng tin. Bị chặn xem nhiệm vụ phòng ban (B6).",
-      targetUrl: "/base"
+      targetUrl: "/base",
     },
     {
       role: "MEMBER",
@@ -63,37 +92,156 @@ export default function SignInPage() {
       email: "member.sales@enterprise.local",
       dept: "Tổ Kinh Doanh Nội Địa",
       desc: "Chỉ thấy công việc của tổ mình và hồ sơ cá nhân bảo mật.",
-      targetUrl: "/servers/9825609f-fc16-49e5-99ca-e2c204fdf8ec/channels/1811e0c6-b6d3-4f93-988c-be1468a38d23"
-    }
+      targetUrl: "/servers/9825609f-fc16-49e5-99ca-e2c204fdf8ec/channels/1811e0c6-b6d3-4f93-988c-be1468a38d23",
+    },
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 flex flex-col items-center justify-center gap-8 py-8">
-      {/* Top Quick Access Banner */}
-      <div className="w-full max-w-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 p-4 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 text-white">
-        <div className="flex items-center gap-3 text-center sm:text-left">
-          <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-yellow-300" />
-          </div>
-          <div>
-            <h2 className="font-bold text-sm sm:text-base">
-              Deku Enterprise Workspace Platform
+    <div className="w-full max-w-5xl mx-auto p-4 flex flex-col items-center justify-center gap-6 py-6 select-none">
+      {/* 1. TOP DOWNLOAD HUB: WINDOWS PC & SMARTPHONE APP (Đặt ở phần đầu theo yêu cầu) */}
+      <div className="w-full max-w-4xl bg-gradient-to-r from-[#18191c] via-[#1e1f22] to-[#18191c] border border-emerald-500/40 rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold">
+              <Sparkles className="h-3 w-3" />
+              <span>Đa Nền Tảng: Web • Windows PC • Android • iOS (iPhone)</span>
+            </div>
+            <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+              <span>Tải Ứng Dụng Deku Cho Máy Tính & Điện Thoại</span>
             </h2>
-            <p className="text-xs text-white/80">
-              Hệ thống phòng họp AI, quản trị nhân sự và không gian làm việc trực tuyến
+            <p className="text-xs text-zinc-300 leading-relaxed max-w-2xl">
+              Bạn có thể đăng nhập trên Web ngay bên dưới, hoặc tải ứng dụng riêng cho máy tính và điện thoại để nhận cuộc gọi, thông báo khay hệ thống mượt mà nhất.
             </p>
+          </div>
+
+          <Link
+            href="/download"
+            className="shrink-0 h-9 px-3.5 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-200 hover:text-white border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+          >
+            <span>Trung tâm tải về</span>
+            <ExternalLink className="h-3 w-3 text-emerald-400" />
+          </Link>
+        </div>
+
+        {/* Action Buttons Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
+          {/* Windows Download Button */}
+          <button
+            type="button"
+            onClick={handleDownloadWindows}
+            disabled={downloadingWindows}
+            className="h-11 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+          >
+            <Laptop className="h-4 w-4" />
+            <span>
+              {downloadingWindows
+                ? "Đang tải xuống bộ cài..."
+                : "Tải Cho Windows (1-Click Setup)"}
+            </span>
+          </button>
+
+          {/* Smartphone QR Code Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowQrPanel(!showQrPanel)}
+            className={`h-11 px-4 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-2 border cursor-pointer ${
+              showQrPanel
+                ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30"
+                : "bg-[#2b2d31] hover:bg-zinc-700 text-zinc-200 border-white/5"
+            }`}
+          >
+            <Smartphone className="h-4 w-4 text-emerald-400" />
+            <span>Quét Mã Cài Cho Điện Thoại</span>
+            {showQrPanel ? (
+              <ChevronUp className="h-3.5 w-3.5 text-zinc-400" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 text-zinc-400" />
+            )}
+          </button>
+
+          {/* Quick Web Mode Link */}
+          <div className="h-11 px-4 rounded-2xl bg-[#111214]/60 border border-zinc-800 text-zinc-400 text-xs flex items-center justify-center gap-2 sm:col-span-2 md:col-span-1">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Bản Web sẵn sàng bên dưới</span>
           </div>
         </div>
 
-        <Link
-          href="/servers/9825609f-fc16-49e5-99ca-e2c204fdf8ec/channels/e30c2e39-7648-44c5-a693-da7c151877fe"
-          className="shrink-0 bg-white hover:bg-zinc-100 text-indigo-700 font-bold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg transition active:scale-95"
-        >
-          <span>Vào Không Gian Ngay</span>
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+        {/* Expandable Mobile App QR Code & Guide */}
+        {showQrPanel && (
+          <div className="mt-3 p-4 rounded-2xl bg-[#111214] border border-indigo-500/30 space-y-3 animate-in slide-in-from-top-3 duration-200">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white flex items-center gap-2">
+                <QrCode className="h-4 w-4 text-emerald-400" />
+                Quét mã bằng Camera điện thoại để cài đặt ứng dụng ngay
+              </span>
+
+              {/* OS Switcher */}
+              <div className="flex items-center p-0.5 rounded-lg bg-[#2b2d31] border border-white/5 text-[11px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setMobileOs("android")}
+                  className={`px-2.5 py-1 rounded-md transition ${
+                    mobileOs === "android"
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  Android
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileOs("ios")}
+                  className={`px-2.5 py-1 rounded-md transition ${
+                    mobileOs === "ios"
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  iPhone (iOS)
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-1">
+              <div className="p-2 bg-black/60 rounded-xl border border-emerald-500/40 shrink-0 shadow-lg">
+                <img
+                  src={qrCodeUrl}
+                  alt="QR Code Deku Workspace"
+                  className="w-28 h-28 rounded-lg"
+                />
+              </div>
+
+              <div className="space-y-1.5 text-xs text-zinc-300">
+                {mobileOs === "android" ? (
+                  <>
+                    <p className="font-semibold text-emerald-400">
+                      Hướng dẫn cài đặt trên Android (Samsung, Xiaomi, Oppo...):
+                    </p>
+                    <ol className="list-decimal list-inside space-y-1 text-zinc-400 text-[11px] leading-relaxed">
+                      <li>Bật máy ảnh điện thoại quét mã QR để mở trang trong Google Chrome.</li>
+                      <li>Nhấn vào thông báo <strong>&ldquo;Cài đặt ứng dụng Deku&rdquo;</strong> hoặc bấm nút ⋮ chọn <strong>&ldquo;Cài đặt ứng dụng&rdquo;</strong>.</li>
+                      <li>Ứng dụng sẽ hiển thị trực tiếp trên màn hình chính như một app tải từ CH Play.</li>
+                    </ol>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold text-indigo-400">
+                      Hướng dẫn cài đặt trên iPhone / iPad (iOS Safari):
+                    </p>
+                    <ol className="list-decimal list-inside space-y-1 text-zinc-400 text-[11px] leading-relaxed">
+                      <li>Mở Camera iPhone quét mã QR để mở liên kết trong <strong>Safari</strong>.</li>
+                      <li>Nhấn nút <strong>Chia sẻ</strong> (hình vuông có mũi tên trỏ lên ở dưới cùng).</li>
+                      <li>Cuộn xuống chọn <strong>&ldquo;Thêm vào MH chính&rdquo; (Add to Home Screen)</strong> rồi nhấn <strong>Thêm</strong>.</li>
+                    </ol>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* 2. MAIN SIGN-IN & EXPLORE AREA */}
       <div className="w-full flex flex-col lg:flex-row items-start justify-center gap-8">
         {/* Clerk Sign In Box or Fallback Auth Form */}
         <div className="shrink-0 w-full lg:w-auto flex justify-center">
@@ -102,8 +250,8 @@ export default function SignInPage() {
               <SignIn
                 appearance={{
                   elements: {
-                    rootBox: "mx-auto shadow-2xl rounded-3xl border border-zinc-800"
-                  }
+                    rootBox: "mx-auto shadow-2xl rounded-3xl border border-zinc-800",
+                  },
                 }}
               />
             </div>

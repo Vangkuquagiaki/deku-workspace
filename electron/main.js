@@ -185,3 +185,4 @@ ipcMain.on("notification:send", (_, { title, body }) => {
     }).show();
   }
 });
+

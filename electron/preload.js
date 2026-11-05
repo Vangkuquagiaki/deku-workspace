@@ -10,3 +10,4 @@ contextBridge.exposeInMainWorld("desktopApp", {
   sendNotification: (title, body) => ipcRenderer.send("notification:send", { title, body }),
   setBadgeCount: (count) => ipcRenderer.send("badge:set", count),
 });
+
