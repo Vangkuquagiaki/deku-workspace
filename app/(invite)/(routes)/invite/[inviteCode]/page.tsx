@@ -20,10 +20,15 @@ export default async function InviteCodePage({
 
   if (!inviteCode) return redirect("/base");
 
-  // 1. Check if inviteCode is an EmployeeInvitation token (SHA-256 hash lookup)
-  const tokenHash = crypto.createHash("sha256").update(inviteCode).digest("hex");
-  const employeeInvite = await db.employeeInvitation.findUnique({
-    where: { tokenHash },
+  // 1. Check if inviteCode is an EmployeeInvitation token (check both raw token hash and direct tokenHash)
+  const rawTokenHash = crypto.createHash("sha256").update(inviteCode).digest("hex");
+  const employeeInvite = await db.employeeInvitation.findFirst({
+    where: {
+      OR: [
+        { tokenHash: rawTokenHash },
+        { tokenHash: inviteCode },
+      ],
+    },
   });
 
   if (employeeInvite) {

@@ -302,11 +302,16 @@ export function PersonalWorkspaceView() {
         }),
       });
       if (res.ok) {
+        const createdInvite = await res.json();
         setInviteEmail("");
         setInviteFullName("");
         showToast("🎉 Đã tạo mã lời mời an toàn! Hãy sao chép liên kết bên dưới gửi cho nhân sự mới.");
         const iData = await (await fetch("/api/invitations")).json();
-        setInvitations(iData);
+        if (createdInvite?.token) {
+          setInvitations([createdInvite, ...iData.filter((x: any) => x.id !== createdInvite.id)]);
+        } else {
+          setInvitations(iData);
+        }
       }
     } catch (e) {
       console.error(e);

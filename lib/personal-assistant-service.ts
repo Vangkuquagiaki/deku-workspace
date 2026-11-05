@@ -961,8 +961,13 @@ export async function acceptEmployeeInvitation({
 }) {
   const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
-  const invitation = await db.employeeInvitation.findUnique({
-    where: { tokenHash },
+  const invitation = await db.employeeInvitation.findFirst({
+    where: {
+      OR: [
+        { tokenHash },
+        { tokenHash: token },
+      ],
+    },
   });
 
   if (!invitation) {
