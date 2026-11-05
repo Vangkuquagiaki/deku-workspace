@@ -14,9 +14,33 @@ import { ClerkProvider } from "@clerk/nextjs";
 const openSans = Open_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Deku - Enterprise Collaboration & AI Platform",
+  metadataBase: new URL("https://deku-workspace.vercel.app"),
+  title: {
+    default: "Deku Workspace - Nền tảng Hợp tác, Họp trực tuyến & AI Doanh nghiệp",
+    template: "%s | Deku Workspace",
+  },
   description:
-    "Hệ thống làm việc, phòng họp trực tuyến và quản trị điều hành doanh nghiệp bảo mật Deku.",
+    "Hệ thống hợp tác làm việc, phòng họp trực tuyến WebRTC và quản trị điều hành doanh nghiệp bảo mật Deku Workspace tích hợp Trợ lý AI thế hệ mới.",
+  keywords: [
+    "Deku Workspace",
+    "deku-workspace",
+    "deku-workspace.vercel.app",
+    "Deku",
+    "Lark Base Doanh Nghiệp",
+    "Quản trị nhân sự AI",
+    "Phòng họp trực tuyến WebRTC",
+    "Hợp tác doanh nghiệp",
+    "AI Assistant",
+    "Discord Clone Enterprise",
+  ],
+  authors: [{ name: "Deku Engineering Team", url: "https://deku-workspace.vercel.app" }],
+  creator: "Deku Team",
+  publisher: "Deku Workspace",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   manifest: "/manifest.json",
   themeColor: "#111214",
   viewport: {
@@ -33,7 +57,42 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Deku",
+    title: "Deku Workspace",
+  },
+  openGraph: {
+    title: "Deku Workspace - Enterprise Collaboration & AI Platform",
+    description:
+      "Nền tảng hợp nhất giao tiếp real-time, phòng họp trực tuyến WebRTC, Lark Base quản trị công việc và Trợ lý AI thế hệ mới.",
+    url: "https://deku-workspace.vercel.app",
+    siteName: "Deku Workspace",
+    locale: "vi_VN",
+    type: "website",
+    images: [
+      {
+        url: "/logo.png",
+        width: 512,
+        height: 512,
+        alt: "Deku Workspace Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Deku Workspace - Enterprise Collaboration & AI Platform",
+    description:
+      "Nền tảng hợp nhất giao tiếp real-time, phòng họp trực tuyến WebRTC, Lark Base quản trị công việc và Trợ lý AI.",
+    images: ["/logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
