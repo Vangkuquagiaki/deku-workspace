@@ -45,10 +45,10 @@ export function LeaveServerModal() {
       <DialogContent className="bg-white text-black p-0 overflow-hidden">
         <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-2xl text-center font-bold">
-            Leave Server
+            Rời Khỏi Không Gian Làm Việc
           </DialogTitle>
           <DialogDescription className="text-center text-zinc-500">
-            Are you sure? You want to leave{" "}
+            Bạn có chắc chắn muốn rời khỏi không gian{" "}
             <span className="font-semibold text-indigo-500">
               {server?.name}
             </span>
@@ -58,10 +58,10 @@ export function LeaveServerModal() {
         <DialogFooter className="bg-gray-100 px-6 py-4">
           <div className="flex items-center justify-between w-full">
             <Button variant="ghost" disabled={isLoading} onClick={onClose}>
-              Cancel
+              Hủy bỏ
             </Button>
             <Button variant="primary" disabled={isLoading} onClick={onClick}>
-              Confirm
+              Rời khỏi
             </Button>
           </div>
         </DialogFooter>

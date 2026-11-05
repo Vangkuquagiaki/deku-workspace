@@ -25,7 +25,9 @@ export default function GlobalError({
         return;
       }
       if (error?.message === "NEXT_REDIRECT" || error?.digest?.startsWith("NEXT_REDIRECT")) {
-        window.location.replace("/base");
+        const parts = error?.digest?.split(";") || [];
+        const redirectUrl = parts[2] || "/sign-in";
+        window.location.replace(redirectUrl);
         return;
       }
     }

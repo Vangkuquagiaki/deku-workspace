@@ -807,7 +807,7 @@ export function FriendsView({
             size="sm"
             onClick={() => {
               sounds.playPop();
-              router.push("/servers");
+              router.push("/meetings");
             }}
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold h-8"
           >

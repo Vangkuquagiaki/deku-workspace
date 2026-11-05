@@ -51,25 +51,26 @@ export function DeleteMessageModal() {
       <DialogContent className="bg-white text-black p-0 overflow-hidden">
         <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-2xl text-center font-bold">
-            Delete Message
+            Xóa Tin Nhắn
           </DialogTitle>
           <DialogDescription className="text-center text-zinc-500">
-            Are you sure you want to do this?
+            Bạn có chắc chắn muốn xóa tin nhắn này không?
             <br />
-            The message will be permanently deleted.
+            Tin nhắn sẽ bị xóa vĩnh viễn khỏi cuộc trò chuyện.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="bg-gray-100 px-6 py-4">
           <div className="flex items-center justify-between w-full">
             <Button variant="ghost" disabled={isLoading} onClick={onClose}>
-              Cancel
+              Hủy bỏ
             </Button>
             <Button
               variant="primary"
               disabled={isLoading}
               onClick={onClick}
+              className="bg-rose-600 hover:bg-rose-700 text-white"
             >
-              Confirm
+              Xác nhận xóa
             </Button>
           </div>
         </DialogFooter>
