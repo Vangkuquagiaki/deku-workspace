@@ -37,53 +37,73 @@ const roleIconMap = {
 };
 
 export async function ServerSidebar({ serverId }: { serverId: string }) {
-  const profile = await currentProfile();
+  let profile: any = null;
+  try {
+    profile = await currentProfile();
+  } catch (err) {
+    console.error("[SERVER_SIDEBAR_PROFILE_ERR]", err);
+  }
 
   if (!profile) return redirect("/");
 
-  const server = await db.server.findUnique({
-    where: {
-      id: serverId
-    },
-    include: {
-      channels: {
-        include: {
-          orgUnit: true,
-        },
-        orderBy: {
-          createdAt: "asc"
-        }
+  let server: any = null;
+  try {
+    server = await db.server.findUnique({
+      where: {
+        id: serverId
       },
-      members: {
-        include: {
-          profile: true
+      include: {
+        channels: {
+          include: {
+            orgUnit: true,
+          },
+          orderBy: {
+            createdAt: "asc"
+          }
         },
-        orderBy: {
-          role: "asc"
+        members: {
+          include: {
+            profile: true
+          },
+          orderBy: {
+            role: "asc"
+          }
         }
       }
-    }
-  });
+    });
+  } catch (err) {
+    console.error("[SERVER_SIDEBAR_DB_ERR]", err);
+    try {
+      await new Promise((r) => setTimeout(r, 300));
+      server = await db.server.findUnique({
+        where: { id: serverId },
+        include: {
+          channels: { orderBy: { createdAt: "asc" } },
+          members: { include: { profile: true } }
+        }
+      });
+    } catch (_) {}
+  }
 
-  const textChannels = server?.channels.filter(
-    (channel) => channel.type === ChannelType.TEXT
+  if (!server) return redirect("/base");
+
+  const textChannels = (server.channels || []).filter(
+    (channel: any) => channel.type === ChannelType.TEXT
   );
-  const audioChannels = server?.channels.filter(
-    (channel) => channel.type === ChannelType.AUDIO
+  const audioChannels = (server.channels || []).filter(
+    (channel: any) => channel.type === ChannelType.AUDIO
   );
-  const videoChannels = server?.channels.filter(
-    (channel) => channel.type === ChannelType.VIDEO
+  const videoChannels = (server.channels || []).filter(
+    (channel: any) => channel.type === ChannelType.VIDEO
   );
 
-  const members = server?.members.filter(
-    (member) => member.profileId !== profile.id
+  const members = (server.members || []).filter(
+    (member: any) => member.profileId !== profile.id
   );
 
-  if (!server) return redirect("/");
-
-  const role = server.members.find(
-    (member) => member.profileId === profile.id
-  )?.role;
+  const role = ((server.members || []).find(
+    (member: any) => member.profileId === profile.id
+  )?.role as MemberRole) || MemberRole.GUEST;
 
   return (
     <div className="flex flex-col h-full text-primary w-full dark:bg-[#2b2d31] bg-[#f2f3f5] min-h-0">
@@ -95,37 +115,37 @@ export async function ServerSidebar({ serverId }: { serverId: string }) {
               {
                 label: "Kênh thảo luận & Văn bản",
                 type: "channel",
-                data: textChannels?.map((channel) => ({
+                data: textChannels?.map((channel: any) => ({
                   id: channel.id,
                   name: channel.name,
-                  icon: iconMap[channel.type]
+                  icon: iconMap[channel.type as ChannelType]
                 }))
               },
               {
                 label: "Phòng họp âm thanh (Voice)",
                 type: "channel",
-                data: audioChannels?.map((channel) => ({
+                data: audioChannels?.map((channel: any) => ({
                   id: channel.id,
                   name: channel.name,
-                  icon: iconMap[channel.type]
+                  icon: iconMap[channel.type as ChannelType]
                 }))
               },
               {
                 label: "Phòng họp trực tuyến HD (Video)",
                 type: "channel",
-                data: videoChannels?.map((channel) => ({
+                data: videoChannels?.map((channel: any) => ({
                   id: channel.id,
                   name: channel.name,
-                  icon: iconMap[channel.type]
+                  icon: iconMap[channel.type as ChannelType]
                 }))
               },
               {
                 label: "Nhân sự phòng ban",
                 type: "member",
-                data: members?.map((member) => ({
+                data: members?.map((member: any) => ({
                   id: member.id,
                   name: member.profile.name,
-                  icon: roleIconMap[member.role]
+                  icon: roleIconMap[member.role as MemberRole]
                 }))
               }
             ]}
@@ -141,14 +161,14 @@ export async function ServerSidebar({ serverId }: { serverId: string }) {
             imageUrl: profile.imageUrl,
             role: role,
           }}
-          channels={server.channels.map((c) => ({
+          channels={(server.channels || []).map((c: any) => ({
             id: c.id,
             name: c.name,
             type: c.type,
           }))}
-          availableMembers={server.members
-            .filter((m) => m && m.profile)
-            .map((m) => ({
+          availableMembers={(server.members || [])
+            .filter((m: any) => m && m.profile)
+            .map((m: any) => ({
               id: m.id,
               name: m.profile?.name || "Nhân sự",
               imageUrl: m.profile?.imageUrl || "",

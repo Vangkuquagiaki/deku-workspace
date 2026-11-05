@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ModalProvider } from "@/components/providers/modal-provider";
 import { SocketProvider } from "@/components/providers/socket-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { PwaProvider } from "@/components/providers/pwa-provider";
 
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
@@ -16,10 +17,23 @@ export const metadata: Metadata = {
   title: "Deku - Enterprise Collaboration & AI Platform",
   description:
     "Hệ thống làm việc, phòng họp trực tuyến và quản trị điều hành doanh nghiệp bảo mật Deku.",
+  manifest: "/manifest.json",
+  themeColor: "#111214",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",
     apple: "/logo.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Deku",
   },
 };
 
@@ -46,8 +60,10 @@ export default function RootLayout({
           >
             <SocketProvider>
               <QueryProvider>
-                <ModalProvider />
-                {children}
+                <PwaProvider>
+                  <ModalProvider />
+                  {children}
+                </PwaProvider>
               </QueryProvider>
             </SocketProvider>
           </ThemeProvider>

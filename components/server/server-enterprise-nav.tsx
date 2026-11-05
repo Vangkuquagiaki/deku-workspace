@@ -14,7 +14,8 @@ import {
   ChevronDown,
   ChevronRight,
   Briefcase,
-  Flame
+  Flame,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -151,6 +152,18 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       badgeColor: "bg-rose-500/20 text-rose-300 border-rose-500/30",
       activeBg: "bg-rose-950/40 border-rose-500/50 text-white shadow-sm shadow-rose-950/50",
       activeIndicator: "bg-rose-400",
+    },
+    {
+      id: "download",
+      label: "Tải Ứng Dụng (PC & Mobile)",
+      icon: Download,
+      badge: "App",
+      href: `/download`,
+      isActive: pathname.startsWith("/download"),
+      iconColor: "text-emerald-400 group-hover:text-emerald-300",
+      badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+      activeBg: "bg-emerald-950/40 border-emerald-500/50 text-white shadow-sm shadow-emerald-950/50",
+      activeIndicator: "bg-emerald-400",
     },
   ];
 

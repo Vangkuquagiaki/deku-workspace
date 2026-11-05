@@ -9,6 +9,7 @@ import { NavigationAction } from "@/components/navigation/navigation-action";
 import { NavigationHome } from "@/components/navigation/navigation-home";
 import { NavigationMeetings } from "@/components/navigation/navigation-meetings";
 import { NavigationBase } from "@/components/navigation/navigation-base";
+import { NavigationDownload } from "@/components/navigation/navigation-download";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NavigationItem } from "@/components/navigation/navigation-item";
@@ -34,6 +35,7 @@ export async function NavigationSidebar() {
       <NavigationHome />
       <NavigationMeetings />
       <NavigationBase />
+      <NavigationDownload />
       <Separator className="h-[2px] bg-zinc-300 dark:bg-zinc-700/60 rounded-md w-8 mx-auto" />
       <ScrollArea className="flex-1 w-full">
         {servers.map((server) => (

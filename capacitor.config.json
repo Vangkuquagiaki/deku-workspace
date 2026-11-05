@@ -1,0 +1,26 @@
+{
+  "appId": "com.deku.workspace",
+  "appName": "Deku Workspace",
+  "webDir": "out",
+  "server": {
+    "url": "https://deku-workspace.vercel.app",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  },
+  "ios": {
+    "contentInset": "always",
+    "allowsLinkPreview": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#111214",
+      "showSpinner": true,
+      "spinnerColor": "#10b981"
+    }
+  }
+}

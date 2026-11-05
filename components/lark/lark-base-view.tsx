@@ -38,6 +38,9 @@ import {
   ArrowLeft,
   LogOut,
   Video,
+  Download,
+  Smartphone,
+  Laptop,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserProfileCard } from "@/components/user-profile-card";
@@ -366,6 +369,16 @@ export function LarkBaseView({
             >
               <Video className="h-3.5 w-3.5 text-emerald-400" />
               <span className="hidden sm:inline">Phòng họp</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/download")}
+              className="h-7 px-2.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-indigo-500/30"
+              title="Tải ứng dụng Deku cho Windows và Điện thoại"
+            >
+              <Download className="h-3.5 w-3.5 text-indigo-400" />
+              <span className="hidden md:inline">Tải ứng dụng</span>
             </button>
 
             <div className="h-5 w-[1px] bg-zinc-800 hidden sm:block" />

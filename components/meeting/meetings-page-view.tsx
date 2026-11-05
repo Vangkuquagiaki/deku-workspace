@@ -23,6 +23,7 @@ import {
   Home,
   RotateCcw,
   Settings,
+  Download,
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 
@@ -45,16 +46,15 @@ export function MeetingsPageView({ serverId }: MeetingsPageViewProps) {
 
   const fetchRecentMeetings = async () => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3500);
+    const timeout = setTimeout(() => controller.abort(), 12000);
     try {
       const res = await fetch("/api/meetings", { signal: controller.signal });
-      clearTimeout(timeout);
       if (res.ok) {
         const data = await res.json();
         setRecentMeetings(Array.isArray(data) ? data : []);
       }
     } catch (e) {
-      console.error(e);
+      console.error("[MEETINGS_FETCH_ERR]", e);
     } finally {
       clearTimeout(timeout);
       setLoading(false);
@@ -149,6 +149,17 @@ export function MeetingsPageView({ serverId }: MeetingsPageViewProps) {
 
         {/* Right: Actions & Role */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Download App button */}
+          <button
+            type="button"
+            onClick={() => router.push("/download")}
+            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-emerald-600/20 to-teal-500/20 hover:from-emerald-600/30 hover:to-teal-500/30 text-emerald-300 hover:text-white border border-emerald-500/30 transition flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap shrink-0 shadow-sm"
+            title="Tải ứng dụng Deku cho Windows và Điện thoại"
+          >
+            <Download className="h-3.5 w-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">Tải ứng dụng</span>
+          </button>
+
           {/* Quick link to Base */}
           <button
             type="button"
