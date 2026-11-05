@@ -95,13 +95,14 @@ export function MobileBottomNav() {
       activeBg: "bg-emerald-500/15",
     },
     {
-      id: "mobile",
-      label: "App Mobile",
-      href: "/mobile",
-      icon: Smartphone,
+      id: "download",
+      label: "Tải App",
+      href: "/download",
+      icon: Download,
       isActive: isMobileApp,
-      activeColor: "text-purple-400",
-      activeBg: "bg-purple-500/15",
+      activeColor: "text-emerald-400",
+      activeBg: "bg-emerald-500/15",
+      badge: "HOT",
     },
   ];
 
@@ -164,3 +165,4 @@ export function MobileBottomNav() {
     </nav>
   );
 }
+

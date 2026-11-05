@@ -91,7 +91,12 @@ export function ResizableServerLayout({
   }, [isDragging, width, minWidth, maxWidth]);
 
   return (
-    <div className={cn("h-full relative", isDragging && "select-none cursor-col-resize")}>
+    <div
+      className={cn("h-full relative", isDragging && "select-none cursor-col-resize")}
+      style={{
+        ["--sidebar-w" as any]: mounted ? `${width}px` : `${defaultWidth}px`,
+      }}
+    >
       {/* Sidebar container */}
       <div
         style={{
@@ -132,10 +137,7 @@ export function ResizableServerLayout({
 
       {/* Main Content Area */}
       <main
-        style={{
-          marginLeft: mounted ? `${width}px` : `${defaultWidth}px`,
-        }}
-        className="h-full relative overflow-hidden transition-none"
+        className="h-full relative overflow-hidden transition-none ml-0 md:ml-[var(--sidebar-w,280px)]"
       >
         {children}
       </main>

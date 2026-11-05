@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import {
   Bell,
   BellOff,
@@ -13,6 +14,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Shield,
+  Download,
 } from "lucide-react";
 
 import { MobileToggle } from "@/components/mobile-toggle";
@@ -129,7 +131,11 @@ export function ChatHeader({
         {activeChatId && <PinnedMessagesPopover chatId={activeChatId} />}
 
         {/* In-channel Search */}
-        {activeChatId && <ChatSearchInput chatId={activeChatId} />}
+        {activeChatId && (
+          <div className="hidden sm:block">
+            <ChatSearchInput chatId={activeChatId} />
+          </div>
+        )}
 
         {/* Notification Sound Toggle */}
         <ActionTooltip
@@ -166,6 +172,16 @@ export function ChatHeader({
             </button>
           </ActionTooltip>
         )}
+
+        {/* Prominent Download App Link */}
+        <Link
+          href="/download"
+          className="h-7 px-2 sm:px-2.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 text-xs font-bold flex items-center gap-1 transition shrink-0 shadow-sm"
+          title="Tải ứng dụng Deku cho Windows và Điện thoại"
+        >
+          <Download className="h-3.5 w-3.5" />
+          <span className="text-[11px] font-bold">Tải App</span>
+        </Link>
 
         <SocketIndicatior />
       </div>

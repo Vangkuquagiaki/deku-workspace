@@ -116,7 +116,7 @@ export function MeetingsPageView({ serverId }: MeetingsPageViewProps) {
             <button
               type="button"
               onClick={() => router.push(serverId ? `/servers/${serverId}` : "/")}
-              className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#2b2d31] hover:bg-rose-950/40 hover:border-rose-500/30 text-zinc-400 hover:text-rose-300 border border-white/5 transition flex items-center justify-center shrink-0 shadow-sm"
+              className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#2b2d31] hover:bg-rose-950/40 hover:border-rose-500/30 text-zinc-400 hover:text-rose-300 border border-white/5 transition items-center justify-center shrink-0 shadow-sm"
               title="Thoát khỏi phòng họp, về Workspace chính (Discord)"
             >
               <LogOut className="h-3.5 w-3.5" />
@@ -126,15 +126,15 @@ export function MeetingsPageView({ serverId }: MeetingsPageViewProps) {
           <div className="h-5 w-[1px] bg-zinc-800 hidden sm:block shrink-0" />
 
           {/* Logo & Title */}
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
               <Video className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
 
             <div className="min-w-0 flex flex-col justify-center">
               <div className="flex items-center gap-2">
-                <h1 className="text-sm sm:text-base font-bold text-white whitespace-nowrap truncate">
-                  Phòng Họp & Hội Nghị Doanh Nghiệp
+                <h1 className="text-xs sm:text-base font-bold text-white truncate max-w-[130px] sm:max-w-none">
+                  Phòng Họp <span className="hidden sm:inline">& Hội Nghị Doanh Nghiệp</span>
                 </h1>
                 <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap shrink-0 hidden md:inline">
                   AI Phiên Dịch
@@ -148,23 +148,23 @@ export function MeetingsPageView({ serverId }: MeetingsPageViewProps) {
         </div>
 
         {/* Right: Actions & Role */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Download App button */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Prominent Download App button */}
           <button
             type="button"
             onClick={() => router.push("/download")}
-            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-emerald-600/20 to-teal-500/20 hover:from-emerald-600/30 hover:to-teal-500/30 text-emerald-300 hover:text-white border border-emerald-500/30 transition flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap shrink-0 shadow-sm"
+            className="h-8 sm:h-9 px-2 sm:px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-1.5 text-xs font-bold whitespace-nowrap shrink-0 shadow-md shadow-emerald-600/30 active:scale-95"
             title="Tải ứng dụng Deku cho Windows và Điện thoại"
           >
-            <Download className="h-3.5 w-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">Tải ứng dụng</span>
+            <Download className="h-3.5 w-3.5" />
+            <span className="text-[11px] font-bold">Tải App</span>
           </button>
 
           {/* Quick link to Base */}
           <button
             type="button"
             onClick={() => router.push(serverId ? `/servers/${serverId}/base` : "/base")}
-            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/5 transition flex items-center gap-1.5 text-xs font-medium whitespace-nowrap shrink-0 shadow-sm"
+            className="hidden xs:flex h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white border border-white/5 transition items-center gap-1.5 text-xs font-medium whitespace-nowrap shrink-0 shadow-sm"
             title="Mở Bảng việc Base"
           >
             <LayoutGrid className="h-3.5 w-3.5 text-indigo-400" />

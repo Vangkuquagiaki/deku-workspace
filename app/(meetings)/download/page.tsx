@@ -191,33 +191,28 @@ export default function DownloadHubPage() {
 
             {/* Action Buttons */}
             <div className="pt-6 sm:pt-8 space-y-3">
-              <button
-                type="button"
-                onClick={handleDownloadWindows}
-                disabled={downloadingWindows}
-                className="w-full h-12 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
+              <a
+                href="/api/download/windows"
+                download="Deku-Workspace-Setup.cmd"
+                className="w-full h-12 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer text-center"
               >
                 <Download className="h-4 w-4" />
-                <span>
-                  {downloadingWindows
-                    ? "Đang tải xuống bộ cài..."
-                    : "Tải Bộ Cài Đặt Windows (.cmd / 1-Click Setup)"}
-                </span>
-              </button>
+                <span>Tải Bộ Cài Đặt Windows (.cmd / Tự Động 1-Click)</span>
+              </a>
 
               {canInstall && (
                 <button
                   type="button"
                   onClick={handleDirectInstall}
-                  className="w-full h-11 rounded-2xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-200 hover:text-white font-semibold text-xs border border-white/10 transition flex items-center justify-center gap-2"
+                  className="w-full h-11 rounded-2xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-200 hover:text-white font-semibold text-xs border border-white/10 transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Zap className="h-3.5 w-3.5 text-amber-400" />
-                  <span>Cài đặt PWA ngay trên trình duyệt máy tính</span>
+                  <span>Cài đặt ứng dụng trực tiếp trên trình duyệt (PWA)</span>
                 </button>
               )}
 
-              <p className="text-[11px] text-zinc-500 text-center">
-                Bộ cài đặt tự động tương thích Windows 10 & Windows 11 64-bit
+              <p className="text-[11px] text-zinc-400 text-center">
+                Tải file <strong>Deku-Workspace-Setup.cmd</strong> về máy tính $\rightarrow$ Nhấp đúp để tạo icon trên Desktop.
               </p>
             </div>
           </div>
@@ -332,19 +327,17 @@ export default function DownloadHubPage() {
 
             {/* Direct Mobile Action */}
             <div className="pt-6 sm:pt-8 space-y-3">
-              <a
-                href={appUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full h-12 rounded-2xl bg-[#2b2d31] hover:bg-zinc-700 text-white font-bold text-sm border border-white/10 transition flex items-center justify-center gap-2 active:scale-[0.98]"
+              <Link
+                href="/mobile"
+                className="w-full h-12 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2 active:scale-[0.98]"
               >
-                <Smartphone className="h-4 w-4 text-emerald-400" />
-                <span>Mở Trực Tiếp Trên Trình Duyệt Điện Thoại</span>
-                <ExternalLink className="h-3.5 w-3.5 text-zinc-400" />
-              </a>
+                <Smartphone className="h-4 w-4" />
+                <span>Mở Trung Tâm Cài Đặt Điện Thoại (Mobile App)</span>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
 
-              <p className="text-[11px] text-zinc-500 text-center">
-                Tương thích mọi thiết bị iOS 13+ (iPhone) và Android 8.0+
+              <p className="text-[11px] text-zinc-400 text-center">
+                Quét mã QR hoặc nhấn nút trên để cài đặt ứng dụng cho iOS (iPhone) & Android
               </p>
             </div>
           </div>

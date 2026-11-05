@@ -353,8 +353,8 @@ export function LarkBaseView({
     <div className="flex-1 flex flex-col h-full bg-[#111214] text-zinc-100 overflow-y-auto select-none">
       {/* Top Header */}
       {!hideHeader && (
-        <header className="h-12 px-5 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/90 backdrop-blur-md sticky top-0 z-30 select-none">
-          <div className="flex items-center gap-2 md:gap-3">
+        <header className="h-12 px-2.5 sm:px-5 border-b border-zinc-800/80 flex items-center justify-between bg-[#1e1f22]/90 backdrop-blur-md sticky top-0 z-30 select-none gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
             {/* Quick exit back to Discord chat */}
             <button
               type="button"
@@ -366,70 +366,77 @@ export function LarkBaseView({
                     : "");
                 router.push(targetServerId ? `/servers/${targetServerId}` : "/");
               }}
-              className="h-7 px-2.5 rounded-lg bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-white/5"
+              className="h-7 px-2 sm:px-2.5 rounded-lg bg-[#2b2d31] hover:bg-zinc-700 text-zinc-300 hover:text-white transition flex items-center gap-1 text-xs font-semibold border border-white/5 shrink-0"
               title="Quay lại Workspace chính (Discord Chat)"
             >
               <ArrowLeft className="h-3.5 w-3.5 text-emerald-400" />
               <span className="hidden sm:inline">Về Chat</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => router.push("/meetings")}
-              className="h-7 px-2.5 rounded-lg bg-emerald-600/15 hover:bg-emerald-600 text-emerald-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-emerald-500/20"
-              title="Đi tới Phòng Họp & Hội Nghị Video"
-            >
-              <Video className="h-3.5 w-3.5 text-emerald-400" />
-              <span className="hidden sm:inline">Phòng họp</span>
-            </button>
-
+            {/* Prominent Download Button */}
             <button
               type="button"
               onClick={() => router.push("/download")}
-              className="h-7 px-2.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-indigo-500/30"
+              className="h-7 px-2 sm:px-2.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white transition flex items-center gap-1 text-xs font-bold border border-emerald-500/30 shrink-0 shadow-sm"
               title="Tải ứng dụng Deku cho Windows và Điện thoại"
             >
-              <Download className="h-3.5 w-3.5 text-indigo-400" />
-              <span className="hidden md:inline">Tải ứng dụng</span>
+              <Download className="h-3.5 w-3.5 text-emerald-400 group-hover:text-white" />
+              <span className="text-[11px] font-bold">Tải App</span>
             </button>
 
+            {/* Quick link to Meetings (desktop only to prevent mobile overflow) */}
+            <button
+              type="button"
+              onClick={() => router.push("/meetings")}
+              className="hidden sm:flex h-7 px-2 sm:px-2.5 rounded-lg bg-emerald-600/15 hover:bg-emerald-600 text-emerald-300 hover:text-white transition items-center gap-1.5 text-xs font-semibold border border-emerald-500/20 shrink-0"
+              title="Đi tới Phòng Họp & Hội Nghị Video"
+            >
+              <Video className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="hidden md:inline">Phòng họp</span>
+            </button>
+
+            {/* Bot Auto-Test (desktop only) */}
             <button
               type="button"
               onClick={() => router.push("/test-bot")}
-              className="h-7 px-2.5 rounded-lg bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-purple-500/30"
+              className="hidden lg:flex h-7 px-2.5 rounded-lg bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white transition items-center gap-1.5 text-xs font-semibold border border-purple-500/30 shrink-0"
               title="Khởi chạy Bot tự động full test toàn bộ tính năng demo"
             >
               <Bot className="h-3.5 w-3.5 text-purple-400" />
-              <span className="hidden lg:inline">Bot Auto-Test</span>
+              <span>Bot Auto-Test</span>
             </button>
 
-            <div className="h-5 w-[1px] bg-zinc-800 hidden sm:block" />
+            <div className="h-5 w-[1px] bg-zinc-800 hidden sm:block shrink-0" />
 
-            <div className="h-7 w-7 rounded-lg bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
+            <div className="h-7 w-7 rounded-lg bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 hidden sm:flex items-center justify-center shrink-0">
               <LayoutGrid className="h-4 w-4" />
             </div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold text-white">Lark Base Doanh Nghiệp</h1>
-              <span className="text-[10px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-1.5 py-0.2 rounded font-mono hidden md:inline">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h1 className="text-xs sm:text-sm font-bold text-white whitespace-nowrap truncate max-w-[90px] sm:max-w-none">
+                Lark Base <span className="hidden md:inline">Doanh Nghiệp</span>
+              </h1>
+              <span className="text-[10px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-1.5 py-0.2 rounded font-mono hidden xl:inline shrink-0">
                 Bảo mật 3 tầng
               </span>
             </div>
           </div>
 
           {/* Demo Role Switcher Toolbar */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-[#2b2d31] border border-white/5 px-2 py-0.5 rounded-lg text-xs">
-              <Eye className="h-3.5 w-3.5 text-amber-400" />
-              <span className="text-zinc-400 text-[11px] font-medium">Vai trò:</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1 bg-[#2b2d31] border border-white/5 px-1.5 sm:px-2 py-0.5 rounded-lg text-xs max-w-[135px] sm:max-w-none">
+              <Eye className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+              <span className="text-zinc-400 text-[10px] sm:text-[11px] font-medium hidden sm:inline">Vai trò:</span>
               <select
                 value={demoRole}
                 onChange={(e) => setDemoRole(e.target.value as DemoRole)}
-                className="bg-black/40 border border-zinc-700 rounded-md px-1.5 py-0.5 text-[11px] font-bold text-amber-300 focus:outline-none cursor-pointer"
+                className="bg-black/40 border border-zinc-700 rounded px-1 sm:px-1.5 py-0.5 text-[10px] sm:text-[11px] font-bold text-amber-300 focus:outline-none cursor-pointer max-w-[110px] sm:max-w-none truncate"
               >
                 <option value="MEMBER">1. Tổ viên (Member)</option>
                 <option value="LEAD">2. Tổ trưởng (Lead)</option>
                 <option value="HEAD">3. Trưởng phòng (Head)</option>
                 <option value="HR">4. Nhân sự (HR)</option>
+                <option value="DIRECTOR">5. Giám đốc (Director)</option>
+                <option value="CHAIRMAN">6. Ban quản trị (Chairman)</option>
               </select>
             </div>
           </div>
