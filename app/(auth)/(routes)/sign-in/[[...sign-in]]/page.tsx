@@ -23,6 +23,7 @@ import {
   X,
   Zap,
   ExternalLink,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -114,13 +115,24 @@ export default function SignInPage() {
             </p>
           </div>
 
-          <Link
-            href="/download"
-            className="shrink-0 h-9 px-3.5 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-200 hover:text-white border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 shadow-sm"
-          >
-            <span>Trung tâm tải về</span>
-            <ExternalLink className="h-3 w-3 text-emerald-400" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/test-bot"
+              className="shrink-0 h-9 px-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+              title="Khởi chạy Bot tự động full test toàn bộ tính năng demo"
+            >
+              <Bot className="h-3.5 w-3.5 text-indigo-400" />
+              <span>Bot Auto-Test</span>
+            </Link>
+
+            <Link
+              href="/download"
+              className="shrink-0 h-9 px-3.5 rounded-xl bg-[#2b2d31] hover:bg-zinc-700 text-zinc-200 hover:text-white border border-white/10 text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+            >
+              <span>Trung tâm tải về</span>
+              <ExternalLink className="h-3 w-3 text-emerald-400" />
+            </Link>
+          </div>
         </div>
 
         {/* Action Buttons Row */}

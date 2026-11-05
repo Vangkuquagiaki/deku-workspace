@@ -16,6 +16,7 @@ import {
   Briefcase,
   Flame,
   Download,
+  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -164,6 +165,18 @@ function ServerEnterpriseNavContent({ serverId }: ServerEnterpriseNavProps) {
       badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
       activeBg: "bg-emerald-950/40 border-emerald-500/50 text-white shadow-sm shadow-emerald-950/50",
       activeIndicator: "bg-emerald-400",
+    },
+    {
+      id: "bot",
+      label: "Bot Auto-Test Toàn Diện",
+      icon: Bot,
+      badge: "BOT",
+      href: `/test-bot`,
+      isActive: pathname.startsWith("/test-bot"),
+      iconColor: "text-purple-400 group-hover:text-purple-300",
+      badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+      activeBg: "bg-purple-950/40 border-purple-500/50 text-white shadow-sm shadow-purple-950/50",
+      activeIndicator: "bg-purple-400",
     },
   ];
 

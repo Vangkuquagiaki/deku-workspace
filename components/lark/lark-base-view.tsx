@@ -381,6 +381,16 @@ export function LarkBaseView({
               <span className="hidden md:inline">Tải ứng dụng</span>
             </button>
 
+            <button
+              type="button"
+              onClick={() => router.push("/test-bot")}
+              className="h-7 px-2.5 rounded-lg bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold border border-purple-500/30"
+              title="Khởi chạy Bot tự động full test toàn bộ tính năng demo"
+            >
+              <Bot className="h-3.5 w-3.5 text-purple-400" />
+              <span className="hidden lg:inline">Bot Auto-Test</span>
+            </button>
+
             <div className="h-5 w-[1px] bg-zinc-800 hidden sm:block" />
 
             <div className="h-7 w-7 rounded-lg bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">

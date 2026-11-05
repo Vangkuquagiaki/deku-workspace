@@ -27,6 +27,9 @@ try {
       "/meet(.*)",
       "/meetings(.*)",
       "/base(.*)",
+      "/download(.*)",
+      "/test-bot(.*)",
+      "/api/download(.*)",
       "/api/org-units(.*)",
       "/api/posts(.*)",
       "/api/tasks(.*)",
@@ -43,6 +46,9 @@ try {
       "/api/personal(.*)",
       "/api/announcements(.*)",
       "/api/invitations(.*)",
+      "/api/download(.*)",
+      "/download(.*)",
+      "/test-bot(.*)",
     ],
     ignoredRoutes: [
       "/api/uploadthing",
@@ -54,6 +60,9 @@ try {
       "/api/personal(.*)",
       "/api/announcements(.*)",
       "/api/invitations(.*)",
+      "/api/download(.*)",
+      "/download(.*)",
+      "/test-bot(.*)",
     ],
   });
 } catch (err) {

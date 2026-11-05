@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "seed": "node --env-file=.env prisma/seed.js"
+    "seed": "node --env-file=.env prisma/seed.js",
+    "test:bot": "node scripts/demo-test-bot.js"
   },
   "prisma": {
     "seed": "node --env-file=.env prisma/seed.js"
