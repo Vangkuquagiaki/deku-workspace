@@ -9,6 +9,8 @@
 [![LiveKit](https://img.shields.io/badge/LiveKit-WebRTC-FF5722?style=for-the-badge)](https://livekit.io/)
 [![Clerk](https://img.shields.io/badge/Clerk-Authentication-6C47FF?style=for-the-badge)](https://clerk.com/)
 [![Tests Status](https://img.shields.io/badge/Test_Bot-100%25_PASS-brightgreen?style=for-the-badge)](https://deku-workspace.vercel.app/test-bot)
+[![Database](https://img.shields.io/badge/Database-27%2C124_Records_in_41_Tables-blueviolet?style=for-the-badge)](BAO_CAO_DU_AN_DEKU_WORKSPACE.md#4-mô-hình-dữ-liệu--quản-trị-cơ-sở-dữ-liệu-enterprise-scale)
+[![Employees](https://img.shields.io/badge/HR_Directory-1%2C309_Employees-success?style=for-the-badge)](BAO_CAO_DU_AN_DEKU_WORKSPACE.md)
 
 > **Deku Workspace** là nền tảng hợp tác, họp trực tuyến WebRTC và quản trị điều hành doanh nghiệp All-in-One tích hợp Trí tuệ Nhân tạo (AI), kết hợp giữa trải nghiệm tương tác thời gian thực của Discord, năng lực tổ chức công việc phân quyền 3 tầng của Lark Base và sức mạnh trợ lý tự động hóa thông minh (ChatGPT-Grade).
 

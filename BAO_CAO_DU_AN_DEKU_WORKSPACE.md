@@ -87,20 +87,46 @@ flowchart TD
 | **Xác thực & Danh tính** | Clerk Authentication Platform | Bảo mật đa yếu tố, quản lý session an toàn, demo role giả lập |
 | **Giao tiếp Realtime** | Socket.io + Custom Hooks | Đồng bộ tin nhắn, trạng thái mic/loa tức thời giữa các client |
 
+### 3.2. Kiến trúc tích hợp API dịch vụ & RESTful nội bộ
+Hệ thống kết nối và cung cấp 2 tầng API chuyên nghiệp:
+1. **API Dịch Vụ Đám Mây Quốc Tế (External 3rd-Party Cloud APIs)**:
+   - **Clerk Authentication API**: Xác thực định danh, session JWT, phân quyền tài khoản.
+   - **LiveKit Cloud WebRTC API**: Cấp Access Token, điều khiển phòng họp video đa điểm độ nét cao.
+   - **Neon Serverless Postgres Protocol**: Kết nối DB tự động co giãn, pooling chống nghẽn và phân nhánh dữ liệu.
+   - **UploadThing API**: Lưu trữ file, ảnh đại diện và tài liệu đính kèm trên CDN tốc độ cao.
+   - **QR Server API**: Tự động sinh mã QR động cho phép quét cài đặt ứng dụng PWA trên điện thoại di động.
+2. **Hệ Thống Hơn 25+ Endpoint RESTful & Socket.io Nội Bộ (Internal Application APIs)**:
+   - `/api/socket/messages`, `/api/socket/direct-messages`, `/api/socket/io`: Chat thời gian thực.
+   - `/api/meetings`, `/api/meetings/[id]/summary`, `/api/text/translate`: Họp video và biên bản AI.
+   - `/api/tasks`, `/api/personal/today`: Bảng việc Lark Base và AI cá nhân hóa.
+   - `/api/approvals`, `/api/announcements/[id]/ack`, `/api/ai-admin/reconcile`: Quản trị nhân sự và kiểm toán.
+   - `/api/download/windows`: Tự động sinh file cài đặt Desktop 1-Click.
+
 ---
 
-## 4. MÔ HÌNH DỮ LIỆU & QUẢN TRỊ CƠ SỞ DỮ LIỆU
+## 4. MÔ HÌNH DỮ LIỆU & QUẢN TRỊ CƠ SỞ DỮ LIỆU (ENTERPRISE SCALE)
 
-Hệ thống quản lý dữ liệu chặt chẽ với các bảng chính:
-1. **Profile & Member**: Định danh người dùng, chức danh, phân quyền vai trò (Admin, Moderator, Guest / Lead, HR, Member).
-2. **Server & Channel**: Quản lý máy chủ không gian làm việc, kênh Text, Audio, Video và Announcement.
-3. **OrgUnit**: Quản trị cấu trúc cây phòng ban doanh nghiệp (13 khối và ban chuyên môn).
-4. **Task & Milestone**: Nhiệm vụ của tổ, tiến độ, người chịu trách nhiệm, mức độ khẩn cấp và trạng thái hoàn thành.
-5. **PersonalNote**: Sổ tay cá nhân riêng tư, gắn cờ ưu tiên và mã hóa theo người dùng.
-6. **AnnouncementCampaign & Acknowledgment**: Các chỉ thị công ty bắt buộc ký nhận, lưu vết thời gian đọc/ký.
-7. **SocialPost & Reaction**: Mạng xã hội sáng kiến nội bộ (Threads).
-8. **Meeting & Transcript**: Phòng họp trực tuyến, bản ghi âm, danh sách người tham dự và biên bản tóm tắt AI.
-9. **AuditLog**: Nhật ký kiểm toán bảo mật bất biến, ghi lại mọi hành vi chuyển quyền, xóa dữ liệu, đăng nhập.
+Hệ thống vận hành thực tế trên Neon PostgreSQL với **27.124 bản ghi dữ liệu** liên kết chặt chẽ qua **41 bảng quan hệ**:
+
+| Nhóm dữ liệu | Bảng dữ liệu chính | Số lượng bản ghi | Ý nghĩa nghiệp vụ |
+|---|---|---|---|
+| **Chấm công & Điểm danh** | `attendanceRecord` | **7.330** | Dữ liệu chấm công vào/ra theo ca làm việc toàn công ty |
+| **Quản trị công việc (Lark Base)** | `task` | **5.573** | Nhiệm vụ theo tổ (Kanban & Grid), phân bổ deadline, độ khẩn cấp |
+| **Hội nghị & Biên bản họp AI** | `transcriptSegment` | **4.784** | Lời thoại bóc băng và phụ đề song ngữ trực tiếp các cuộc họp |
+| **Mạng xã hội Threads nội bộ** | `socialPost` | **1.504** | Bài viết thảo luận, sáng kiến cải tiến quy trình công việc |
+| **Nghỉ phép & Phê duyệt HR** | `leaveRequest` | **1.333** | Đơn xin nghỉ phép, nghỉ ốm, thai sản kèm luồng phê duyệt |
+| **Hồ sơ nhân sự (HR Profile)** | `employeeProfile` | **1.309** | 1.309 hồ sơ nhân sự đầy đủ: Mã NV, họ tên, chức danh, khối, bậc lương |
+| **Định danh & Thành viên** | `profile` & `member` | **1.309** | Tài khoản đăng nhập, avatar và vai trò (Admin/Lead/Member/HR) |
+| **Cơ cấu tổ chức doanh nghiệp** | `orgUnitMember` | **1.291** | Phân bổ nhân sự chính xác vào 13 khối và 33 tổ chuyên môn |
+| **Phòng họp trực tuyến** | `meeting` | **615** | Các phòng họp WebRTC có mã bảo mật và trạng thái cuộc họp |
+| **Truyền thông nội bộ (Bảng tin)** | `post` | **322** | Các chỉ thị ban giám đốc bắt buộc nhân sự đọc và ký nhận |
+| **Quỹ phép năm** | `leaveBalance` | **105** | Hạn mức ngày phép năm và số ngày đã sử dụng theo quy định |
+| **Chủ đề thảo luận** | `socialTopic` | **63** | Các chủ đề hashtag, chuyên mục thảo luận sáng kiến |
+| **Cây phòng ban chuyên môn** | `orgUnit` | **46** | Cấu trúc cây tổ chức: Ban Giám Đốc $\rightarrow$ Khối $\rightarrow$ Phòng $\rightarrow$ Tổ |
+| **Nhật ký kiểm toán (Audit Log)** | `auditLog` | **33** | Lưu vết toàn bộ hành vi: tạo task, sửa quyền, duyệt đơn, xuất file |
+| **Kênh trao đổi nội bộ** | `channel` | **28** | Kênh Text, Kênh Thoại, Kênh Video và Kênh Chỉ thị |
+| **Khác** | *Onboarding, từ điển, chính sách...* | **1.098** | Checklist hội nhập, từ điển thuật ngữ, lời mời, sự kiện |
+| **TỔNG CỘNG** | **41 Bảng dữ liệu** | **27.124** | **Vận hành trơn tru với chỉ mục Indexing & Pooling** |
 
 ---
 
